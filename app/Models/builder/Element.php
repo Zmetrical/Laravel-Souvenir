@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
  
 class Element extends Model
 {
-    protected $fillable = [
-        'slug', 'name', 'category', 'group', 'shape',
-        'color', 'detail_color', 'use_img', 'img_path',
-        'series_id', 'price', 'stock',
-        'is_small', 'is_large', 'is_active',
-    ];
+protected $fillable = [
+    'slug', 'name', 'category', 'group', 'shape',
+    'color', 'detail_color', 'use_img', 'img_path',
+    'series_id', 'is_small', 'is_large',
+    'price', 'stock', 'is_active',
+];
  
     protected $casts = [
         'use_img'   => 'boolean',

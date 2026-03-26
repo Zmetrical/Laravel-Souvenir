@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\builder;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-class NecklaceController extends BuilderController  
+class NecklaceController extends BuilderController
 {
     public function index()
     {
+        $product  = $this->getProduct('necklace');
+        $elements = $this->getElementsPayload();
+
         return view('builder.necklace', [
-            'activePage'   => 'necklace',
-            'maxBeads'     => 30,
-            'productLabel' => 'Necklace',
+            'activePage'    => 'necklace',
+            'maxBeads'      => $product->max_beads,
+            'productLabel'  => $product->label,
             'productConfig' => [
                 'product'   => 'necklace',
-                'basePrice' => 120,
-                'maxBeads'  => 30,
+                'basePrice' => $product->base_price,
+                'maxBeads'  => $product->max_beads,
             ],
+            'elements'      => $elements,
         ]);
     }
 }
