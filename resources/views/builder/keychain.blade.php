@@ -129,7 +129,8 @@ $productConfig = ['product' => 'keychain', 'basePrice' => 65, 'maxBeads' => $max
 <div class="toast" id="toast"></div>
 
 <script>
-  window.BUILDER_PRODUCT = {!! json_encode($productConfig) !!};
+  window.BUILDER_PRODUCT  = {!! json_encode($productConfig) !!};
+  window.BUILDER_ELEMENTS = {!! json_encode($elements) !!};  // ← add this
 </script>
 <script type="module" src="{{ asset('js/builder/main.js') }}"></script>
 </body>

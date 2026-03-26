@@ -5,7 +5,7 @@ namespace App\Http\Controllers\builder;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class NecklaceController extends Controller
+class NecklaceController extends BuilderController  
 {
     public function index()
     {

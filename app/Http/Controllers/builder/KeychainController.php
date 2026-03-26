@@ -5,7 +5,7 @@ namespace App\Http\Controllers\builder;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class KeychainController extends Controller
+class KeychainController extends BuilderController  
 {
     public function index()
     {

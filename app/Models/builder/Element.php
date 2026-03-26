@@ -43,25 +43,36 @@ class Element extends Model
  
     // ── Canvas-ready JSON shape ───────────────────────────────────────────────
     // Matches the structure your JS data.js files expect
-    public function toCanvasArray(): array
-    {
-        return array_filter([
-            'id'           => $this->slug,
-            'name'         => $this->name,
-            'category'     => $this->category,
-            'group'        => $this->group,
-            'shape'        => $this->shape,
-            'color'        => $this->color,
-            'detail'       => $this->detail_color,
-            'useImg'       => $this->use_img ?: null,
-            'imgSrc'       => $this->use_img
-                                ? asset('storage/' . $this->img_path)
-                                : null,
-            'series'       => $this->series?->name,
-            'price'        => $this->price,
-            'stock'        => $this->stock,
-            'small'        => $this->is_small ?: null,
-            'large'        => $this->is_large ?: null,
-        ], fn($v) => $v !== null);
-    }
+public function toCanvasArray(): array
+{
+    return [
+        // ── Identity ─────────────────────────────────────────────────
+        'id'       => $this->slug,          // JS uses slug as id
+        'name'     => $this->name,
+        'category' => $this->category,      // 'beads' | 'figures' | 'charms'
+        'group'    => $this->group,         // ← was group_label (wrong)
+
+        // ── Shape / Color (canvas drawing) ───────────────────────────
+        'shape'    => $this->shape,
+        'color'    => $this->color,
+        'detail'   => $this->detail_color,  // ← DB: detail_color → JS: detail
+
+        // ── Image-based charms ───────────────────────────────────────
+        'useImg'   => (bool) $this->use_img,              // ← DB: use_img → JS: useImg
+        'imgSrc' => $this->img_path
+            ? asset('img/builder/' . $this->img_path)
+            : null,
+
+        // ── Size flags ───────────────────────────────────────────────
+        'small'    => (bool) $this->is_small,  // ← DB: is_small → JS: small
+        'large'    => (bool) $this->is_large,  // ← DB: is_large → JS: large
+
+        // ── Pricing / Stock ──────────────────────────────────────────
+        'price'    => $this->price,
+        'stock'    => $this->stock,             // 'in' | 'low' | 'out'
+
+        // ── Charms series name ───────────────────────────────────────
+        'series'   => $this->series?->name,     // used by buildCharmsGrid
+    ];
+}
 }

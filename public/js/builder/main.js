@@ -1,4 +1,6 @@
-import { BEADS, FIGURES, CHARMS } from './data/index.js';
+// import { BEADS, FIGURES, CHARMS } from './data/index.js';
+const { beads: BEADS, figures: FIGURES, charms: CHARMS } = window.BUILDER_ELEMENTS || {};
+
 import { State } from './state.js';
 import { CanvasEngine } from './canvas/canvasengine.js';
 import { UIController } from './uicontroller.js';

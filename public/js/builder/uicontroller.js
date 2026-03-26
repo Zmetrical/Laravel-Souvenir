@@ -1,4 +1,8 @@
-import { BEADS, FIGURES, CHARMS, ELEM_MAP } from './data/index.js';
+// import { BEADS, FIGURES, CHARMS, ELEM_MAP } from './data/index.js';
+// AFTER
+const { beads: BEADS, figures: FIGURES, charms: CHARMS } = window.BUILDER_ELEMENTS || {};
+const ELEM_MAP = {};
+[...(BEADS||[]), ...(FIGURES||[]), ...(CHARMS||[])].forEach(e => { ELEM_MAP[e.id] = e; });
 
 export class UIController {
   constructor(appInstance) {
