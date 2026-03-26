@@ -438,7 +438,7 @@
             Cancel
           </a>
         </div>
-
+        
       </div>
     </div>
 
@@ -446,8 +446,8 @@
 </form>
 
 @push('scripts')
-{{-- Load the unified shape renderer first --}}
-<script src="{{ asset('js/admin/shape-renderer.js') }}"></script>
+{{-- Unified shape renderer --}}
+<script src="{{ asset('js/builder/canvas/shaperenderer.js') }}"></script>
 
 <script>
 /* ─── State ───────────────────────────────────────────────────────────────── */
@@ -492,17 +492,12 @@ function previewUploadedImage(input) {
 
 /* ─── Shape tile click ───────────────────────────────────────────────────── */
 function selectShape(shape, btnEl) {
-  // Update hidden select
   document.getElementById('shape-select').value = shape;
-
-  // Update tile highlight states
   document.querySelectorAll('.shape-tile').forEach(t => {
     const sel = t.dataset.shape === shape;
-    t.style.borderColor  = sel ? 'var(--pink)'    : 'var(--grey-200)';
-    t.style.background   = sel ? 'var(--pink-lt)' : 'var(--grey-50)';
+    t.style.borderColor = sel ? 'var(--pink)'    : 'var(--grey-200)';
+    t.style.background  = sel ? 'var(--pink-lt)' : 'var(--grey-50)';
   });
-
-  // Update preview
   updatePreview();
 }
 
@@ -517,15 +512,14 @@ function refreshAllTiles() {
     ArtshapeRenderer.draw(c);
   });
 
-  // Colour chip indicators
   const mainChip   = document.getElementById('prev-main-chip');
   const mainHex    = document.getElementById('prev-main-hex');
   const detailChip = document.getElementById('prev-detail-chip');
   const detailHex  = document.getElementById('prev-detail-hex');
-  if (mainChip)   mainChip.style.background   = color;
-  if (mainHex)    mainHex.textContent          = color;
-  if (detailChip) detailChip.style.background  = detail;
-  if (detailHex)  detailHex.textContent         = detail;
+  if (mainChip)   mainChip.style.background  = color;
+  if (mainHex)    mainHex.textContent         = color;
+  if (detailChip) detailChip.style.background = detail;
+  if (detailHex)  detailHex.textContent        = detail;
 }
 
 /* ─── Debounced preview update ───────────────────────────────────────────── */
@@ -543,7 +537,6 @@ function updatePreview() {
   const detail  = document.getElementById('detail-pick')?.value  || '#C0136A';
   const isSmall = document.getElementById('is_small')?.checked   || false;
 
-  // Update info labels
   const shapeLabel = document.getElementById('prev-shape-label');
   const shapeBadge = document.getElementById('prev-shape-badge');
   const sizeLabel  = document.getElementById('prev-size-label');
@@ -551,7 +544,6 @@ function updatePreview() {
   if (shapeBadge) shapeBadge.textContent = shape || '—';
   if (sizeLabel)  sizeLabel.textContent  = isSmall ? 'Small' : 'Standard';
 
-  // Re-render big preview canvas using the same unified renderer
   const canvas = document.getElementById('preview-canvas');
   if (!canvas) return;
 
@@ -563,8 +555,8 @@ function updatePreview() {
   ArtshapeRenderer.draw(canvas, { shape, color, detail, small: isSmall });
 }
 
-/* ─── Init ───────────────────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
+/* ─── Init — runs immediately (DOM already ready at bottom of <body>) ────── */
+(function init() {
   if (LOCKED_CAT !== 'charms') {
     // Render all shape-picker tiles
     document.querySelectorAll('.shape-tile-canvas').forEach(c => {
@@ -573,8 +565,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render the large preview
     updatePreview();
   }
-  // Re-init Lucide for any icons we injected
+  // Re-init Lucide for any icons injected by Blade
   if (window.lucide) lucide.createIcons();
-});
+}());
 </script>
 @endpush

@@ -130,5 +130,6 @@
 @endsection
 
 @push('scripts')
-
+{{-- Unified renderer handles all canvas.shape-canvas elements automatically --}}
+<script src="{{ asset('js/builder/canvas/shaperenderer.js') }}"></script>
 @endpush
