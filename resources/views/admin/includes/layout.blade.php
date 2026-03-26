@@ -12,24 +12,36 @@
     :root {
       --pink:      #FF5FA0;
       --pink-lt:   #FFD6E8;
+      --pink-dk:   #C0136A;
       --teal:      #1AC8C4;
+      --teal-lt:   #D0F5F4;
       --purple:    #A855F7;
+      --purple-lt: #EDE9FE;
       --lime:      #84CC16;
-      --ink:       #2D2D3A;
-      --sidebar-w: 240px;
+      --lime-lt:   #ECFCCB;
+      --ink:       #1E1E2A;
+      --ink-2:     #3A3A4A;
+      --sidebar-w: 232px;
+      --white:     #FFFFFF;
+      --grey-50:   #F8F8FB;
+      --grey-100:  #F0EFF7;
+      --grey-200:  #E2E0EF;
+      --grey-400:  #9896A8;
+      --grey-600:  #5E5C6E;
     }
 
     * { box-sizing: border-box; }
 
     body {
-      background: #F8F7FA;
-      font-family: 'Segoe UI', sans-serif;
+      background: var(--grey-50);
+      font-family: 'Segoe UI', system-ui, sans-serif;
       margin: 0;
+      color: var(--ink);
     }
 
     /* ── Lucide fix ────────────────────────────────────────────────────── */
     [data-lucide] {
-      width: 15px; height: 15px;
+      width: 14px; height: 14px;
       display: inline-block;
       vertical-align: middle;
       flex-shrink: 0;
@@ -47,48 +59,55 @@
     }
 
     .ac-sidebar .brand {
-      padding: 20px 22px 16px;
-      font-size: 1.15rem; font-weight: 800;
-      color: #fff; letter-spacing: -.3px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 18px 20px 16px;
+      font-size: 1rem; font-weight: 800;
+      color: #fff; letter-spacing: -.2px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
       flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
     }
-    .ac-sidebar .brand span { color: var(--pink); }
+    .ac-sidebar .brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--pink); flex-shrink: 0;
+    }
+    .ac-sidebar .brand small {
+      font-size: .58rem; opacity: .35; font-weight: 400; margin-left: 2px;
+    }
 
     .ac-sidebar .nav-section {
-      padding: 14px 16px 4px;
-      font-size: .62rem; font-weight: 700;
-      color: rgba(255,255,255,.3);
-      letter-spacing: .1em; text-transform: uppercase;
+      padding: 16px 18px 4px;
+      font-size: .6rem; font-weight: 700;
+      color: rgba(255,255,255,.25);
+      letter-spacing: .12em; text-transform: uppercase;
     }
 
     .ac-sidebar .nav-link {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 14px; margin: 1px 8px;
-      border-radius: 8px;
-      color: rgba(255,255,255,.6); font-size: .84rem; font-weight: 500;
-      text-decoration: none; transition: all .15s;
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 12px; margin: 1px 8px;
+      border-radius: 7px;
+      color: rgba(255,255,255,.5); font-size: .82rem; font-weight: 500;
+      text-decoration: none; transition: all .12s;
     }
-    .ac-sidebar .nav-link:hover  { background: rgba(255,255,255,.08); color: #fff; }
+    .ac-sidebar .nav-link:hover  { background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); }
     .ac-sidebar .nav-link.active { background: var(--pink); color: #fff; }
 
-    /* ── Sub-nav (category links) ──────────────────────────────────────── */
+    /* Sub-nav */
     .ac-subnav {
-      margin: 2px 8px 4px 36px;
-      border-left: 2px solid rgba(255,255,255,.1);
-      padding-left: 4px;
+      margin: 1px 8px 4px 34px;
+      border-left: 1px solid rgba(255,255,255,.08);
+      padding-left: 6px;
     }
     .ac-subnav .sub-link {
       display: flex; align-items: center; gap: 8px;
-      padding: 6px 10px;
+      padding: 5px 10px;
       border-radius: 6px;
-      color: rgba(255,255,255,.45); font-size: .8rem;
-      text-decoration: none; transition: all .15s;
+      color: rgba(255,255,255,.38); font-size: .78rem;
+      text-decoration: none; transition: all .12s;
     }
-    .ac-subnav .sub-link:hover  { background: rgba(255,255,255,.07); color: #fff; }
+    .ac-subnav .sub-link:hover  { background: rgba(255,255,255,.06); color: rgba(255,255,255,.7); }
     .ac-subnav .sub-link.active { color: var(--pink-lt); font-weight: 600; }
     .ac-subnav .sub-link .dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
     }
 
     /* ── Main area ─────────────────────────────────────────────────────── */
@@ -100,27 +119,33 @@
 
     /* ── Topbar ────────────────────────────────────────────────────────── */
     .ac-topbar {
-      background: #fff;
-      border-bottom: 1px solid #EEEDF3;
-      padding: 13px 28px;
+      background: var(--white);
+      border-bottom: 1px solid var(--grey-200);
+      padding: 12px 28px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 50;
     }
-    .ac-topbar .page-title { font-weight: 700; font-size: 1rem; color: var(--ink); }
+    .ac-topbar .page-title {
+      font-weight: 700; font-size: .95rem; color: var(--ink);
+    }
+    .ac-topbar .topbar-right {
+      display: flex; align-items: center; gap: 12px;
+      font-size: .78rem; color: var(--grey-400);
+    }
 
     /* ── Content ───────────────────────────────────────────────────────── */
-    .ac-content { padding: 28px; flex: 1; }
+    .ac-content { padding: 26px 28px; flex: 1; }
 
     /* ── Cards ─────────────────────────────────────────────────────────── */
     .ac-card {
-      background: #fff; border-radius: 14px;
-      border: 1px solid #EEEDF3;
-      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      background: var(--white); border-radius: 12px;
+      border: 1px solid var(--grey-200);
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
     }
     .ac-card-header {
-      padding: 14px 20px;
-      border-bottom: 1px solid #EEEDF3;
-      font-weight: 700; font-size: .88rem; color: var(--ink);
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--grey-200);
+      font-weight: 700; font-size: .82rem; color: var(--ink-2);
       display: flex; align-items: center; gap: 8px;
     }
 
@@ -131,178 +156,179 @@
 
     /* ── Flash alerts ──────────────────────────────────────────────────── */
     .flash-success {
-      background: #D1FAE5; border: 1px solid #6EE7B7;
-      color: #065F46; border-radius: 10px; padding: 12px 18px;
-      margin-bottom: 18px; font-size: .88rem; font-weight: 500;
+      background: #F0FDF4; border: 1px solid #86EFAC;
+      color: #166534; border-radius: 8px; padding: 10px 16px;
+      margin-bottom: 16px; font-size: .85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
     }
     .flash-error {
-      background: #FEE2E2; border: 1px solid #FCA5A5;
-      color: #991B1B; border-radius: 10px; padding: 12px 18px;
-      margin-bottom: 18px; font-size: .88rem; font-weight: 500;
+      background: #FFF1F2; border: 1px solid #FDA4AF;
+      color: #9F1239; border-radius: 8px; padding: 10px 16px;
+      margin-bottom: 16px; font-size: .85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
     }
 
-    /* ── Compact element grid cards ────────────────────────────────────── */
+    /* ── Element grid cards ─────────────────────────────────────────────── */
     .el-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
       padding: 16px;
     }
     .el-card {
-      background: #FAFAFA; border: 1px solid #EEEDF3;
-      border-radius: 10px; padding: 12px 10px;
+      background: var(--grey-50); border: 1px solid var(--grey-200);
+      border-radius: 9px; padding: 11px 9px;
       text-align: center; position: relative;
-      transition: box-shadow .15s, border-color .15s;
+      transition: box-shadow .12s, border-color .12s;
     }
-    .el-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); border-color: #DDD; }
-
-    .el-card .swatch {
-      width: 44px; height: 44px; border-radius: 50%;
-      margin: 0 auto 8px;
-      border: 2px solid rgba(0,0,0,.07);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .7rem; font-weight: 700; color: rgba(0,0,0,.3);
+    .el-card:hover {
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      border-color: var(--grey-400);
     }
     .el-card .el-name {
-      font-size: .76rem; font-weight: 600; color: var(--ink);
+      font-size: .72rem; font-weight: 600; color: var(--ink);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .el-card .el-price {
-      font-size: .72rem; color: var(--pink); font-weight: 700; margin-top: 2px;
+      font-size: .68rem; color: var(--pink); font-weight: 700; margin-top: 2px;
     }
     .el-card .el-actions {
       display: none;
-      position: absolute; top: 6px; right: 6px;
+      position: absolute; top: 5px; right: 5px;
       gap: 3px;
     }
     .el-card:hover .el-actions { display: flex; }
     .el-card .el-actions a,
     .el-card .el-actions button {
-      width: 24px; height: 24px; border-radius: 5px; border: none;
+      width: 22px; height: 22px; border-radius: 4px; border: none;
       display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; cursor: pointer; text-decoration: none;
+      cursor: pointer; text-decoration: none;
       transition: background .1s;
     }
-    .el-card .el-actions .btn-edit   { background: #EEE; color: #444; }
+    .el-card .el-actions .btn-edit   { background: var(--grey-200); color: var(--ink-2); }
     .el-card .el-actions .btn-delete { background: #FEE2E2; color: #991B1B; }
-    .el-card .el-actions .btn-edit:hover   { background: #DDD; }
+    .el-card .el-actions .btn-edit:hover   { background: var(--grey-400); color: #fff; }
     .el-card .el-actions .btn-delete:hover { background: #FCA5A5; }
 
-    /* inactive overlay */
-    .el-card.inactive { opacity: .45; }
+    .el-card.inactive { opacity: .42; }
     .el-card .inactive-badge {
-      position: absolute; top: 5px; left: 5px;
-      font-size: .6rem; background: #374151; color: #fff;
-      border-radius: 4px; padding: 1px 5px;
+      position: absolute; top: 4px; left: 4px;
+      font-size: .58rem; background: var(--ink-2); color: #fff;
+      border-radius: 3px; padding: 1px 5px; letter-spacing: .03em;
     }
 
-    /* ── Charm image grid ──────────────────────────────────────────────── */
+    /* ── Charm grid ─────────────────────────────────────────────────────── */
     .charm-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
       padding: 16px;
     }
     .charm-card {
-      background: #FAFAFA; border: 1px solid #EEEDF3;
-      border-radius: 10px; overflow: hidden; position: relative;
-      transition: box-shadow .15s, border-color .15s;
+      background: var(--grey-50); border: 1px solid var(--grey-200);
+      border-radius: 9px; overflow: hidden; position: relative;
+      transition: box-shadow .12s, border-color .12s;
     }
-    .charm-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); border-color: #DDD; }
+    .charm-card:hover {
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      border-color: var(--grey-400);
+    }
     .charm-card .thumb {
       width: 100%; aspect-ratio: 1;
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #FFF0F6, #F0F8FF);
+      background: var(--grey-100);
+      border-bottom: 1px solid var(--grey-200);
     }
-    .charm-card .thumb img {
-      width: 80%; height: 80%; object-fit: contain;
-    }
-    .charm-card .thumb-placeholder {
-      font-size: 1.8rem;
-    }
-    .charm-card .charm-info {
-      padding: 8px 10px 10px;
-    }
+    .charm-card .thumb img { width: 72%; height: 72%; object-fit: contain; }
+    .charm-card .thumb-placeholder { font-size: 1.4rem; opacity: .3; }
+    .charm-card .charm-info { padding: 8px 10px 10px; }
     .charm-card .charm-name {
-      font-size: .78rem; font-weight: 600; color: var(--ink);
+      font-size: .74rem; font-weight: 600; color: var(--ink);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .charm-card .charm-series {
-      font-size: .68rem; color: #999; margin-top: 1px;
-    }
-    .charm-card .charm-price {
-      font-size: .72rem; color: var(--pink); font-weight: 700; margin-top: 4px;
-    }
+    .charm-card .charm-series { font-size: .65rem; color: var(--grey-400); margin-top: 1px; }
+    .charm-card .charm-price { font-size: .68rem; color: var(--pink); font-weight: 700; margin-top: 4px; }
     .charm-card .el-actions {
       display: none;
-      position: absolute; top: 6px; right: 6px;
-      gap: 3px;
+      position: absolute; top: 5px; right: 5px; gap: 3px;
     }
     .charm-card:hover .el-actions { display: flex; }
     .charm-card .el-actions a,
     .charm-card .el-actions button {
-      width: 26px; height: 26px; border-radius: 5px; border: none;
+      width: 24px; height: 24px; border-radius: 4px; border: none;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; text-decoration: none; transition: background .1s;
     }
-    .charm-card .el-actions .btn-edit   { background: rgba(255,255,255,.9); color: #444; }
+    .charm-card .el-actions .btn-edit   { background: rgba(255,255,255,.92); color: var(--ink-2); }
     .charm-card .el-actions .btn-delete { background: #FEE2E2; color: #991B1B; }
 
-    /* ── Filter bar ────────────────────────────────────────────────────── */
+    /* ── Filter bar ─────────────────────────────────────────────────────── */
     .filter-bar {
-      padding: 12px 16px;
-      border-bottom: 1px solid #EEEDF3;
-      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--grey-200);
+      display: flex; flex-wrap: wrap; gap: 7px; align-items: center;
     }
     .filter-bar input, .filter-bar select {
-      font-size: .8rem; padding: 5px 10px; border-radius: 7px;
-      border: 1px solid #DDDCEF; background: #FAFAFA;
-      height: 32px;
+      font-size: .78rem; padding: 4px 9px; border-radius: 6px;
+      border: 1px solid var(--grey-200); background: var(--white);
+      height: 30px; color: var(--ink);
     }
     .filter-bar input:focus, .filter-bar select:focus {
       outline: none; border-color: var(--pink);
     }
     .filter-bar .btn-filter {
       background: var(--ink); color: #fff; border: none;
-      font-size: .78rem; padding: 5px 14px; border-radius: 7px; height: 32px;
-      cursor: pointer;
+      font-size: .75rem; padding: 4px 13px; border-radius: 6px; height: 30px;
+      cursor: pointer; font-weight: 600;
     }
+    .filter-bar .btn-filter:hover { background: var(--ink-2); }
     .filter-bar .btn-reset {
-      background: transparent; color: #888; border: 1px solid #DDD;
-      font-size: .78rem; padding: 5px 12px; border-radius: 7px; height: 32px;
+      background: transparent; color: var(--grey-400);
+      border: 1px solid var(--grey-200);
+      font-size: .75rem; padding: 4px 11px; border-radius: 6px; height: 30px;
       cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
     }
 
     /* ── Group divider inside grid ─────────────────────────────────────── */
     .group-label {
       grid-column: 1 / -1;
-      font-size: .7rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .08em; color: #AAA;
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .09em; color: var(--grey-400);
       padding: 4px 2px 0;
-      border-top: 1px solid #EEEDF3; margin-top: 4px;
+      border-top: 1px solid var(--grey-200); margin-top: 4px;
     }
     .group-label:first-child { border-top: none; margin-top: 0; }
+
+    /* ── Series header ─────────────────────────────────────────────────── */
+    .series-label {
+      padding: 12px 16px 4px;
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .09em; color: var(--grey-400);
+      border-top: 1px solid var(--grey-200);
+    }
+    .series-label:first-of-type { border-top: none; }
   </style>
 
   @stack('styles')
 </head>
 <body>
 
-{{-- ══ SIDEBAR ══════════════════════════════════════════════════════════════ --}}
+{{-- SIDEBAR ──────────────────────────────────────────────────────────────── --}}
 <aside class="ac-sidebar">
 
-  <div class="brand">Artsy<span>Crate</span><small style="font-size:.58rem;opacity:.4;font-weight:400;margin-left:5px;">Admin</small></div>
+  <div class="brand">
+    <div class="brand-dot"></div>
+    ArtsyCrate
+    <small>Admin</small>
+  </div>
 
-  {{-- ── Builder section ──────────────────────────────────────────────── --}}
   <div class="nav-section">Builder</div>
 
-  {{-- Elements parent link (overview) --}}
   <a href="{{ route('admin.elements.index') }}"
      class="nav-link {{ request()->routeIs('admin.elements.index') ? 'active' : '' }}">
     <i data-lucide="gem"></i> Elements
   </a>
 
-  {{-- Sub-nav — always visible ──────────────────────────────────────────── --}}
   <div class="ac-subnav">
     <a href="{{ route('admin.elements.beads') }}"
        class="sub-link {{ request()->routeIs('admin.elements.beads') ? 'active' : '' }}">
@@ -318,39 +344,44 @@
     </a>
   </div>
 
-  {{-- ── Store section ────────────────────────────────────────────────── --}}
   <div class="nav-section" style="margin-top:8px;">Store</div>
   <a href="#" class="nav-link"><i data-lucide="package"></i> Orders</a>
   <a href="#" class="nav-link"><i data-lucide="box"></i> Products</a>
 
-  {{-- ── Bottom ────────────────────────────────────────────────────────── --}}
-  <div style="margin-top:auto; padding:14px 8px;">
-    <a href="/" class="nav-link" style="background:rgba(255,255,255,.05);">
+  <div style="margin-top:auto; padding:12px 8px;">
+    <a href="/" class="nav-link">
       <i data-lucide="arrow-left"></i> Back to Site
     </a>
   </div>
 
 </aside>
 
-{{-- ══ MAIN ═════════════════════════════════════════════════════════════════ --}}
+{{-- MAIN ─────────────────────────────────────────────────────────────────── --}}
 <div class="ac-main">
 
-  {{-- Topbar --}}
   <div class="ac-topbar">
     <div class="page-title">@yield('title', 'Dashboard')</div>
-    <div style="font-size:.8rem; color:#999;">
-      @auth {{ auth()->user()->name }} @endauth
+    <div class="topbar-right">
+      @auth
+        <i data-lucide="user" style="width:13px;height:13px;"></i>
+        {{ auth()->user()->name }}
+      @endauth
     </div>
   </div>
 
-  {{-- Content --}}
   <div class="ac-content">
 
     @if(session('success'))
-      <div class="flash-success">✓ {{ session('success') }}</div>
+      <div class="flash-success">
+        <i data-lucide="check-circle" style="width:15px;height:15px;"></i>
+        {{ session('success') }}
+      </div>
     @endif
     @if(session('error'))
-      <div class="flash-error">✕ {{ session('error') }}</div>
+      <div class="flash-error">
+        <i data-lucide="x-circle" style="width:15px;height:15px;"></i>
+        {{ session('error') }}
+      </div>
     @endif
 
     @yield('content')

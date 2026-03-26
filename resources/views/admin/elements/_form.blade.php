@@ -17,40 +17,45 @@
     'Bead Shapes'   => ['round','ellipse','tube','pearl','faceted','heart','star','moon','flower','rainbow','bow','butterfly'],
     'Cube / Figure' => ['cube','cube-dice1','cube-dice2','cube-dice3','cube-dice4','cube-dice5','cube-dice6','cube-heart','cube-star','cube-checker','cube-smile'],
   ];
+
+  $catMeta = [
+    'beads'   => ['label' => 'Bead',   'color' => '#F9B8CF', 'text' => '#C0136A', 'icon' => 'circle'],
+    'figures' => ['label' => 'Figure', 'color' => '#93C5FD', 'text' => '#1D4ED8', 'icon' => 'square'],
+    'charms'  => ['label' => 'Charm',  'color' => '#C4B5FD', 'text' => '#7C3AED', 'icon' => 'sparkles'],
+  ];
+  $meta = $catMeta[$lockedCat];
 @endphp
 
 <form action="{{ $action }}" method="POST" enctype="multipart/form-data" id="element-form">
   @csrf
   @if($method === 'PUT') @method('PUT') @endif
-
-  {{-- Hidden locked category --}}
   <input type="hidden" name="category" value="{{ $lockedCat }}"/>
 
   <div class="row g-4">
 
-    {{-- ══ LEFT COLUMN ══════════════════════════════════════════════════════ --}}
+    {{-- LEFT COLUMN ─────────────────────────────────────────────────────── --}}
     <div class="col-lg-7">
 
-      {{-- ── Basic Info ────────────────────────────────────────────────── --}}
-      <div class="ac-card mb-4">
+      {{-- Basic Info ──────────────────────────────────────────────────── --}}
+      <div class="ac-card mb-3">
         <div class="ac-card-header">
-          <i data-lucide="info"></i> Basic Info
-          {{-- Category pill (locked, read-only) --}}
-          <span class="ms-auto badge"
-                style="font-size:.75rem;
-                {{ $lockedCat === 'beads'   ? 'background:#FFD6E8;color:#C0136A;' : '' }}
-                {{ $lockedCat === 'figures' ? 'background:#D6F0FF;color:#0369A1;' : '' }}
-                {{ $lockedCat === 'charms'  ? 'background:#EDE9FE;color:#7C3AED;' : '' }}">
-            {{ $lockedCat === 'beads' ? '🔵 Bead' : ($lockedCat === 'figures' ? '🟧 Figure' : '✨ Charm') }}
+          <i data-lucide="info"></i>
+          Basic Info
+          <span class="ms-auto" style="display:inline-flex;align-items:center;gap:5px;
+                font-size:.7rem;font-weight:700;
+                color:{{ $meta['text'] }};
+                background:{{ $meta['color'] }}22;
+                border:1px solid {{ $meta['color'] }};
+                border-radius:5px;padding:2px 9px;">
+            <i data-lucide="{{ $meta['icon'] }}" style="width:11px;height:11px;"></i>
+            {{ $meta['label'] }}
           </span>
         </div>
         <div class="p-4">
-
           <div class="row g-3">
 
-            {{-- Name --}}
             <div class="col-md-8">
-              <label class="form-label fw-semibold small">Name <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold small mb-1">Name <span class="text-danger">*</span></label>
               <input type="text" name="name" value="{{ $old('name') }}"
                      class="form-control form-control-sm @error('name') is-invalid @enderror"
                      placeholder="e.g. Round Blush"
@@ -58,9 +63,8 @@
               @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
-            {{-- Slug --}}
             <div class="col-md-4">
-              <label class="form-label fw-semibold small">Slug <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold small mb-1">Slug <span class="text-danger">*</span></label>
               <input type="text" name="slug" id="slug-input"
                      value="{{ $old('slug') }}"
                      class="form-control form-control-sm font-monospace @error('slug') is-invalid @enderror"
@@ -68,35 +72,32 @@
               @error('slug') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
-            {{-- Group --}}
             <div class="col-md-6">
-              <label class="form-label fw-semibold small">Group</label>
+              <label class="form-label fw-semibold small mb-1">Group</label>
               <input type="text" name="group" value="{{ $old('group') }}"
                      class="form-control form-control-sm"
                      placeholder="e.g. Round, Plain Cubes"/>
               <div class="form-text">Groups elements in library tabs</div>
             </div>
 
-            {{-- Price --}}
             <div class="col-md-3">
-              <label class="form-label fw-semibold small">Price (₱) <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold small mb-1">Price (₱) <span class="text-danger">*</span></label>
               <input type="number" name="price" value="{{ $old('price', 8) }}" min="1" max="9999"
                      class="form-control form-control-sm @error('price') is-invalid @enderror"/>
               @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
-            {{-- Stock --}}
             <div class="col-md-3">
-              <label class="form-label fw-semibold small">Stock <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold small mb-1">Stock <span class="text-danger">*</span></label>
               <select name="stock" class="form-select form-select-sm">
                 @foreach(['in' => 'In Stock', 'low' => 'Low Stock', 'out' => 'Out of Stock'] as $val => $label)
                   <option value="{{ $val }}" {{ $old('stock', 'in') === $val ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
               </select>
             </div>
+
           </div>
 
-          {{-- Flags --}}
           <div class="d-flex gap-4 mt-3">
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" name="is_active" id="is_active"
@@ -118,13 +119,12 @@
             </div>
             @endif
           </div>
-
         </div>
       </div>
 
-      {{-- ── Shape & Colors (beads + figures only) ────────────────────── --}}
+      {{-- Shape & Colors (beads + figures) ─────────────────────────────── --}}
       @if($lockedCat !== 'charms')
-      <div class="ac-card mb-4">
+      <div class="ac-card mb-3">
         <div class="ac-card-header">
           <i data-lucide="shapes"></i> Shape & Colors
         </div>
@@ -132,17 +132,16 @@
           <div class="row g-3">
 
             <div class="col-12">
-              <label class="form-label fw-semibold small">Shape</label>
+              <label class="form-label fw-semibold small mb-1">Shape</label>
               <select name="shape" id="shape-select"
                       class="form-select form-select-sm"
                       onchange="updatePreview()">
                 <option value="">— Select shape —</option>
                 @foreach($shapes as $grp => $opts)
-                  {{-- For figures, only show Cube group; for beads, show Bead Shapes --}}
                   @if(
-                    ($lockedCat === 'beads'   && $grp === 'Bead Shapes') ||
-                    ($lockedCat === 'figures'  && $grp === 'Cube / Figure') ||
-                    $lockedCat === 'beads' && $grp === 'Cube / Figure'
+                    ($lockedCat === 'beads'  && $grp === 'Bead Shapes') ||
+                    ($lockedCat === 'figures' && $grp === 'Cube / Figure') ||
+                    ($lockedCat === 'beads'  && $grp === 'Cube / Figure')
                   )
                   <optgroup label="{{ $grp }}">
                     @foreach($opts as $s)
@@ -155,29 +154,32 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-semibold small">Main Color</label>
+              <label class="form-label fw-semibold small mb-1">Main Color</label>
               <div class="d-flex gap-2 align-items-center">
                 <input type="color" name="color" id="color-pick"
                        value="{{ $old('color', '#F9B8CF') }}"
                        class="form-control form-control-color form-control-sm"
-                       style="width:44px;height:34px;padding:2px;"
+                       style="width:40px;height:32px;padding:2px;"
                        oninput="document.getElementById('color-hex').value=this.value; updatePreview()"/>
                 <input type="text" id="color-hex" value="{{ $old('color', '#F9B8CF') }}"
-                       class="form-control form-control-sm font-monospace" style="width:100px;"
+                       class="form-control form-control-sm font-monospace" style="width:96px;"
                        oninput="syncColor('color-pick', this.value)"/>
               </div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-semibold small">Detail Color <small class="text-muted">(optional)</small></label>
+              <label class="form-label fw-semibold small mb-1">
+                Detail Color
+                <small class="text-muted fw-normal">(optional)</small>
+              </label>
               <div class="d-flex gap-2 align-items-center">
                 <input type="color" name="detail_color" id="detail-pick"
                        value="{{ $old('detail_color', '#C0136A') }}"
                        class="form-control form-control-color form-control-sm"
-                       style="width:44px;height:34px;padding:2px;"
+                       style="width:40px;height:32px;padding:2px;"
                        oninput="document.getElementById('detail-hex').value=this.value; updatePreview()"/>
                 <input type="text" id="detail-hex" value="{{ $old('detail_color', '#C0136A') }}"
-                       class="form-control form-control-sm font-monospace" style="width:100px;"
+                       class="form-control form-control-sm font-monospace" style="width:96px;"
                        oninput="syncColor('detail-pick', this.value)"/>
               </div>
               <div class="form-text">Dice dots, star fill, checker pattern, etc.</div>
@@ -188,9 +190,9 @@
       </div>
       @endif
 
-      {{-- ── Charm Image (charms only) ────────────────────────────────── --}}
+      {{-- Charm Image (charms only) ────────────────────────────────────── --}}
       @if($lockedCat === 'charms')
-      <div class="ac-card mb-4">
+      <div class="ac-card mb-3">
         <div class="ac-card-header">
           <i data-lucide="image"></i> Charm Image
         </div>
@@ -198,7 +200,7 @@
           <div class="row g-3">
 
             <div class="col-md-6">
-              <label class="form-label fw-semibold small">Series <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold small mb-1">Series <span class="text-danger">*</span></label>
               <select name="series_id" id="series-select"
                       class="form-select form-select-sm @error('series_id') is-invalid @enderror"
                       onchange="updateSeriesSlug(this)">
@@ -217,7 +219,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-semibold small">Image File</label>
+              <label class="form-label fw-semibold small mb-1">Image File</label>
               <input type="file" name="img_file" id="img-file-input"
                      accept="image/png,image/jpeg,image/webp"
                      class="form-control form-control-sm @error('img_file') is-invalid @enderror"
@@ -228,13 +230,16 @@
 
             @if($isEdit && $element->img_path)
             <div class="col-12">
-              <label class="form-label fw-semibold small">Current Image</label>
+              <label class="form-label fw-semibold small mb-1">Current Image</label>
               <div class="d-flex align-items-center gap-3">
-                <img src="{{ asset('img/builder/' . $element->img_path) }}"
-                     style="width:60px;height:60px;object-fit:contain;
-                            border-radius:8px;background:#F8F7FA;border:1px solid #EEE;padding:4px;"
-                     alt="{{ $element->name }}"/>
-                <code class="text-muted small">{{ $element->img_path }}</code>
+                <div style="width:56px;height:56px;border-radius:8px;
+                            background:var(--grey-100);border:1px solid var(--grey-200);
+                            display:flex;align-items:center;justify-content:center;padding:4px;">
+                  <img src="{{ asset('img/builder/' . $element->img_path) }}"
+                       style="width:100%;height:100%;object-fit:contain;"
+                       alt="{{ $element->name }}"/>
+                </div>
+                <code style="font-size:.72rem;color:var(--grey-400);">{{ $element->img_path }}</code>
               </div>
               <div class="form-text">Upload a new file to replace it.</div>
             </div>
@@ -247,17 +252,21 @@
 
     </div>
 
-    {{-- ══ RIGHT COLUMN — Live Preview ══════════════════════════════════════ --}}
+    {{-- RIGHT COLUMN — Live Preview ─────────────────────────────────────── --}}
     <div class="col-lg-5">
       <div class="ac-card" style="position:sticky;top:80px;">
         <div class="ac-card-header">
           <i data-lucide="eye"></i> Live Preview
         </div>
-        <div class="p-4 text-center">
 
-          <div style="background:linear-gradient(135deg,#FFF0F6,#F0F8FF);
-                      border-radius:12px; padding:20px; margin-bottom:16px;
-                      border:1px dashed #E2D9F3; min-height:130px;
+        <div class="p-4">
+
+          {{-- Preview area —  flat background, no gradient ──────────── --}}
+          <div style="background:var(--grey-50);
+                      border:1px solid var(--grey-200);
+                      border-radius:10px; padding:20px;
+                      margin-bottom:16px;
+                      min-height:130px;
                       display:flex;align-items:center;justify-content:center;">
             @if($lockedCat === 'charms')
               <div id="charm-img-preview">
@@ -269,46 +278,51 @@
                   <img id="charm-img"
                        style="width:110px;height:110px;object-fit:contain;border-radius:8px;display:none;"
                        src="" alt=""/>
-                  <span style="font-size:2.5rem;opacity:.3;">✨</span>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.3;">
+                    <i data-lucide="sparkles" style="width:32px;height:32px;"></i>
+                    <span style="font-size:.7rem;">No image</span>
+                  </div>
                 @endif
               </div>
             @else
               <canvas id="preview-canvas" width="160" height="160"
-                      style="border-radius:8px;"></canvas>
+                      style="border-radius:6px;"></canvas>
             @endif
           </div>
 
-          {{-- Summary --}}
-          <div style="font-size:.82rem;">
+          {{-- Summary ─────────────────────────────────────────────── --}}
+          <div style="font-size:.78rem;border-top:1px solid var(--grey-200);padding-top:12px;">
             <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted">Category</span>
+              <span style="color:var(--grey-400);">Category</span>
               <span class="fw-semibold">{{ ucfirst($lockedCat) }}</span>
             </div>
             @if($lockedCat !== 'charms')
             <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted">Shape</span>
-              <span id="prev-shape" class="fw-semibold font-monospace">—</span>
+              <span style="color:var(--grey-400);">Shape</span>
+              <span id="prev-shape" class="fw-semibold font-monospace" style="font-size:.72rem;">—</span>
             </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted">Color</span>
-              <span id="prev-color" class="fw-semibold">—</span>
+            <div class="d-flex justify-content-between">
+              <span style="color:var(--grey-400);">Color</span>
+              <span id="prev-color" class="fw-semibold" style="font-size:.72rem;">—</span>
             </div>
             @endif
           </div>
 
         </div>
 
-        {{-- Submit --}}
-        <div class="p-4 pt-0">
+        {{-- Submit ────────────────────────────────────────────────── --}}
+        <div class="p-4 pt-0 d-flex flex-column gap-2">
           <button type="submit" class="btn w-100 fw-bold"
-                  style="background:#FF5FA0;color:#fff;border-radius:10px;padding:10px;">
-            {{ $isEdit ? '✓ Save Changes' : '+ Add ' . ucfirst($lockedCat) }}
+                  style="background:var(--pink);color:#fff;border-radius:8px;padding:9px;font-size:.85rem;">
+            {{ $isEdit ? 'Save Changes' : 'Add ' . ucfirst($lockedCat) }}
           </button>
           <a href="{{ route('admin.elements.' . $lockedCat) }}"
-             class="btn btn-outline-secondary w-100 mt-2" style="border-radius:10px;">
+             class="btn btn-sm btn-outline-secondary w-100"
+             style="border-radius:8px;font-size:.8rem;">
             Cancel
           </a>
         </div>
+
       </div>
     </div>
 
@@ -317,17 +331,15 @@
 
 @push('scripts')
 <script>
-const isEdit     = {{ $isEdit ? 'true' : 'false' }};
-const lockedCat  = '{{ $lockedCat }}';
+const isEdit    = {{ $isEdit ? 'true' : 'false' }};
+const lockedCat = '{{ $lockedCat }}';
 
-// ── Slug auto-gen ────────────────────────────────────────────────────────
 function autoSlug(name) {
   if (isEdit) return;
   document.getElementById('slug-input').value = name.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// ── Color sync ───────────────────────────────────────────────────────────
 function syncColor(pickerId, hexVal) {
   if (/^#[0-9A-Fa-f]{6}$/.test(hexVal)) {
     document.getElementById(pickerId).value = hexVal;
@@ -335,40 +347,37 @@ function syncColor(pickerId, hexVal) {
   }
 }
 
-// ── Series slug ──────────────────────────────────────────────────────────
 function updateSeriesSlug(select) {
   const opt = select.options[select.selectedIndex];
   document.getElementById('series-slug-input').value = opt.dataset.slug || '';
 }
 
-// ── Image file preview (charms) ──────────────────────────────────────────
 function previewUploadedImage(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
   reader.onload = e => {
     const img = document.getElementById('charm-img');
     if (img) { img.src = e.target.result; img.style.display = ''; }
-    const ph = document.querySelector('#charm-img-preview span');
+    const ph = document.querySelector('#charm-img-preview div');
     if (ph) ph.style.display = 'none';
   };
   reader.readAsDataURL(input.files[0]);
 }
 
-// ── Canvas preview (beads + figures) ────────────────────────────────────
 function updatePreview() {
   if (lockedCat === 'charms') return;
 
-  const shape   = document.getElementById('shape-select')?.value || 'round';
-  const color   = document.getElementById('color-pick')?.value   || '#F9B8CF';
-  const detail  = document.getElementById('detail-pick')?.value  || '#C0136A';
+  const shape  = document.getElementById('shape-select')?.value || 'round';
+  const color  = document.getElementById('color-pick')?.value   || '#F9B8CF';
+  const detail = document.getElementById('detail-pick')?.value  || '#C0136A';
   const isSmall = document.getElementById('is_small')?.checked;
 
   const prevShape = document.getElementById('prev-shape');
   const prevColor = document.getElementById('prev-color');
   if (prevShape) prevShape.textContent = shape || '—';
   if (prevColor) prevColor.innerHTML =
-    `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;
-      background:${color};border:1px solid rgba(0,0,0,.15);
+    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;
+      background:${color};border:1px solid rgba(0,0,0,.12);
       margin-right:4px;vertical-align:middle;"></span>${color}`;
 
   const canvas = document.getElementById('preview-canvas');
