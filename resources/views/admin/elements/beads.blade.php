@@ -55,7 +55,7 @@
     </div>
   </form>
 
-  {{-- Bead grid —grouped by group ──────────────────────────────────────── --}}
+  {{-- Bead grid — grouped by group ─────────────────────────────────────── --}}
   @if($elements->isEmpty())
     <div class="text-center py-5 text-muted">
       No beads found. <a href="{{ route('admin.elements.create', ['cat'=>'beads']) }}">Add one →</a>
@@ -92,12 +92,16 @@
             </form>
           </div>
 
-          {{-- Color swatch --}}
-          <div class="swatch" style="background:{{ $el->color ?? '#DDD' }};">
-            @if(!$el->color)
-              <span>{{ strtoupper(substr($el->shape ?? '?', 0, 1)) }}</span>
-            @endif
-          </div>
+          {{-- ✦ Canvas shape preview instead of plain swatch ─────────── --}}
+          <canvas
+            class="shape-canvas"
+            width="52" height="52"
+            data-shape="{{ $el->shape ?? 'round' }}"
+            data-color="{{ $el->color ?? '#F9B8CF' }}"
+            data-detail="{{ $el->detail_color ?? '#C0136A' }}"
+            data-small="{{ $el->is_small ? '1' : '0' }}"
+            style="display:block; margin:0 auto 8px; border-radius:4px;">
+          </canvas>
 
           <div class="el-name" title="{{ $el->name }}">{{ $el->name }}</div>
           <div class="el-price">₱{{ $el->price }}</div>
@@ -130,3 +134,220 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+/* ─── Shape drawing helpers (shared with _form.blade.php) ─────────────── */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath();
+}
+
+function drawShape(ctx, shape, R, color, detail) {
+  ctx.fillStyle = color;
+
+  if (!shape || shape === 'round') {
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
+
+  } else if (shape === 'pearl') {
+    /* Pearl: circle with a subtle sheen */
+    const grad = ctx.createRadialGradient(-R*.28, -R*.28, R*.05, 0, 0, R);
+    grad.addColorStop(0,   lighten(color, 48));
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1,   darken(color, 18));
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
+
+  } else if (shape === 'ellipse') {
+    ctx.beginPath(); ctx.ellipse(0, 0, R*1.55, R*0.78, 0, 0, Math.PI*2); ctx.fill();
+
+  } else if (shape === 'tube') {
+    ctx.beginPath(); ctx.ellipse(0, 0, R*0.7, R*1.58, 0, 0, Math.PI*2); ctx.fill();
+
+  } else if (shape === 'faceted') {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++)
+      ctx.lineTo(Math.cos(i*Math.PI/3)*R, Math.sin(i*Math.PI/3)*R);
+    ctx.closePath(); ctx.fill();
+    /* facet lines */
+    ctx.strokeStyle = darken(color, 14); ctx.lineWidth = 0.8; ctx.globalAlpha = .5;
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath(); ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(i*Math.PI/3)*R, Math.sin(i*Math.PI/3)*R);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+  } else if (shape === 'heart') {
+    ctx.beginPath();
+    ctx.moveTo(0, R*0.3);
+    ctx.bezierCurveTo( R, -R*1.2,  R*2.2, R*0.4, 0, R);
+    ctx.bezierCurveTo(-R*2.2, R*0.4, -R, -R*1.2, 0, R*0.3);
+    ctx.fill();
+
+  } else if (shape === 'star') {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i%2===0 ? R : R*0.44;
+      ctx.lineTo(Math.cos(i*Math.PI/5 - Math.PI/2)*r, Math.sin(i*Math.PI/5 - Math.PI/2)*r);
+    }
+    ctx.closePath(); ctx.fill();
+
+  } else if (shape === 'moon') {
+    ctx.beginPath();
+    ctx.arc(0, 0, R, Math.PI*0.15, Math.PI*1.85, true);
+    ctx.quadraticCurveTo(-R*0.4, 0, Math.cos(Math.PI*0.15)*R, Math.sin(Math.PI*0.15)*R);
+    ctx.fill();
+
+  } else if (shape === 'flower') {
+    for (let i = 0; i < 5; i++) {
+      const a = i * Math.PI*2/5 - Math.PI/2;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(a)*R*.55, Math.sin(a)*R*.55, R*.42, R*.26, a, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle = detail;
+    ctx.beginPath(); ctx.arc(0, 0, R*.28, 0, Math.PI*2); ctx.fill();
+
+  } else if (shape === 'rainbow') {
+    ctx.beginPath();
+    ctx.arc(0, R*.2, R, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(0, R*.2, R*.55, Math.PI, 0); ctx.fill();
+
+  } else if (shape === 'butterfly') {
+    /* two wing pairs */
+    [[-.7,-1.2,.1,.2],[ .7,-1.2,-.1,.2],
+     [-.7, .8, .1,-.2],[ .7, .8,-.1,-.2]].forEach(([cx1,cy1,cx2,cy2]) => {
+      ctx.beginPath(); ctx.moveTo(0,0);
+      ctx.bezierCurveTo(cx1*R,cy1*R,cx2*R,cy2*R,0,0); ctx.fill();
+    });
+
+  } else if (shape === 'bow') {
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-R*1.4,-R*0.9,-R*1.6,R*0.4,-R*0.2,R*0.15);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    ctx.bezierCurveTo( R*1.4,-R*0.9, R*1.6,R*0.4, R*0.2,R*0.15);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = detail;
+    ctx.beginPath(); ctx.arc(0, R*0.06, R*0.28, 0, Math.PI*2); ctx.fill();
+
+  } else if (shape && shape.startsWith('cube')) {
+    drawCube(ctx, shape, R, color, detail);
+
+  } else {
+    /* fallback – round */
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function drawCube(ctx, shape, R, color, detail) {
+  const s = R * 1.75;
+  ctx.fillStyle = color;
+  ctx.beginPath(); roundRect(ctx, -s/2, -s/2, s, s, s*0.18); ctx.fill();
+
+  /* top-face highlight */
+  ctx.fillStyle = 'rgba(255,255,255,.18)';
+  ctx.beginPath(); roundRect(ctx, -s/2+2, -s/2+2, s-4, s*.42, s*0.12); ctx.fill();
+
+  if (shape === 'cube') return;
+
+  ctx.fillStyle = detail;
+
+  if (shape === 'cube-heart') {
+    const hr = R*.52;
+    ctx.beginPath();
+    ctx.moveTo(0, hr*.3);
+    ctx.bezierCurveTo( hr, -hr*1.2,  hr*2.2, hr*.4, 0, hr);
+    ctx.bezierCurveTo(-hr*2.2, hr*.4, -hr, -hr*1.2, 0, hr*.3);
+    ctx.fill();
+
+  } else if (shape === 'cube-star') {
+    const sr = R*.55;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i%2===0 ? sr : sr*.44;
+      ctx.lineTo(Math.cos(i*Math.PI/5 - Math.PI/2)*r, Math.sin(i*Math.PI/5 - Math.PI/2)*r);
+    }
+    ctx.closePath(); ctx.fill();
+
+  } else if (shape === 'cube-checker') {
+    ctx.save();
+    ctx.beginPath(); roundRect(ctx, -s/2, -s/2, s, s, s*.18); ctx.clip();
+    const cs = s/4;
+    for (let row = 0; row < 4; row++)
+      for (let col = 0; col < 4; col++)
+        if ((row+col)%2===0)
+          ctx.fillRect(-s/2+col*cs, -s/2+row*cs, cs, cs);
+    ctx.restore();
+
+  } else if (shape === 'cube-smile') {
+    ctx.beginPath(); ctx.arc(-R*.33, -R*.18, R*.12, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( R*.33, -R*.18, R*.12, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = detail; ctx.lineWidth = R*.13; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(0, R*.12, R*.36, 0.2, Math.PI-0.2); ctx.stroke();
+
+  } else {
+    const diceMap = {
+      'cube-dice1': [[0,0]],
+      'cube-dice2': [[-1,1],[1,-1]],
+      'cube-dice3': [[-1,1],[0,0],[1,-1]],
+      'cube-dice4': [[-1,-1],[1,-1],[-1,1],[1,1]],
+      'cube-dice5': [[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],
+      'cube-dice6': [[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]],
+    };
+    const dots = diceMap[shape] || [];
+    const h = (s/2)*.36, dr = R*.16;
+    dots.forEach(([dx,dy]) => {
+      ctx.beginPath(); ctx.arc(dx*h, dy*h, dr, 0, Math.PI*2); ctx.fill();
+    });
+  }
+}
+
+/* ─── Colour helpers ─────────────────────────────────────────────────────── */
+function hexToRgb(hex) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? [parseInt(r[1],16), parseInt(r[2],16), parseInt(r[3],16)] : [200,200,200];
+}
+function lighten(hex, amt) {
+  const [r,g,b] = hexToRgb(hex);
+  return `rgb(${Math.min(255,r+amt)},${Math.min(255,g+amt)},${Math.min(255,b+amt)})`;
+}
+function darken(hex, amt) {
+  const [r,g,b] = hexToRgb(hex);
+  return `rgb(${Math.max(0,r-amt)},${Math.max(0,g-amt)},${Math.max(0,b-amt)})`;
+}
+
+/* ─── Render all canvases on the page ────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('canvas.shape-canvas').forEach(canvas => {
+    const shape  = canvas.dataset.shape  || 'round';
+    const color  = canvas.dataset.color  || '#F9B8CF';
+    const detail = canvas.dataset.detail || '#C0136A';
+    const small  = canvas.dataset.small  === '1';
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    ctx.imageSmoothingEnabled = true;
+
+    /* soft drop shadow */
+    ctx.shadowColor   = 'rgba(0,0,0,.14)';
+    ctx.shadowBlur    = 4;
+    ctx.shadowOffsetY = 2;
+
+    ctx.save();
+    ctx.translate(w/2, h/2);
+    const R = small ? w*.24 : w*.36;
+    drawShape(ctx, shape, R, color, detail);
+    ctx.restore();
+  });
+});
+</script>
+@endpush
