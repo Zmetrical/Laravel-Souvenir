@@ -12,11 +12,10 @@ $productConfig = ['product' => 'keychain', 'basePrice' => 65, 'maxBeads' => $max
   <title>ArtsyCrate — Keychain Builder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="./css/style.css"/>
-</head>
+<link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/></head>
 <body>
 
-<?php include 'includes/topbar.php'; ?>
+@include('builder.includes.topbar')
 
 <div class="builder">
 
@@ -117,22 +116,21 @@ $productConfig = ['product' => 'keychain', 'basePrice' => 65, 'maxBeads' => $max
       </div>
 
     </div>
-  </div><!-- /setup-panel -->
+  </div>
+  
+  
+<!-- /setup-panel -->
 
-  <?php include 'includes/library-panel.php'; ?>
-  <?php include 'includes/canvas.php'; ?>
-  <?php include 'includes/design-panel.php'; ?>
-
-</div><!-- /builder -->
-
-<?php include 'includes/modal-preview.php'; ?>
-<?php include 'includes/modal-order.php'; ?>
-
+@include('builder.includes.library-panel')
+@include('builder.includes.canvas')
+@include('builder.includes.design-panel')
+@include('builder.includes.modal-preview')
+@include('builder.includes.modal-order')
 <div class="toast" id="toast"></div>
 
 <script>
-  window.BUILDER_PRODUCT = <?= json_encode($productConfig) ?>;
+  window.BUILDER_PRODUCT = {!! json_encode($productConfig) !!};
 </script>
-<script type="module" src="./js/main.js"></script>
+<script type="module" src="{{ asset('js/builder/main.js') }}"></script>
 </body>
 </html>

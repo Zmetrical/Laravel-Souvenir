@@ -5,7 +5,7 @@ $productLabel = $productLabel ?? 'Custom Order';
 <div class="overlay" id="order-modal">
   <div class="mbox">
     <div class="mhead pink">
-      <div class="mtitle">( Place Your Order )</div>
+<div class="mtitle">( Place Your Order )</div>
       <button class="mclose" onclick="app.ui.closeModal('order-modal')">×</button>
     </div>
     <div class="mbody">
@@ -31,7 +31,7 @@ $productLabel = $productLabel ?? 'Custom Order';
         <div class="osum">
           <div class="osum-t">Order Summary</div>
           <div class="osum-row">
-            <span id="os-prod"><?= htmlspecialchars($productLabel) ?></span>
+<span id="os-prod">{{ $productLabel }}</span>
             <span id="os-base">₱0</span>
           </div>
           <div class="osum-row">

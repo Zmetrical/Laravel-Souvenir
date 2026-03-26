@@ -56,7 +56,7 @@ $maxBeads = $maxBeads ?? 20;
           <span class="bdg teal" style="width:100%;justify-content:center;display:flex;">
             Beads:
             <span class="val" id="bead-ct" style="margin:0 3px;">0</span>
-            / <span id="bead-max" style="margin-left:3px;"><?= $maxBeads ?></span>
+/ <span id="bead-max" style="margin-left:3px;">{{ $maxBeads }}</span>
           </span>
         </div>
         <button class="tbtn t-pink" onclick="app.state.clearAll()">× Clear All</button>

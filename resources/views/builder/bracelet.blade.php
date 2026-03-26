@@ -1,26 +1,25 @@
 <?php
-$activePage   = 'necklace';
-$maxBeads     = 28;
-$productLabel = 'Necklace';
-$productConfig = ['product' => 'necklace', 'basePrice' => 100, 'maxBeads' => $maxBeads];
+$activePage   = 'bracelet';
+$maxBeads     = 20;
+$productLabel = 'Bracelet';
+$productConfig = ['product' => 'bracelet', 'basePrice' => 80, 'maxBeads' => $maxBeads];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>ArtsyCrate — Necklace Builder</title>
+  <title>ArtsyCrate — Bracelet Builder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="./css/style.css"/>
-</head>
+<link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/></head>
 <body>
 
-<?php include 'includes/topbar.php'; ?>
+@include('builder.includes.topbar')
 
 <div class="builder">
 
-  <!-- ══ SETUP PANEL — necklace-specific ═══════════════════════════════════ -->
+  <!-- ══ SETUP PANEL — bracelet-specific ════════════════════════════════════ -->
   <div class="setup-panel" id="setup-panel">
     <div class="setup-inner">
 
@@ -34,11 +33,12 @@ $productConfig = ['product' => 'necklace', 'basePrice' => 100, 'maxBeads' => $ma
             <line x1="9" y1="6" x2="11" y2="6"/>
           </svg>
         </div>
-        Necklace Setup
+        Bracelet Setup
       </div>
+
       <div class="psec open" id="sec-string">
         <div class="psec-toggle" onclick="app.ui.toggleSec('sec-string')">
-          <span class="psec-toggle-lbl">Chain / Cord &amp; Clasp</span>
+          <span class="psec-toggle-lbl">String &amp; Clasp</span>
           <svg class="psec-arr" viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
         </div>
         <div class="psec-body">
@@ -55,20 +55,20 @@ $productConfig = ['product' => 'necklace', 'basePrice' => 100, 'maxBeads' => $ma
             <div class="sw"        style="background:#EF4444;" onclick="app.ui.setStrCol('#EF4444',this)"></div>
           </div>
 
-          <div class="slbl" style="margin-bottom:8px;">Chain / Cord Type</div>
+          <div class="slbl" style="margin-bottom:8px;">String Type</div>
           <select class="sel" id="str-type" style="margin-bottom:14px;"
                   onchange="app.ui.setStrType(this.value)">
-            <option value="Chain">Chain</option>
+            <option value="Elastic">Elastic</option>
             <option value="Cord">Cord</option>
             <option value="Wire">Wire</option>
-            <option value="Elastic">Elastic</option>
+            <option value="Chain">Chain</option>
           </select>
 
           <div class="slbl" style="margin-bottom:8px;">Length</div>
           <select class="sel" id="length-sel" style="margin-bottom:14px;">
-            <option value="small">Choker — 40 cm</option>
-            <option value="medium" selected>Princess — 45 cm</option>
-            <option value="large">Matinee — 50 cm</option>
+            <option value="small">Small — 16 cm</option>
+            <option value="medium" selected>Medium — 18 cm</option>
+            <option value="large">Large — 20 cm</option>
             <option value="custom">Custom</option>
           </select>
 
@@ -82,22 +82,21 @@ $productConfig = ['product' => 'necklace', 'basePrice' => 100, 'maxBeads' => $ma
         </div>
       </div>
     </div>
-  </div><!-- /setup-panel -->
+  </div>
+  
+<!-- /setup-panel -->
 
-  <?php include 'includes/library-panel.php'; ?>
-  <?php include 'includes/canvas.php'; ?>
-  <?php include 'includes/design-panel.php'; ?>
-
-</div><!-- /builder -->
-
-<?php include 'includes/modal-preview.php'; ?>
-<?php include 'includes/modal-order.php'; ?>
+@include('builder.includes.library-panel')
+@include('builder.includes.canvas')
+@include('builder.includes.design-panel')
+@include('builder.includes.modal-preview')
+@include('builder.includes.modal-order')
 
 <div class="toast" id="toast"></div>
 
 <script>
-  window.BUILDER_PRODUCT = <?= json_encode($productConfig) ?>;
+  window.BUILDER_PRODUCT = {!! json_encode($productConfig) !!};
 </script>
-<script type="module" src="./js/main.js"></script>
+<script type="module" src="{{ asset('js/builder/main.js') }}"></script>
 </body>
 </html>
