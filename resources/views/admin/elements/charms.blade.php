@@ -32,11 +32,11 @@
       <input type="text" name="search" value="{{ request('search') }}"
              placeholder="Search charms..." style="width:180px;"/>
 
-      <select name="series" style="width:160px;">
-        <option value="">All Series</option>
-        @foreach($seriesList as $s)
-          <option value="{{ $s->id }}" {{ request('series') == $s->id ? 'selected' : '' }}>
-            {{ $s->name }}
+      <select name="group" style="width:160px;">
+        <option value="">All Groups</option>
+        @foreach($groups as $g)
+          <option value="{{ $g }}" {{ request('group') === $g ? 'selected' : '' }}>
+            {{ $g }}
           </option>
         @endforeach
       </select>
@@ -57,24 +57,24 @@
     </div>
   </form>
 
-  {{-- Charm image grid — grouped by series ─────────────────────────────── --}}
+  {{-- Charm image grid — grouped by group ──────────────────────────────── --}}
   @if($elements->isEmpty())
     <div class="text-center py-5 text-muted">
       No charms found. <a href="{{ route('admin.elements.create', ['cat'=>'charms']) }}">Add one →</a>
     </div>
   @else
     @php
-      $grouped = $elements->groupBy(fn($el) => $el->series?->name ?? 'No Series');
+      $grouped = $elements->groupBy(fn($el) => $el->group ?? 'Ungrouped');
     @endphp
 
-    @foreach($grouped as $seriesName => $items)
+    @foreach($grouped as $groupName => $items)
 
-      {{-- Series header --}}
+      {{-- Group header --}}
       <div style="padding: 14px 16px 4px;
                   font-size:.72rem; font-weight:700; text-transform:uppercase;
                   letter-spacing:.08em; color:#999;
                   border-top: 1px solid #EEEDF3;">
-        {{ $seriesName }}
+        {{ $groupName }}
         <span style="font-weight:400;color:#CCC;margin-left:6px;">{{ $items->count() }}</span>
       </div>
 
@@ -113,7 +113,7 @@
 
           <div class="charm-info">
             <div class="charm-name" title="{{ $el->name }}">{{ $el->name }}</div>
-            <div class="charm-series">{{ $el->series?->name ?? '—' }}</div>
+            <div class="charm-series">{{ $el->group ?? '—' }}</div>
             <div class="charm-price">₱{{ $el->price }}</div>
             <div class="mt-1">
               <span class="badge stock-{{ $el->stock }}" style="font-size:.6rem;">
@@ -144,5 +144,5 @@
 @endsection
 
 @push('scripts')
-@vite(['resources/js/shapes.js']) 
+@vite(['resources/js/shapes.js'])
 @endpush

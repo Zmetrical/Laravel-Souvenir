@@ -4,34 +4,32 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\builder\Element;
-use App\Models\builder\ElementSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ElementController extends Controller
 {
     // ── GET /admin/elements ────────────────────────────────────────────────
-    // Overview dashboard — shows counts + quick stats per category
     public function overview()
     {
         $stats = [
             'beads' => [
-                'total'    => Element::where('category', 'beads')->count(),
-                'active'   => Element::where('category', 'beads')->where('is_active', true)->count(),
-                'low'      => Element::where('category', 'beads')->where('stock', 'low')->count(),
-                'out'      => Element::where('category', 'beads')->where('stock', 'out')->count(),
+                'total'  => Element::where('category', 'beads')->count(),
+                'active' => Element::where('category', 'beads')->where('is_active', true)->count(),
+                'low'    => Element::where('category', 'beads')->where('stock', 'low')->count(),
+                'out'    => Element::where('category', 'beads')->where('stock', 'out')->count(),
             ],
             'figures' => [
-                'total'    => Element::where('category', 'figures')->count(),
-                'active'   => Element::where('category', 'figures')->where('is_active', true)->count(),
-                'low'      => Element::where('category', 'figures')->where('stock', 'low')->count(),
-                'out'      => Element::where('category', 'figures')->where('stock', 'out')->count(),
+                'total'  => Element::where('category', 'figures')->count(),
+                'active' => Element::where('category', 'figures')->where('is_active', true)->count(),
+                'low'    => Element::where('category', 'figures')->where('stock', 'low')->count(),
+                'out'    => Element::where('category', 'figures')->where('stock', 'out')->count(),
             ],
             'charms' => [
-                'total'    => Element::where('category', 'charms')->count(),
-                'active'   => Element::where('category', 'charms')->where('is_active', true)->count(),
-                'low'      => Element::where('category', 'charms')->where('stock', 'low')->count(),
-                'out'      => Element::where('category', 'charms')->where('stock', 'out')->count(),
+                'total'  => Element::where('category', 'charms')->count(),
+                'active' => Element::where('category', 'charms')->where('is_active', true)->count(),
+                'low'    => Element::where('category', 'charms')->where('stock', 'low')->count(),
+                'out'    => Element::where('category', 'charms')->where('stock', 'out')->count(),
             ],
         ];
 
@@ -43,15 +41,9 @@ class ElementController extends Controller
     {
         $query = Element::where('category', 'beads')->latest();
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-        if ($request->filled('stock')) {
-            $query->where('stock', $request->stock);
-        }
-        if ($request->filled('group')) {
-            $query->where('group', $request->group);
-        }
+        if ($request->filled('search')) $query->where('name', 'like', '%' . $request->search . '%');
+        if ($request->filled('stock'))  $query->where('stock', $request->stock);
+        if ($request->filled('group'))  $query->where('group', $request->group);
 
         $elements = $query->paginate(40)->withQueryString();
         $groups   = Element::where('category', 'beads')->whereNotNull('group')->distinct()->pluck('group');
@@ -64,15 +56,9 @@ class ElementController extends Controller
     {
         $query = Element::where('category', 'figures')->latest();
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-        if ($request->filled('stock')) {
-            $query->where('stock', $request->stock);
-        }
-        if ($request->filled('group')) {
-            $query->where('group', $request->group);
-        }
+        if ($request->filled('search')) $query->where('name', 'like', '%' . $request->search . '%');
+        if ($request->filled('stock'))  $query->where('stock', $request->stock);
+        if ($request->filled('group'))  $query->where('group', $request->group);
 
         $elements = $query->paginate(40)->withQueryString();
         $groups   = Element::where('category', 'figures')->whereNotNull('group')->distinct()->pluck('group');
@@ -83,91 +69,153 @@ class ElementController extends Controller
     // ── GET /admin/elements/charms ─────────────────────────────────────────
     public function charms(Request $request)
     {
-        $query = Element::with('series')->where('category', 'charms')->latest();
+        $query = Element::where('category', 'charms')->latest();
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-        if ($request->filled('stock')) {
-            $query->where('stock', $request->stock);
-        }
-        if ($request->filled('series')) {
-            $query->where('series_id', $request->series);
-        }
+        if ($request->filled('search')) $query->where('name', 'like', '%' . $request->search . '%');
+        if ($request->filled('stock'))  $query->where('stock', $request->stock);
+        if ($request->filled('group'))  $query->where('group', $request->group);
 
-        $elements   = $query->paginate(24)->withQueryString();
-        $seriesList = ElementSeries::where('is_active', true)->orderBy('name')->get();
+        $elements = $query->paginate(24)->withQueryString();
+        $groups   = Element::where('category', 'charms')->whereNotNull('group')->distinct()->pluck('group');
 
-        return view('admin.elements.charms', compact('elements', 'seriesList'));
+        return view('admin.elements.charms', compact('elements', 'groups'));
     }
 
     // ── GET /admin/elements/create ─────────────────────────────────────────
-    // Accepts ?cat=beads|figures|charms to pre-select + lock category
     public function create(Request $request)
     {
-        $seriesList  = ElementSeries::where('is_active', true)->orderBy('name')->get();
         $preCategory = $request->query('cat', 'beads');
-
-        return view('admin.elements.create', compact('seriesList', 'preCategory'));
+        return view('admin.elements.create', compact('preCategory'));
     }
-
-
 
     // ── POST /admin/elements ───────────────────────────────────────────────
     public function store(Request $request)
     {
-            // ── Bulk mode ────────────────────────────────────────────────────────
-    if ($request->input('_mode') === 'bulk') {
+        // ── Bulk mode ─────────────────────────────────────────────────────
+        if ($request->input('_mode') === 'bulk') {
 
-        $request->validate([
-            'category'       => 'required|in:beads,figures,charms',
-            'shape'          => 'required|string',
-            'name'           => 'required|string|max:120',
-            'slug'           => 'required|string|max:120',
-            'group'          => 'nullable|string|max:80',
-            'price'          => 'required|numeric|min:1',
-            'stock'          => 'required|in:in,low,out',
-            'variations'     => 'required|array|min:1',
-            'variations.*.color'  => 'required|string|max:20',
-            'variations.*.detail' => 'required|string|max:20',
-        ]);
+            // ── Charm bulk (each variation has its own image) ──────────────
+            if ($request->input('category') === 'charms') {
+                $request->validate([
+                    'category'  => 'required|in:beads,figures,charms',
+                    'name'      => 'required|string|max:120',
+                    'slug'      => 'required|string|max:120',
+                    'group'     => 'nullable|string|max:80',
+                    'price'     => 'required|numeric|min:1',
+                    'stock'     => 'required|in:in,low,out',
+                    'variations' => 'required|array|min:1',
+                    'variations.*.suffix' => 'nullable|string|max:80',
+                ]);
 
-        $created = 0;
-        foreach ($request->variations as $v) {
-            $suffix = trim($v['suffix'] ?? '');
-            $name   = $suffix ? $request->name . ' ' . $suffix : $request->name;
-            $slug   = $suffix
-                ? $request->slug . '-' . Str::slug($suffix)
-                : $request->slug;
+                $folder   = Str::slug($request->group ?? 'charms');
+                $varFiles = $request->file('variations') ?? [];
+                $created  = 0;
 
-            // Ensure slug is unique
-            $slug = $this->uniqueSlug($slug);
+                // Create the primary charm (top-level img_file)
+                $primarySlug    = $this->uniqueSlug($request->slug);
+                $primaryImgPath = null;
+                if ($request->hasFile('img_file')) {
+                    $primaryImgPath = $this->handleImageUpload($request, $folder);
+                }
+                Element::create([
+                    'category'  => 'charms',
+                    'name'      => $request->name,
+                    'slug'      => $primarySlug,
+                    'group'     => $request->group,
+                    'price'     => $request->price,
+                    'stock'     => $request->stock,
+                    'is_active' => $request->boolean('is_active'),
+                    'is_large'  => $request->boolean('is_large'),
+                    'img_path'  => $primaryImgPath,
+                    'use_img'   => !empty($primaryImgPath),
+                ]);
+                $created++;
 
-            Element::create([
-                'category'     => $request->category,
-                'shape'        => $request->shape,
-                'name'         => $name,
-                'slug'         => $slug,
-                'group'        => $request->group,
-                'price'        => $request->price,
-                'stock'        => $request->stock,
-                'is_active'    => $request->boolean('is_active'),
-                'color'        => $v['color'],
-                'detail_color' => $v['detail'],
+                // Create each additional variation
+                foreach ($request->variations as $idx => $v) {
+                    $suffix = trim($v['suffix'] ?? '');
+                    $name   = $suffix ? $request->name . ' ' . $suffix : $request->name;
+                    $base   = $suffix
+                        ? $request->slug . '-' . Str::slug($suffix)
+                        : $request->slug;
+                    $slug   = $this->uniqueSlug($base);
+
+                    $imgPath = null;
+                    if (isset($varFiles[$idx]['img_file'])) {
+                        $imgPath = $this->handleImageFile($varFiles[$idx]['img_file'], $folder);
+                    }
+
+                    Element::create([
+                        'category'  => 'charms',
+                        'name'      => $name,
+                        'slug'      => $slug,
+                        'group'     => $request->group,
+                        'price'     => $request->price,
+                        'stock'     => $request->stock,
+                        'is_active' => $request->boolean('is_active'),
+                        'is_large'  => $request->boolean('is_large'),
+                        'img_path'  => $imgPath,
+                        'use_img'   => !empty($imgPath),
+                    ]);
+                    $created++;
+                }
+
+                return redirect()
+                    ->route('admin.elements.charms')
+                    ->with('success', "{$created} charm(s) created successfully!");
+            }
+
+            // ── Bead / Figure bulk (color variations) ─────────────────────
+            $request->validate([
+                'category'           => 'required|in:beads,figures,charms',
+                'shape'              => 'required|string',
+                'name'               => 'required|string|max:120',
+                'slug'               => 'required|string|max:120',
+                'group'              => 'nullable|string|max:80',
+                'price'              => 'required|numeric|min:1',
+                'stock'              => 'required|in:in,low,out',
+                'variations'         => 'required|array|min:1',
+                'variations.*.color'  => 'required|string|max:20',
+                'variations.*.detail' => 'required|string|max:20',
             ]);
-            $created++;
+
+            $created = 0;
+            foreach ($request->variations as $v) {
+                $suffix = trim($v['suffix'] ?? '');
+                $name   = $suffix ? $request->name . ' ' . $suffix : $request->name;
+                $base   = $suffix
+                    ? $request->slug . '-' . Str::slug($suffix)
+                    : $request->slug;
+                $slug   = $this->uniqueSlug($base);
+
+                Element::create([
+                    'category'     => $request->category,
+                    'shape'        => $request->shape,
+                    'name'         => $name,
+                    'slug'         => $slug,
+                    'group'        => $request->group,
+                    'price'        => $request->price,
+                    'stock'        => $request->stock,
+                    'is_active'    => $request->boolean('is_active'),
+                    'color'        => $v['color'],
+                    'detail_color' => $v['detail'],
+                ]);
+                $created++;
+            }
+
+            return redirect()
+                ->route('admin.elements.' . $request->category)
+                ->with('success', "{$created} variation(s) created successfully!");
         }
 
-        return redirect()
-            ->route('admin.elements.' . $request->category)
-            ->with('success', "{$created} variation(s) created successfully!");
-    }
+        // ── Single mode ────────────────────────────────────────────────────
         $validated = $this->validateElement($request);
 
         if ($request->hasFile('img_file')) {
-            $validated['img_path'] = $this->handleImageUpload($request, $validated['series_slug'] ?? 'charms');
+            $folder = Str::slug($validated['group'] ?? 'charms');
+            $validated['img_path'] = $this->handleImageUpload($request, $folder);
         }
-        unset($validated['series_slug'], $validated['img_file']);
+        unset($validated['img_file']);
 
         if (empty($validated['slug'])) {
             $validated['slug'] = $this->generateSlug($validated['name']);
@@ -175,40 +223,16 @@ class ElementController extends Controller
 
         Element::create($validated);
 
-        // Redirect back to the right category page
-        $category = $validated['category'];
-        return redirect()->route('admin.elements.' . $category)
+        return redirect()
+            ->route('admin.elements.' . $validated['category'])
             ->with('success', 'Element "' . $validated['name'] . '" added successfully.');
-    }
-
-    
-    private function uniqueSlug(string $base): string
-    {
-        $slug = $base;
-        $i    = 2;
-        while (Element::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $i++;
-            if (empty($validated['slug'])) {
-                $validated['slug'] = $this->generateSlug($validated['name']);
-            }
-
-            Element::create($validated);
-
-            // Redirect back to the right category page
-            $category = $validated['category'];
-            return redirect()->route('admin.elements.' . $category)
-                ->with('success', 'Element "' . $validated['name'] . '" added successfully.');
-        }
-        return $slug;
     }
 
     // ── GET /admin/elements/{element}/edit ─────────────────────────────────
     public function edit(Element $element)
     {
-        $seriesList  = ElementSeries::where('is_active', true)->orderBy('name')->get();
         $preCategory = $element->category;
-
-        return view('admin.elements.edit', compact('element', 'seriesList', 'preCategory'));
+        return view('admin.elements.edit', compact('element', 'preCategory'));
     }
 
     // ── PUT /admin/elements/{element} ──────────────────────────────────────
@@ -221,14 +245,15 @@ class ElementController extends Controller
                 $oldPath = public_path('img/builder/' . $element->img_path);
                 if (file_exists($oldPath)) unlink($oldPath);
             }
-            $validated['img_path'] = $this->handleImageUpload($request, $validated['series_slug'] ?? 'charms');
+            $folder = Str::slug($validated['group'] ?? 'charms');
+            $validated['img_path'] = $this->handleImageUpload($request, $folder);
         }
-        unset($validated['series_slug'], $validated['img_file']);
+        unset($validated['img_file']);
 
         $element->update($validated);
 
-        $category = $element->category;
-        return redirect()->route('admin.elements.' . $category)
+        return redirect()
+            ->route('admin.elements.' . $element->category)
             ->with('success', 'Element "' . $element->name . '" updated successfully.');
     }
 
@@ -245,7 +270,8 @@ class ElementController extends Controller
         $name = $element->name;
         $element->delete();
 
-        return redirect()->route('admin.elements.' . $category)
+        return redirect()
+            ->route('admin.elements.' . $category)
             ->with('success', 'Element "' . $name . '" deleted.');
     }
 
@@ -268,8 +294,6 @@ class ElementController extends Controller
             'use_img'      => 'boolean',
             'img_path'     => 'nullable|string|max:255',
             'img_file'     => 'nullable|image|mimes:png,jpg,webp|max:2048',
-            'series_id'    => 'nullable|exists:element_series,id',
-            'series_slug'  => 'nullable|string',
             'is_small'     => 'boolean',
             'is_large'     => 'boolean',
             'price'        => 'required|integer|min:1|max:9999',
@@ -278,31 +302,40 @@ class ElementController extends Controller
         ]);
     }
 
-    private function handleImageUpload(Request $request, string $seriesSlug): string
+    /** Handle a file from $request->file('img_file') */
+    private function handleImageUpload(Request $request, string $folderName): string
     {
-        $file   = $request->file('img_file');
-        $folder = public_path('img/builder/' . $seriesSlug);
+        return $this->handleImageFile($request->file('img_file'), $folderName);
+    }
 
-        if (!is_dir($folder)) mkdir($folder, 0755, true);
+    /** Handle an already-resolved UploadedFile instance */
+    private function handleImageFile(\Illuminate\Http\UploadedFile $file, string $folderName): string
+    {
+        $dir = public_path('img/builder/' . $folderName);
+
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         $filename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))
                   . '.' . $file->getClientOriginalExtension();
 
-        $file->move($folder, $filename);
+        $file->move($dir, $filename);
 
-        return $seriesSlug . '/' . $filename;
+        return $folderName . '/' . $filename;
+    }
+
+    /** Return a slug that does not yet exist in the elements table */
+    private function uniqueSlug(string $base): string
+    {
+        $slug = $base;
+        $i    = 2;
+        while (Element::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+        return $slug;
     }
 
     private function generateSlug(string $name): string
     {
-        $base = Str::slug($name, '-');
-        $slug = $base;
-        $i    = 1;
-
-        while (Element::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $i++;
-        }
-
-        return $slug;
+        return $this->uniqueSlug(Str::slug($name, '-'));
     }
 }

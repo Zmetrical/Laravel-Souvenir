@@ -2,7 +2,6 @@
   Shared form partial — used by create.blade.php and edit.blade.php
   Variables:
     $element     — Element model (or absent for create)
-    $seriesList  — collection of ElementSeries
     $action      — form action URL
     $method      — 'POST' or 'PUT'
     $preCategory — 'beads' | 'figures' | 'charms'  (locks the category radio)
@@ -34,7 +33,6 @@
 
   $allShapes = $allShapes[$lockedCat] ?? [];
 
-  // Build shape → group lookup for JS auto-fill
   $shapeToGroup = [];
   foreach ($allShapes as $grp => $opts) {
     foreach ($opts as $s) {
@@ -47,8 +45,8 @@
     'figures' => ['label' => 'Figure', 'color' => '#93C5FD', 'text' => '#1D4ED8', 'icon' => 'square'],
     'charms'  => ['label' => 'Charm',  'color' => '#C4B5FD', 'text' => '#7C3AED', 'icon' => 'sparkles'],
   ];
-  $meta      = $catMeta[$lockedCat];
-  $catLabel  = $meta['label'];
+  $meta     = $catMeta[$lockedCat];
+  $catLabel = $meta['label'];
 @endphp
 
 <style>
@@ -64,6 +62,9 @@
   border: 1.5px solid var(--grey-150, #ebebeb);
   transition: border-color .15s, box-shadow .15s;
   position: relative;
+}
+.var-row.charm-row {
+  grid-template-columns: 48px 1fr 1fr 36px;
 }
 .var-row:hover {
   border-color: #f7cfe0;
@@ -142,6 +143,9 @@
   text-transform: uppercase; letter-spacing: .07em;
   color: var(--grey-300, #bbb);
 }
+.var-col-headers.charm-headers {
+  grid-template-columns: 48px 1fr 1fr 36px;
+}
 
 /* ── Variation section divider ───────────────────────────────────────────── */
 .var-divider {
@@ -157,13 +161,26 @@
 /* ── Hex mini input ──────────────────────────────────────────────────────── */
 .var-hex { font-size:.7rem!important; font-family:monospace!important;
            padding:3px 5px!important; height:28px!important; width:80px!important; }
+
+/* ── Charm thumb in variation rows ──────────────────────────────────────── */
+.charm-var-thumb {
+  width: 40px; height: 40px; border-radius: 7px;
+  overflow: hidden;
+  background: var(--grey-100);
+  border: 1px solid var(--grey-200);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.charm-var-thumb img {
+  width: 100%; height: 100%; object-fit: contain; display: none;
+}
 </style>
 
 <form action="{{ $action }}" method="POST" enctype="multipart/form-data" id="element-form">
   @csrf
   @if($method === 'PUT') @method('PUT') @endif
   <input type="hidden" name="category" value="{{ $lockedCat }}"/>
-  <input type="hidden" name="_mode"    id="mode-input" value="single"/>
+  <input type="hidden" name="_mode" id="mode-input" value="single"/>
 
   <div class="row g-4">
 
@@ -212,12 +229,21 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-semibold small mb-1">Group</label>
+              <label class="form-label fw-semibold small mb-1">
+                Group
+                @if($lockedCat === 'charms')
+                  <span class="text-muted fw-normal" style="font-size:.7rem;">
+                    (replaces series — used to organise charms)
+                  </span>
+                @endif
+              </label>
               <input type="text" name="group" id="group-input"
                      value="{{ $old('group') }}"
                      class="form-control form-control-sm"
-                     placeholder="Auto-fills on shape pick"/>
+                     placeholder="{{ $lockedCat === 'charms' ? 'e.g. Sanrio, Animals…' : 'Auto-fills on shape pick' }}"/>
+              @if($lockedCat !== 'charms')
               <div class="form-text">Auto-filled when you pick a shape.</div>
+              @endif
             </div>
 
             <div class="col-md-3">
@@ -270,11 +296,10 @@
         </div>
       </div>
 
-      {{-- Shape & Colors + Variations (beads + figures only) ───────────── --}}
+      {{-- ── Shape & Colors + Variations (beads + figures only) ──────────── --}}
       @if($lockedCat !== 'charms')
       <div class="ac-card mb-3">
 
-        {{-- Card header ──────────────────────────────────────────────────── --}}
         <div class="ac-card-header">
           <i data-lucide="shapes"></i>
           Shape &amp; Colors
@@ -293,7 +318,6 @@
         <div class="p-4">
           <div class="row g-3">
 
-            {{-- Shape picker ─────────────────────────────────────────────── --}}
             <div class="col-12">
               <label class="form-label fw-semibold small mb-2">
                 Shape <span class="text-danger">*</span>
@@ -357,7 +381,6 @@
               <div style="border:1.5px solid var(--grey-150,#ebebeb);
                           border-radius:13px;overflow:hidden;">
 
-                {{-- Primary color pickers ──────────────────────────────── --}}
                 <div style="padding:16px;">
                   <div class="row g-3">
                     <div class="col-md-6">
@@ -399,16 +422,11 @@
                   </div>
                 </div>
 
-                {{-- Variations panel ────────────────────────────────────── --}}
                 @if(!$isEdit)
                 <div id="var-section-body" style="display:none;
                      border-top:1.5px solid var(--grey-100,#f2f2f2);">
-
                   <div style="padding:14px 16px 16px;">
-
                     <div class="var-divider">Additional Variations</div>
-
-                    {{-- Column headers ────────────────────────────────── --}}
                     <div class="var-col-headers">
                       <span></span>
                       <span>Name Suffix</span>
@@ -416,20 +434,16 @@
                       <span></span>
                       <span>Detail</span>
                     </div>
-
-                    {{-- Primary locked row ────────────────────────────── --}}
                     <div class="var-row is-primary mb-2">
                       <canvas id="primary-var-canvas" width="36" height="36"
                               data-color="{{ $old('color', '#F9B8CF') }}"
                               data-detail="{{ $old('detail_color', '#C0136A') }}"
                               style="border-radius:50%;display:block;flex-shrink:0;"></canvas>
-
                       <span id="primary-var-name"
                             style="font-size:.78rem;font-weight:600;color:var(--grey-600);
                                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         {{ $old('name') ?: '(base name)' }}
                       </span>
-
                       <div class="d-flex gap-2 align-items-center"
                            style="opacity:.5;pointer-events:none;cursor:default;">
                         <div id="primary-main-chip"
@@ -441,21 +455,14 @@
                                     background:{{ $old('detail_color', '#C0136A') }};
                                     border:1.5px solid rgba(0,0,0,.08);"></div>
                       </div>
-
-                      {{-- grid spacers --}}
                       <span></span><span></span>
                     </div>
-
-                    {{-- Extra variation rows ──────────────────────────── --}}
                     <div id="variation-list" class="d-flex flex-column gap-2"></div>
-
-                    {{-- Add button ────────────────────────────────────── --}}
                     <button type="button" id="add-var-btn"
                             onclick="addVariation()" class="mt-2">
                       <i data-lucide="plus" style="width:13px;height:13px;"></i>
                       Add Color Variation
                     </button>
-
                   </div>
                 </div>
                 @endif
@@ -468,60 +475,117 @@
       </div>
       @endif
 
-      {{-- Charm Image (charms only) ────────────────────────────────────── --}}
+      {{-- ── Charm Image + Variations (charms only) ───────────────────────── --}}
       @if($lockedCat === 'charms')
       <div class="ac-card mb-3">
+
         <div class="ac-card-header">
-          <i data-lucide="image"></i> Charm Image
-        </div>
-        <div class="p-4">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small mb-1">
-                Series <span class="text-danger">*</span>
-              </label>
-              <select name="series_id" id="series-select"
-                      class="form-select form-select-sm @error('series_id') is-invalid @enderror"
-                      onchange="updateSeriesSlug(this)">
-                <option value="">— Select series —</option>
-                @foreach($seriesList as $series)
-                  <option value="{{ $series->id }}"
-                          data-slug="{{ $series->slug }}"
-                          {{ $old('series_id') == $series->id ? 'selected' : '' }}>
-                    {{ $series->name }}
-                  </option>
-                @endforeach
-              </select>
-              <input type="hidden" name="series_slug" id="series-slug-input"
-                     value="{{ $isEdit ? $element->series?->slug : '' }}"/>
-              @error('series_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small mb-1">Image File</label>
-              <input type="file" name="img_file" id="img-file-input"
-                     accept="image/png,image/jpeg,image/webp"
-                     class="form-control form-control-sm @error('img_file') is-invalid @enderror"
-                     onchange="previewUploadedImage(this)"/>
-              <div class="form-text">PNG recommended (transparent background).</div>
-              @error('img_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            @if($isEdit && $element->img_path)
-            <div class="col-12">
-              <label class="form-label fw-semibold small mb-1">Current Image</label>
-              <div class="d-flex align-items-center gap-3">
-                <div style="width:56px;height:56px;border-radius:8px;
-                            background:var(--grey-100);border:1px solid var(--grey-200);
-                            display:flex;align-items:center;justify-content:center;padding:4px;">
-                  <img src="{{ asset('img/builder/' . $element->img_path) }}"
-                       style="width:100%;height:100%;object-fit:contain;"
-                       alt="{{ $element->name }}"/>
-                </div>
-                <code style="font-size:.72rem;color:var(--grey-400);">{{ $element->img_path }}</code>
-              </div>
-              <div class="form-text">Upload a new file to replace it.</div>
-            </div>
-            @endif
+          <i data-lucide="image"></i>
+          Charm Image
+          @if(!$isEdit)
+          <div class="ms-auto">
+            <button type="button" id="var-toggle-btn" onclick="toggleVarSection()">
+              <i data-lucide="layers" style="width:13px;height:13px;"></i>
+              <span id="var-toggle-label">+ Variations</span>
+              <i data-lucide="chevron-down" id="var-chevron"
+                 style="width:12px;height:12px;transition:transform .2s;display:none;"></i>
+            </button>
           </div>
+          @endif
+        </div>
+
+        {{-- Unified image + variation container --}}
+        <div style="border:1.5px solid var(--grey-150,#ebebeb);
+                    border-radius:13px;overflow:hidden;margin:16px;">
+
+          {{-- Primary image input ─────────────────────────────────────── --}}
+          <div style="padding:16px;">
+            <div class="row g-3">
+              <div class="{{ ($isEdit && $element->img_path) ? 'col-md-6' : 'col-12' }}">
+                <label class="form-label fw-semibold small mb-1">
+                  Image File
+                  @if(!$isEdit)
+                    <small class="text-muted fw-normal">(primary)</small>
+                  @endif
+                </label>
+                <input type="file" name="img_file" id="img-file-input"
+                       accept="image/png,image/jpeg,image/webp"
+                       class="form-control form-control-sm @error('img_file') is-invalid @enderror"
+                       onchange="previewUploadedImage(this); syncPrimaryCharmRow(this)"/>
+                <div class="form-text">PNG recommended (transparent background).</div>
+                @error('img_file') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+
+              @if($isEdit && $element->img_path)
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small mb-1">Current Image</label>
+                <div class="d-flex align-items-center gap-3">
+                  <div style="width:48px;height:48px;border-radius:8px;
+                              background:var(--grey-100);border:1px solid var(--grey-200);
+                              display:flex;align-items:center;justify-content:center;padding:3px;">
+                    <img src="{{ asset('img/builder/' . $element->img_path) }}"
+                         style="width:100%;height:100%;object-fit:contain;"
+                         alt="{{ $element->name }}"/>
+                  </div>
+                  <code style="font-size:.68rem;color:var(--grey-400);">{{ $element->img_path }}</code>
+                </div>
+                <div class="form-text">Upload a new file to replace it.</div>
+              </div>
+              @endif
+            </div>
+          </div>
+
+          {{-- Variation panel (create mode only) ─────────────────────── --}}
+          @if(!$isEdit)
+          <div id="var-section-body" style="display:none;
+               border-top:1.5px solid var(--grey-100,#f2f2f2);">
+            <div style="padding:14px 16px 16px;">
+
+              <div class="var-divider">Additional Variations</div>
+
+              {{-- Column headers --}}
+              <div class="var-col-headers charm-headers">
+                <span></span>
+                <span>Name Suffix</span>
+                <span>Image File</span>
+                <span></span>
+              </div>
+
+              {{-- Primary locked row --}}
+              <div class="var-row charm-row is-primary mb-2">
+                <div id="primary-charm-thumb" class="charm-var-thumb">
+                  <img id="primary-charm-img" src="" alt="" style="display:none;"/>
+                  <i data-lucide="image" id="primary-charm-icon"
+                     style="width:14px;height:14px;color:var(--grey-400);"></i>
+                </div>
+
+                <span id="primary-var-name"
+                      style="font-size:.78rem;font-weight:600;color:var(--grey-600);
+                             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  {{ $old('name') ?: '(base name)' }}
+                </span>
+
+                <span style="font-size:.72rem;color:var(--grey-400);font-style:italic;">
+                  image from above ↑
+                </span>
+
+                <span></span>
+              </div>
+
+              {{-- Extra variation rows --}}
+              <div id="variation-list" class="d-flex flex-column gap-2"></div>
+
+              {{-- Add button --}}
+              <button type="button" id="add-var-btn"
+                      onclick="addCharmVariation()" class="mt-2">
+                <i data-lucide="plus" style="width:13px;height:13px;"></i>
+                Add Image Variation
+              </button>
+
+            </div>
+          </div>
+          @endif
+
         </div>
       </div>
       @endif
@@ -537,13 +601,12 @@
                 style="font-size:.68rem;font-family:monospace;
                        background:var(--grey-100);color:var(--grey-600);
                        padding:2px 8px;border-radius:4px;">
-            {{ $old('shape', $isEdit ? ($element->shape ?? '—') : '—') }}
+            {{ $lockedCat === 'charms' ? 'charm' : ($old('shape', $isEdit ? ($element->shape ?? '—') : '—')) }}
           </span>
         </div>
 
         <div class="p-4">
 
-          {{-- Big canvas ───────────────────────────────────────────────── --}}
           <div style="background:var(--grey-50);
                       border:1px solid var(--grey-200);
                       border-radius:12px; padding:20px;
@@ -579,15 +642,13 @@
             @endif
           </div>
 
-          {{-- Color chips ──────────────────────────────────────────────── --}}
           @if($lockedCat !== 'charms')
           <div class="d-flex gap-2 mb-3 align-items-center">
             <div id="prev-main-chip"
                  style="width:22px;height:22px;border-radius:50%;
                         background:{{ $old('color', $isEdit ? ($element->color ?? '#F9B8CF') : '#F9B8CF') }};
                         border:2px solid rgba(0,0,0,.08);flex-shrink:0;"></div>
-            <span id="prev-main-hex"
-                  style="font-size:.72rem;font-family:monospace;color:var(--grey-600);">
+            <span id="prev-main-hex" style="font-size:.72rem;font-family:monospace;color:var(--grey-600);">
               {{ $old('color', $isEdit ? ($element->color ?? '#F9B8CF') : '#F9B8CF') }}
             </span>
             <div style="width:1px;height:14px;background:var(--grey-200);"></div>
@@ -595,14 +656,12 @@
                  style="width:22px;height:22px;border-radius:50%;
                         background:{{ $old('detail_color', $isEdit ? ($element->detail_color ?? '#C0136A') : '#C0136A') }};
                         border:2px solid rgba(0,0,0,.08);flex-shrink:0;"></div>
-            <span id="prev-detail-hex"
-                  style="font-size:.72rem;font-family:monospace;color:var(--grey-600);">
+            <span id="prev-detail-hex" style="font-size:.72rem;font-family:monospace;color:var(--grey-600);">
               {{ $old('detail_color', $isEdit ? ($element->detail_color ?? '#C0136A') : '#C0136A') }}
             </span>
           </div>
           @endif
 
-          {{-- Summary ──────────────────────────────────────────────────── --}}
           <div style="font-size:.78rem;border-top:1px solid var(--grey-200);padding-top:12px;">
             <div class="d-flex justify-content-between mb-1">
               <span style="color:var(--grey-400);">Category</span>
@@ -611,8 +670,7 @@
             @if($lockedCat !== 'charms')
             <div class="d-flex justify-content-between mb-1">
               <span style="color:var(--grey-400);">Shape</span>
-              <span id="prev-shape-label" class="fw-semibold font-monospace"
-                    style="font-size:.72rem;">
+              <span id="prev-shape-label" class="fw-semibold font-monospace" style="font-size:.72rem;">
                 {{ $old('shape', $isEdit ? ($element->shape ?? '—') : '—') }}
               </span>
             </div>
@@ -623,8 +681,7 @@
               </span>
             </div>
             @endif
-            @if(!$isEdit && $lockedCat !== 'charms')
-            {{-- "Creating X elements" row — hidden until variations exist --}}
+            @if(!$isEdit)
             <div class="d-flex justify-content-between" id="creating-row"
                  style="display:none!important;
                         padding-top:8px;margin-top:6px;
@@ -657,7 +714,7 @@
               <span id="smart-submit-label">
                 {{ $isEdit ? 'Save Changes' : 'Add ' . $catLabel }}
               </span>
-              @if(!$isEdit && $lockedCat !== 'charms')
+              @if(!$isEdit)
               <span class="btn-sub" id="smart-submit-sub" style="display:none;"></span>
               @endif
             </span>
@@ -708,11 +765,6 @@ function syncColor(pickerId, hexVal) {
   }
 }
 
-function updateSeriesSlug(select) {
-  const opt = select.options[select.selectedIndex];
-  document.getElementById('series-slug-input').value = opt.dataset.slug || '';
-}
-
 function previewUploadedImage(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
@@ -726,7 +778,7 @@ function previewUploadedImage(input) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SHAPE PICKER
+   SHAPE PICKER  (beads / figures only)
 ═══════════════════════════════════════════════════════════════════════════ */
 
 function selectShape(shape, btnEl) {
@@ -738,7 +790,6 @@ function selectShape(shape, btnEl) {
     t.style.background  = sel ? 'var(--pink-lt)' : 'var(--grey-50)';
   });
 
-  // Auto-fill group from shape map (create mode only)
   const groupInput = document.getElementById('group-input');
   if (groupInput && !IS_EDIT && SHAPE_GROUPS[shape]) {
     groupInput.value = SHAPE_GROUPS[shape];
@@ -749,7 +800,7 @@ function selectShape(shape, btnEl) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LIVE PREVIEW
+   LIVE PREVIEW  (beads / figures only)
 ═══════════════════════════════════════════════════════════════════════════ */
 
 function refreshAllTiles() {
@@ -769,7 +820,7 @@ function refreshAllTiles() {
   if (mainChip)   mainChip.style.background  = color;
   if (mainHex)    mainHex.textContent         = color;
   if (detailChip) detailChip.style.background = detail;
-  if (detailHex)  detailHex.textContent        = detail;
+  if (detailHex)  detailHex.textContent       = detail;
 }
 
 function schedulePreview() {
@@ -802,10 +853,9 @@ function updatePreview() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   VARIATIONS SECTION
+   VARIATIONS — shared toggle / remove / smart-button
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Toggle the whole variations panel ─────────────────────────────────── */
 function toggleVarSection() {
   varSectionOpen = !varSectionOpen;
 
@@ -820,11 +870,67 @@ function toggleVarSection() {
   }
   if (label) label.textContent = varSectionOpen ? 'Variations' : '+ Variations';
 
-  if (varSectionOpen) requestAnimationFrame(syncPrimaryRow);
+  if (varSectionOpen) requestAnimationFrame(() => {
+    if (LOCKED_CAT !== 'charms') syncPrimaryRow();
+  });
 }
 
-/* ── Keep primary row synced with main pickers ──────────────────────────── */
+function removeVariation(btn) {
+  btn.closest('.var-row').remove();
+  updateSmartButton();
+}
+
+function updateSmartButton() {
+  if (IS_EDIT) return;
+
+  const extraRows   = document.querySelectorAll('#variation-list .var-row').length;
+  // For charms: primary is always created too → total = extraRows + 1
+  // For beads/figures: same display logic
+  const total       = extraRows + 1;
+
+  const label       = document.getElementById('smart-submit-label');
+  const sub         = document.getElementById('smart-submit-sub');
+  const btn         = document.getElementById('smart-submit');
+  const icon        = document.getElementById('smart-submit-icon');
+  const creatingRow = document.getElementById('creating-row');
+  const creatingLbl = document.getElementById('creating-label');
+
+  if (extraRows === 0) {
+    if (label) label.textContent    = `Add ${CAT_LABEL}`;
+    if (sub)   sub.style.display    = 'none';
+    if (btn)   btn.style.background = 'var(--pink)';
+    if (icon)  icon.setAttribute('data-lucide', 'plus-circle');
+    if (creatingRow) creatingRow.style.setProperty('display', 'none', 'important');
+  } else {
+    const varWord = extraRows === 1 ? 'Variation' : 'Variations';
+    if (label) label.textContent = `Add ${CAT_LABEL} + ${extraRows} ${varWord}`;
+    if (sub)   sub.style.display = 'block';
+    if (icon)  icon.setAttribute('data-lucide', 'layers');
+    if (creatingRow) creatingRow.style.removeProperty('display');
+    if (creatingLbl) creatingLbl.textContent = `${total} element${total > 1 ? 's' : ''}`;
+    lucide.createIcons();
+  }
+}
+
+function handleSmartSubmit() {
+  const extraRows = document.querySelectorAll('#variation-list .var-row').length;
+  document.getElementById('mode-input').value = extraRows > 0 ? 'bulk' : 'single';
+  document.getElementById('element-form').submit();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VARIATIONS — beads / figures (color-based)
+═══════════════════════════════════════════════════════════════════════════ */
+
+function syncPrimaryLabel() {
+  const el  = document.getElementById('primary-var-name');
+  const val = document.getElementById('base-name-input')?.value?.trim();
+  if (el) el.textContent = val || '(base name)';
+}
+
 function syncPrimaryRow() {
+  if (LOCKED_CAT === 'charms') return;
+
   const color  = document.getElementById('color-pick')?.value  || '#F9B8CF';
   const detail = document.getElementById('detail-pick')?.value || '#C0136A';
 
@@ -842,16 +948,7 @@ function syncPrimaryRow() {
   }
 }
 
-/* ── Sync primary label with base name input ────────────────────────────── */
-function syncPrimaryLabel() {
-  const el  = document.getElementById('primary-var-name');
-  const val = document.getElementById('base-name-input')?.value?.trim();
-  if (el) el.textContent = val || '(base name)';
-}
-
-/* ── Add one variation row ──────────────────────────────────────────────── */
 function addVariation(color = '#F9B8CF', detail = '#C0136A', suffix = '') {
-  // Auto-open the section on first add
   if (!varSectionOpen) toggleVarSection();
 
   const idx  = variationIndex++;
@@ -910,7 +1007,6 @@ function addVariation(color = '#F9B8CF', detail = '#C0136A', suffix = '') {
   updateSmartButton();
 }
 
-/* ── Render a single var canvas ─────────────────────────────────────────── */
 function renderVarCanvas(idx) {
   const c = document.querySelector(`.var-canvas[data-idx="${idx}"]`);
   if (!c || !window.ArtshapeRenderer) return;
@@ -921,13 +1017,11 @@ function renderVarCanvas(idx) {
   });
 }
 
-/* ── Re-render all var canvases (e.g. on shape change) ──────────────────── */
 function refreshVarCanvases() {
   syncPrimaryRow();
   document.querySelectorAll('.var-canvas').forEach(c => renderVarCanvas(c.dataset.idx));
 }
 
-/* ── Color / hex sync for var rows ──────────────────────────────────────── */
 function onVarColor(idx, field, value) {
   const c = document.querySelector(`.var-canvas[data-idx="${idx}"]`);
   if (c) {
@@ -947,55 +1041,80 @@ function onVarHex(input) {
   onVarColor(input.dataset.idx, input.dataset.field, val);
 }
 
-function removeVariation(btn) {
-  btn.closest('.var-row').remove();
+/* ═══════════════════════════════════════════════════════════════════════════
+   VARIATIONS — charms (image-based)
+═══════════════════════════════════════════════════════════════════════════ */
+
+/** Sync the primary charm thumbnail when the main img_file changes */
+function syncPrimaryCharmRow(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img  = document.getElementById('primary-charm-img');
+    const icon = document.getElementById('primary-charm-icon');
+    if (img)  { img.src = e.target.result; img.style.display = ''; }
+    if (icon) icon.style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+/** Add one image-based charm variation row */
+function addCharmVariation() {
+  if (!varSectionOpen) toggleVarSection();
+
+  const idx  = variationIndex++;
+  const list = document.getElementById('variation-list');
+  if (!list) return;
+
+  const row = document.createElement('div');
+  row.className   = 'var-row charm-row';
+  row.dataset.idx = idx;
+
+  row.innerHTML = `
+    <div class="charm-var-thumb" id="charm-thumb-${idx}">
+      <img class="charm-var-img" src="" alt=""
+           style="width:100%;height:100%;object-fit:contain;display:none;"/>
+      <i data-lucide="image"
+         style="width:14px;height:14px;color:var(--grey-400);"></i>
+    </div>
+
+    <input type="text"
+           name="variations[${idx}][suffix]"
+           placeholder="e.g. Pink ver., v2…"
+           class="form-control form-control-sm"
+           style="font-size:.8rem;"/>
+
+    <input type="file"
+           name="variations[${idx}][img_file]"
+           accept="image/png,image/jpeg,image/webp"
+           class="form-control form-control-sm"
+           style="font-size:.72rem;"
+           onchange="previewCharmVar(this, ${idx})"/>
+
+    <button type="button" class="var-remove-btn"
+            onclick="removeVariation(this)" title="Remove">
+      <i data-lucide="x" style="width:13px;height:13px;"></i>
+    </button>
+  `;
+
+  list.appendChild(row);
+  lucide.createIcons();
   updateSmartButton();
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SMART SUBMIT BUTTON
-═══════════════════════════════════════════════════════════════════════════ */
-
-function updateSmartButton() {
-  if (IS_EDIT || LOCKED_CAT === 'charms') return;
-
-  const extraRows  = document.querySelectorAll('#variation-list .var-row').length;
-  const total      = extraRows + 1;  // +1 for the primary
-
-  const label      = document.getElementById('smart-submit-label');
-  const sub        = document.getElementById('smart-submit-sub');
-  const btn        = document.getElementById('smart-submit');
-  const icon       = document.getElementById('smart-submit-icon');
-  const creatingRow= document.getElementById('creating-row');
-  const creatingLbl= document.getElementById('creating-label');
-
-  if (extraRows === 0) {
-    // ── Single mode ──────────────────────────────────────────────────────
-    if (label) label.textContent    = `Add ${CAT_LABEL}`;
-    if (sub)   sub.style.display    = 'none';
-    if (btn)   btn.style.background = 'var(--pink)';
-    if (icon)  icon.setAttribute('data-lucide', 'plus-circle');
-    if (creatingRow) creatingRow.style.setProperty('display','none','important');
-  } else {
-    // ── Bulk mode ────────────────────────────────────────────────────────
-    const varWord = extraRows === 1 ? 'Variation' : 'Variations';
-    if (label) label.textContent    = `Add ${CAT_LABEL} + ${extraRows} ${varWord}`;
-    if (sub) {
-      sub.style.display  = 'block';
-    }
-    if (icon) icon.setAttribute('data-lucide', 'layers');
-    if (creatingRow) creatingRow.style.removeProperty('display');
-    if (creatingLbl) creatingLbl.textContent = `${total} elements`;
-
-    // Re-render icon after changing data-lucide attribute
-    lucide.createIcons();
-  }
-}
-
-function handleSmartSubmit() {
-  const extraRows = document.querySelectorAll('#variation-list .var-row').length;
-  document.getElementById('mode-input').value = extraRows > 0 ? 'bulk' : 'single';
-  document.getElementById('element-form').submit();
+/** Preview an uploaded image inside a charm variation row */
+function previewCharmVar(input, idx) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const thumb = document.getElementById(`charm-thumb-${idx}`);
+    if (!thumb) return;
+    const img  = thumb.querySelector('.charm-var-img');
+    const icon = thumb.querySelector('[data-lucide]');
+    if (img)  { img.src = e.target.result; img.style.display = ''; }
+    if (icon) icon.style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1014,4 +1133,4 @@ function init() {
 if (window.ArtshapeRenderer) { init(); }
 else { window.addEventListener('artshape:ready', init); }
 </script>
-@endpush  
+@endpush

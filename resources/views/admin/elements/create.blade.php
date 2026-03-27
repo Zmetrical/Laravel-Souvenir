@@ -4,7 +4,6 @@
 @section('content')
 
 <div class="d-flex align-items-center gap-3 mb-4">
-  {{-- Back to the right category page --}}
   <a href="{{ route('admin.elements.' . $preCategory) }}"
      class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
     ← Back to {{ ucfirst($preCategory) }}
@@ -29,7 +28,6 @@
 @include('admin.elements._form', [
   'action'      => route('admin.elements.store'),
   'method'      => 'POST',
-  'seriesList'  => $seriesList,
   'preCategory' => $preCategory,
 ])
 

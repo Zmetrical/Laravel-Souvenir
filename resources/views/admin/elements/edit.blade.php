@@ -29,7 +29,6 @@
   'action'      => route('admin.elements.update', $element),
   'method'      => 'PUT',
   'element'     => $element,
-  'seriesList'  => $seriesList,
   'preCategory' => $preCategory,
 ])
 
