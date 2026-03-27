@@ -349,9 +349,7 @@
   <a href="#" class="nav-link"><i data-lucide="box"></i> Products</a>
 
   <div style="margin-top:auto; padding:12px 8px;">
-    <a href="/" class="nav-link">
-      <i data-lucide="arrow-left"></i> Back to Site
-    </a>
+
   </div>
 
 </aside>

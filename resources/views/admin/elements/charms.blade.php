@@ -142,3 +142,7 @@
 </div>
 
 @endsection
+
+@push('scripts')
+@vite(['resources/js/shapes.js']) 
+@endpush

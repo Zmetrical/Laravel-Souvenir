@@ -11,12 +11,28 @@
 @php
   $isEdit      = isset($element) && $element->exists;
   $lockedCat   = $preCategory ?? ($isEdit ? $element->category : 'beads');
-  $old         = fn($field, $default = null) => old($field, $isEdit ? $element->$field : $default);
+  $old         = fn($field, $default = null) => old($field, $isEdit ? $element->$field : $default); 
 
-  $allShapes = [
-    'Bead Shapes'   => ['round','ellipse','tube','pearl','faceted','heart','star','moon','flower','rainbow','bow','butterfly'],
-    'Cube / Figure' => ['cube','cube-dice1','cube-dice2','cube-dice3','cube-dice4','cube-dice5','cube-dice6','cube-heart','cube-star','cube-checker','cube-smile'],
-  ];
+$allShapes = [
+    'beads' => [
+        'Basic'     => ['round', 'ellipse', 'tube', 'pearl', 'faceted'],
+        'Celestial' => ['star', 'moon', 'sun', 'heart'],
+        'Florals'   => ['flower', 'daisy', 'leaf', 'clover', 'tulip'],
+        'Bugs'      => ['butterfly', 'ladybug', 'bee'],
+        'Sea Life'  => ['shell', 'fish'], 
+        'Sweets'    => ['candy', 'donut', 'cupcake'], 
+        'Fruit'     => ['cherry', 'apple', 'strawberry'], 
+    ],
+    'figures' => [
+        'Cubes' => [
+            'cube', 'cube-dice1', 'cube-dice2', 'cube-dice3',
+            'cube-dice4', 'cube-dice5', 'cube-dice6',
+            'cube-heart', 'cube-star', 'cube-checker', 'cube-smile',
+        ],
+    ],
+];
+
+$allShapes = $allShapes[$lockedCat] ?? [];
 
   $catMeta = [
     'beads'   => ['label' => 'Bead',   'color' => '#F9B8CF', 'text' => '#C0136A', 'icon' => 'circle'],
@@ -152,17 +168,15 @@
               {{-- Hidden real select (submitted with form) --}}
               <select name="shape" id="shape-select" class="d-none">
                 <option value="">— Select shape —</option>
-                @foreach($allShapes as $grp => $opts)
-                  @if(
-                    ($lockedCat === 'beads'   && $grp === 'Bead Shapes')   ||
-                    ($lockedCat === 'figures' && $grp === 'Cube / Figure') ||
-                    ($lockedCat === 'beads'   && $grp === 'Cube / Figure')
-                  )
-                    @foreach($opts as $s)
-                      <option value="{{ $s }}" {{ $old('shape') === $s ? 'selected' : '' }}>{{ $s }}</option>
-                    @endforeach
-                  @endif
-                @endforeach
+@foreach($allShapes as $grp => $opts)
+  <optgroup label="{{ $grp }}">
+    @foreach($opts as $s)
+      <option value="{{ $s }}" {{ $old('shape') === $s ? 'selected' : '' }}>
+        {{ $s }}
+      </option>
+    @endforeach
+  </optgroup>
+@endforeach
               </select>
 
               {{-- Visual shape picker ──────────────────────────────── --}}
@@ -171,55 +185,48 @@
                 grid-template-columns:repeat(auto-fill, minmax(68px, 1fr));
                 gap:8px;
               ">
-                @foreach($allShapes as $grp => $opts)
-                  @if(
-                    ($lockedCat === 'beads'   && $grp === 'Bead Shapes')   ||
-                    ($lockedCat === 'figures' && $grp === 'Cube / Figure') ||
-                    ($lockedCat === 'beads'   && $grp === 'Cube / Figure')
-                  )
-                    {{-- Group label --}}
-                    <div style="
-                      grid-column: 1/-1;
-                      font-size:.62rem; font-weight:700; text-transform:uppercase;
-                      letter-spacing:.08em; color:var(--grey-400);
-                      padding-top:4px;
-                      @if(!$loop->first) border-top:1px solid var(--grey-200); margin-top:4px; @endif
-                    ">{{ $grp }}</div>
+@foreach($allShapes as $grp => $opts)
+  {{-- Group label --}}
+  <div style="
+    grid-column: 1/-1;
+    font-size:.62rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--grey-400);
+    padding-top:4px;
+    {{ !$loop->first ? 'border-top:1px solid var(--grey-200); margin-top:4px;' : '' }}
+  ">{{ $grp }}</div>
 
-                    @foreach($opts as $s)
-                      @php $isSelected = ($old('shape') === $s); @endphp
-                      <button type="button"
-                              class="shape-tile {{ $isSelected ? 'selected' : '' }}"
-                              data-shape="{{ $s }}"
-                              onclick="selectShape('{{ $s }}', this)"
-                              title="{{ $s }}"
-                              style="
-                                display:flex; flex-direction:column;
-                                align-items:center; justify-content:center;
-                                gap:5px; padding:8px 4px;
-                                border-radius:9px; border:2px solid;
-                                border-color:{{ $isSelected ? 'var(--pink)' : 'var(--grey-200)' }};
-                                background:{{ $isSelected ? 'var(--pink-lt)' : 'var(--grey-50)' }};
-                                cursor:pointer; transition:all .14s;
-                                min-height:72px; position:relative;
-                              ">
-                        <canvas
-                          class="shape-tile-canvas"
-                          width="40" height="40"
-                          data-shape="{{ $s }}"
-                          data-color="{{ $old('color', '#F9B8CF') }}"
-                          data-detail="{{ $old('detail_color', '#C0136A') }}"
-                          style="display:block; pointer-events:none;">
-                        </canvas>
-                        <span style="
-                          font-size:.58rem; font-weight:600; color:var(--grey-600);
-                          font-family:monospace; line-height:1.2; text-align:center;
-                          word-break:break-all;
-                        ">{{ $s }}</span>
-                      </button>
-                    @endforeach
-                  @endif
-                @endforeach
+  @foreach($opts as $s)
+    @php $isSelected = ($old('shape') === $s); @endphp
+    <button type="button"
+            class="shape-tile {{ $isSelected ? 'selected' : '' }}"
+            data-shape="{{ $s }}"
+            onclick="selectShape('{{ $s }}', this)"
+            title="{{ $s }}"
+            style="
+              display:flex; flex-direction:column;
+              align-items:center; justify-content:center;
+              gap:5px; padding:8px 4px;
+              border-radius:9px; border:2px solid;
+              border-color:{{ $isSelected ? 'var(--pink)' : 'var(--grey-200)' }};
+              background:{{ $isSelected ? 'var(--pink-lt)' : 'var(--grey-50)' }};
+              cursor:pointer; transition:all .14s;
+              min-height:72px;
+            ">
+      <canvas
+        class="shape-tile-canvas"
+        width="40" height="40"
+        data-shape="{{ $s }}"
+        data-color="{{ $old('color', '#F9B8CF') }}"
+        data-detail="{{ $old('detail_color', '#C0136A') }}"
+        style="display:block; pointer-events:none;">
+      </canvas>
+      <span style="
+        font-size:.58rem; font-weight:600; color:var(--grey-600);
+        font-family:monospace; text-align:center; word-break:break-all;
+      ">{{ $s }}</span>
+    </button>
+  @endforeach
+@endforeach
               </div>
             </div>
 
@@ -438,7 +445,7 @@
             Cancel
           </a>
         </div>
-        
+
       </div>
     </div>
 
@@ -446,8 +453,7 @@
 </form>
 
 @push('scripts')
-{{-- Unified shape renderer --}}
-<script src="{{ asset('js/builder/canvas/shaperenderer.js') }}"></script>
+@vite(['resources/js/shapes.js']) 
 
 <script>
 /* ─── State ───────────────────────────────────────────────────────────────── */
@@ -554,19 +560,20 @@ function updatePreview() {
 
   ArtshapeRenderer.draw(canvas, { shape, color, detail, small: isSmall });
 }
-
-/* ─── Init — runs immediately (DOM already ready at bottom of <body>) ────── */
-(function init() {
+function init() {
   if (LOCKED_CAT !== 'charms') {
-    // Render all shape-picker tiles
     document.querySelectorAll('.shape-tile-canvas').forEach(c => {
       ArtshapeRenderer.draw(c);
     });
-    // Render the large preview
     updatePreview();
   }
-  // Re-init Lucide for any icons injected by Blade
   if (window.lucide) lucide.createIcons();
-}());
+}
+if (window.ArtshapeRenderer) {
+  init();
+} else {
+  window.addEventListener('artshape:ready', init);
+}
+
 </script>
 @endpush
