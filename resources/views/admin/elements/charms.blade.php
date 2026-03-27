@@ -32,17 +32,13 @@
       <input type="text" name="search" value="{{ request('search') }}"
              placeholder="Search charms..." style="width:180px;"/>
 
-      {{-- Series filter --}}
-      <select name="series_id" style="width:170px;">
-        <option value="">All Series</option>
-        @foreach($seriesList as $s)
-          <option value="{{ $s->id }}" {{ request('series_id') == $s->id ? 'selected' : '' }}>
-            {{ $s->name }}
+      <select name="group" style="width:170px;">
+        <option value="">All Groups</option>
+        @foreach($groups as $g)
+          <option value="{{ $g }}" {{ request('group') === $g ? 'selected' : '' }}>
+            {{ $g }}
           </option>
         @endforeach
-        <option value="none" {{ request('series_id') === 'none' ? 'selected' : '' }}>
-          — No series —
-        </option>
       </select>
 
       <select name="stock" style="width:130px;">
@@ -61,33 +57,28 @@
     </div>
   </form>
 
-  {{-- Charm grid — grouped by series ───────────────────────────────────── --}}
+  {{-- Charm grid — grouped by group ────────────────────────────────────── --}}
   @if($elements->isEmpty())
     <div class="text-center py-5 text-muted">
       No charms found. <a href="{{ route('admin.elements.create', ['cat'=>'charms']) }}">Add one →</a>
     </div>
   @else
     @php
-      // Group: charms with a series go under their series name; others under "No Series"
-      $grouped = $elements->getCollection()->groupBy(function ($el) {
-        return $el->series ? $el->series->name : '__none__';
-      });
-
-      // Sort: named series alphabetically first, then "No Series" last
-      $grouped = $grouped->sortBy(fn ($items, $key) => $key === '__none__' ? 'zzz' : $key);
+      $grouped = $elements->getCollection()->groupBy(fn($el) => $el->group ?: '__none__');
+      $grouped = $grouped->sortBy(fn($items, $key) => $key === '__none__' ? 'zzz' : $key);
     @endphp
 
-    @foreach($grouped as $seriesName => $items)
+    @foreach($grouped as $groupName => $items)
 
-      {{-- Series header ────────────────────────────────────────────────── --}}
+      {{-- Group header ──────────────────────────────────────────────────── --}}
       <div style="padding: 14px 16px 4px;
                   border-top: 1px solid #EEEDF3;
                   display: flex; align-items: center; gap: 8px;">
 
-        @if($seriesName === '__none__')
+        @if($groupName === '__none__')
           <span style="font-size:.72rem; font-weight:700; text-transform:uppercase;
                        letter-spacing:.08em; color:#CCC;">
-            No Series
+            No Group
           </span>
         @else
           <span style="display:inline-flex;align-items:center;gap:5px;
@@ -96,8 +87,8 @@
                        background:#EDE9FE;
                        border:1px solid #C4B5FD;
                        border-radius:20px; padding:2px 10px;">
-            <i data-lucide="layers" style="width:10px;height:10px;"></i>
-            {{ $seriesName }}
+            <i data-lucide="folder" style="width:10px;height:10px;"></i>
+            {{ $groupName }}
           </span>
         @endif
 
@@ -140,10 +131,7 @@
 
           <div class="charm-info">
             <div class="charm-name" title="{{ $el->name }}">{{ $el->name }}</div>
-            {{-- Show series name instead of group --}}
-            <div class="charm-series">
-              {{ $el->series?->name ?? '—' }}
-            </div>
+            <div class="charm-series">{{ $el->group ?? '—' }}</div>
             <div class="charm-price">₱{{ $el->price }}</div>
             <div class="mt-1">
               <span class="badge stock-{{ $el->stock }}" style="font-size:.6rem;">

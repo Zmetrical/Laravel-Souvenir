@@ -9,15 +9,6 @@ class ElementSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Series ────────────────────────────────────────────────────────────
-        DB::table('element_series')->insertOrIgnore([
-            ['name' => 'Hello Kitty', 'slug' => 'hello-kitty', 'is_active' => true],
-            ['name' => 'BTS',         'slug' => 'bts',         'is_active' => true],
-        ]);
-
-        $hkId  = DB::table('element_series')->where('slug', 'hello-kitty')->value('id');
-        $btsId = DB::table('element_series')->where('slug', 'bts')->value('id');
-
         // ── Beads ─────────────────────────────────────────────────────────────
         $beads = [
             // Round
@@ -117,23 +108,22 @@ class ElementSeeder extends Seeder
         // ── Charms ────────────────────────────────────────────────────────────
         // img_path is relative to public/img/builder/
         // Full URL will be: asset('img/builder/' . $img_path)
-        // Physical file location: public/img/builder/hello kitty/01.png
-        //                         public/img/builder/bts/1.png
+        // group replaces series_id — uses the former series name as a plain string
         $charms = [
-            // Hello Kitty — folder name has a space, matching the actual directory
-            ['slug'=>'fg1',  'name'=>'Hello Kitty 1', 'category'=>'charms', 'use_img'=>true, 'img_path'=>'hello kitty/01.png', 'series_id'=>$hkId,  'price'=>35, 'is_large'=>true],
-            ['slug'=>'fg2',  'name'=>'Hello Kitty 2', 'category'=>'charms', 'use_img'=>true, 'img_path'=>'hello kitty/02.png', 'series_id'=>$hkId,  'price'=>35, 'is_large'=>true],
-            ['slug'=>'fg3',  'name'=>'Hello Kitty 3', 'category'=>'charms', 'use_img'=>true, 'img_path'=>'hello kitty/03.png', 'series_id'=>$hkId,  'price'=>35, 'is_large'=>true],
-            ['slug'=>'fg4',  'name'=>'Hello Kitty 4', 'category'=>'charms', 'use_img'=>true, 'img_path'=>'hello kitty/04.png', 'series_id'=>$hkId,  'price'=>35, 'is_large'=>true, 'stock'=>'low'],
-            ['slug'=>'fg5',  'name'=>'Hello Kitty 5', 'category'=>'charms', 'use_img'=>true, 'img_path'=>'hello kitty/05.png', 'series_id'=>$hkId,  'price'=>35, 'is_large'=>true],
+            // Hello Kitty
+            ['slug'=>'fg1',  'name'=>'Hello Kitty 1', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/01.png', 'price'=>35, 'is_large'=>true],
+            ['slug'=>'fg2',  'name'=>'Hello Kitty 2', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/02.png', 'price'=>35, 'is_large'=>true],
+            ['slug'=>'fg3',  'name'=>'Hello Kitty 3', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/03.png', 'price'=>35, 'is_large'=>true],
+            ['slug'=>'fg4',  'name'=>'Hello Kitty 4', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/04.png', 'price'=>35, 'is_large'=>true, 'stock'=>'low'],
+            ['slug'=>'fg5',  'name'=>'Hello Kitty 5', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/05.png', 'price'=>35, 'is_large'=>true],
             // BTS
-            ['slug'=>'bts1', 'name'=>'BTS RM',        'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/1.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts2', 'name'=>'BTS Jin',       'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/2.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts3', 'name'=>'BTS Suga',      'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/3.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts4', 'name'=>'BTS J-Hope',    'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/4.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts5', 'name'=>'BTS Jimin',     'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/5.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts6', 'name'=>'BTS V',         'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/6.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts7', 'name'=>'BTS Jungkook',  'category'=>'charms', 'use_img'=>true, 'img_path'=>'bts/7.png', 'series_id'=>$btsId, 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts1', 'name'=>'BTS RM',        'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/1.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts2', 'name'=>'BTS Jin',       'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/2.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts3', 'name'=>'BTS Suga',      'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/3.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts4', 'name'=>'BTS J-Hope',    'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/4.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts5', 'name'=>'BTS Jimin',     'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/5.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts6', 'name'=>'BTS V',         'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/6.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts7', 'name'=>'BTS Jungkook',  'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/7.png', 'price'=>40, 'is_large'=>true],
         ];
 
         // ── Merge defaults and insert ─────────────────────────────────────────
@@ -145,7 +135,6 @@ class ElementSeeder extends Seeder
             'detail_color' => null,
             'use_img'      => false,
             'img_path'     => null,
-            'series_id'    => null,
             'is_small'     => false,
             'is_large'     => false,
             'stock'        => 'in',

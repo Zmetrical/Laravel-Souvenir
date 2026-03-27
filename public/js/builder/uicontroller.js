@@ -670,23 +670,38 @@ export class UIController {
     el.classList.add('active');
   }
 
-  filterCharms(input, gridId) {
-    const q = input.value.toLowerCase().trim();
-    const container = document.getElementById(gridId);
-    if (!container) return;
-    if (!q) {
-      container.querySelectorAll('.ecard, .bgroup').forEach(el => el.style.display = '');
-      return;
-    }
-    container.querySelectorAll('.ecard').forEach(card => {
-      const name = card.querySelector('.ename')?.textContent.toLowerCase() || '';
-      card.style.display = name.includes(q) ? '' : 'none';
+filterCharms(input, target) {
+  const q      = input.value.trim().toLowerCase();
+  const wrap   = document.getElementById(target);
+  if (!wrap) return;
+ 
+  if (target === 'charms-groups-wrap') {
+    // Grouped charm layout — show/hide individual items, then collapse empty groups
+    const items = wrap.querySelectorAll('.charm-litem');
+    items.forEach(item => {
+      const haystack = (item.dataset.search || item.dataset.name || '').toLowerCase();
+      const match    = !q || haystack.includes(q);
+      item.dataset.hidden = match ? 'false' : 'true';
+      item.style.display  = match ? '' : 'none';
     });
-    container.querySelectorAll('.bgroup').forEach(group => {
-      const visible = [...group.querySelectorAll('.ecard')].some(c => c.style.display !== 'none');
-      group.style.display = visible ? '' : 'none';
+ 
+    // Hide groups where every item is filtered out
+    wrap.querySelectorAll('.charm-group').forEach(group => {
+      const anyVisible = [...group.querySelectorAll('.charm-litem')]
+        .some(el => el.style.display !== 'none');
+      group.style.display = anyVisible ? '' : 'none';
+    });
+ 
+  } else {
+    // Flat grid layout (figures tab)
+    const items = wrap.querySelectorAll('.litem');
+    items.forEach(item => {
+      const name  = (item.dataset.name || '').toLowerCase();
+      const match = !q || name.includes(q);
+      item.style.display = match ? '' : 'none';
     });
   }
+}
 
   renderToCanvas(targetCanvas, W, H) {
     targetCanvas.width = W; targetCanvas.height = H;

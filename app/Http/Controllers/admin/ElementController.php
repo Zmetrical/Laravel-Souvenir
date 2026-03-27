@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\builder\Element;
-use App\Models\builder\ElementSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -70,26 +69,23 @@ class ElementController extends Controller
     // ── GET /admin/elements/charms ─────────────────────────────────────────
     public function charms(Request $request)
     {
-        $query = Element::where('category', 'charms')
-                        ->with('series')
-                        ->latest();
+        $query = Element::where('category', 'charms')->latest();
 
-        if ($request->filled('search'))    $query->where('name', 'like', '%' . $request->search . '%');
-        if ($request->filled('stock'))     $query->where('stock', $request->stock);
-        if ($request->filled('series_id')) $query->where('series_id', $request->series_id);
+        if ($request->filled('search')) $query->where('name', 'like', '%' . $request->search . '%');
+        if ($request->filled('stock'))  $query->where('stock', $request->stock);
+        if ($request->filled('group'))  $query->where('group', $request->group);
 
-        $elements   = $query->paginate(24)->withQueryString();
-        $seriesList = ElementSeries::where('is_active', true)->orderBy('name')->get();
+        $elements = $query->paginate(24)->withQueryString();
+        $groups   = Element::where('category', 'charms')->whereNotNull('group')->distinct()->pluck('group');
 
-        return view('admin.elements.charms', compact('elements', 'seriesList'));
+        return view('admin.elements.charms', compact('elements', 'groups'));
     }
 
     // ── GET /admin/elements/create ─────────────────────────────────────────
     public function create(Request $request)
     {
         $preCategory = $request->query('cat', 'beads');
-        $seriesList  = ElementSeries::where('is_active', true)->orderBy('name')->get();
-        return view('admin.elements.create', compact('preCategory', 'seriesList'));
+        return view('admin.elements.create', compact('preCategory'));
     }
 
     // ── POST /admin/elements ───────────────────────────────────────────────
@@ -106,20 +102,14 @@ class ElementController extends Controller
                     'category'            => 'required|in:beads,figures,charms',
                     'name'                => 'required|string|max:120',
                     'slug'                => 'required|string|max:120',
-                    'series_id'           => 'nullable|exists:element_series,id',
+                    'group'               => 'nullable|string|max:100',
                     'price'               => 'required|numeric|min:1',
                     'stock'               => 'required|in:in,low,out',
                     'variations'          => 'required|array|min:1',
                     'variations.*.suffix' => 'nullable|string|max:80',
                 ]);
 
-                $seriesId = $request->series_id ?: null;
-                $folder   = 'charms';
-                if ($seriesId) {
-                    $series = ElementSeries::find($seriesId);
-                    if ($series) $folder = Str::slug($series->name);
-                }
-
+                $folder  = Str::slug($request->group ?: 'charms');
                 $varFiles = $request->file('variations') ?? [];
                 $created  = 0;
 
@@ -133,7 +123,7 @@ class ElementController extends Controller
                     'category'  => 'charms',
                     'name'      => $request->name,
                     'slug'      => $primarySlug,
-                    'series_id' => $seriesId,
+                    'group'     => $request->group,
                     'price'     => $request->price,
                     'stock'     => $request->stock,
                     'is_active' => $request->boolean('is_active'),
@@ -161,7 +151,7 @@ class ElementController extends Controller
                         'category'  => 'charms',
                         'name'      => $name,
                         'slug'      => $slug,
-                        'series_id' => $seriesId,
+                        'group'     => $request->group,
                         'price'     => $request->price,
                         'stock'     => $request->stock,
                         'is_active' => $request->boolean('is_active'),
@@ -226,13 +216,7 @@ class ElementController extends Controller
             : $this->validateElement($request);
 
         if ($request->hasFile('img_file')) {
-            $folder = 'charms';
-            if ($isCharm && !empty($validated['series_id'])) {
-                $series = ElementSeries::find($validated['series_id']);
-                if ($series) $folder = Str::slug($series->name);
-            } elseif (!$isCharm) {
-                $folder = Str::slug($validated['group'] ?? 'charms');
-            }
+            $folder = Str::slug($validated['group'] ?? 'charms');
             $validated['img_path'] = $this->handleImageUpload($request, $folder);
         }
         unset($validated['img_file']);
@@ -252,8 +236,7 @@ class ElementController extends Controller
     public function edit(Element $element)
     {
         $preCategory = $element->category;
-        $seriesList  = ElementSeries::where('is_active', true)->orderBy('name')->get();
-        return view('admin.elements.edit', compact('element', 'preCategory', 'seriesList'));
+        return view('admin.elements.edit', compact('element', 'preCategory'));
     }
 
     // ── PUT /admin/elements/{element} ──────────────────────────────────────
@@ -270,13 +253,7 @@ class ElementController extends Controller
                 $oldPath = public_path('img/builder/' . $element->img_path);
                 if (file_exists($oldPath)) unlink($oldPath);
             }
-            $folder = 'charms';
-            if ($isCharm && !empty($validated['series_id'])) {
-                $series = ElementSeries::find($validated['series_id']);
-                if ($series) $folder = Str::slug($series->name);
-            } elseif (!$isCharm) {
-                $folder = Str::slug($validated['group'] ?? 'charms');
-            }
+            $folder = Str::slug($validated['group'] ?? 'charms');
             $validated['img_path'] = $this->handleImageUpload($request, $folder);
         }
         unset($validated['img_file']);
@@ -334,7 +311,7 @@ class ElementController extends Controller
         ]);
     }
 
-    /** Validate for charms (uses series_id instead of group) */
+    /** Validate for charms — same group-based approach as beads/figures */
     private function validateCharm(Request $request, ?int $ignoreId = null): array
     {
         $slugRule = $ignoreId
@@ -345,7 +322,7 @@ class ElementController extends Controller
             'slug'      => $slugRule,
             'name'      => 'required|string|max:255',
             'category'  => 'required|in:charms',
-            'series_id' => 'nullable|exists:element_series,id',
+            'group'     => 'nullable|string|max:100',
             'use_img'   => 'boolean',
             'img_path'  => 'nullable|string|max:255',
             'img_file'  => 'nullable|image|mimes:png,jpg,webp|max:2048',

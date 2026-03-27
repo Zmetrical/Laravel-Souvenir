@@ -66,7 +66,7 @@ public function toCanvasArray(): array
         // ── Size flags ───────────────────────────────────────────────
         'small'    => (bool) $this->is_small,  // ← DB: is_small → JS: small
         'large'    => (bool) $this->is_large,  // ← DB: is_large → JS: large
-
+    
         // ── Pricing / Stock ──────────────────────────────────────────
         'price'    => $this->price,
         'stock'    => $this->stock,             // 'in' | 'low' | 'out'

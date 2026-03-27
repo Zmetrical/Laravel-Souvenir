@@ -5,7 +5,6 @@
     $action      — form action URL
     $method      — 'POST' or 'PUT'
     $preCategory — 'beads' | 'figures' | 'charms'  (locks the category radio)
-    $seriesList  — Collection of active ElementSeries (for charms only)
 --}}
 
 @php
@@ -48,9 +47,6 @@
   ];
   $meta     = $catMeta[$lockedCat];
   $catLabel = $meta['label'];
-
-  // Current series_id for edit mode
-  $currentSeriesId = $isEdit ? $element->series_id : null;
 @endphp
 
 <style>
@@ -178,30 +174,6 @@
 .charm-var-thumb img {
   width: 100%; height: 100%; object-fit: contain; display: none;
 }
-
-/* ── Series select styling ───────────────────────────────────────────────── */
-.series-select-wrap {
-  position: relative;
-}
-.series-select-wrap select {
-  appearance: none;
-  padding-right: 32px !important;
-}
-.series-select-wrap .series-select-icon {
-  position: absolute;
-  right: 10px; top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--grey-400);
-}
-.series-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 2px 9px; border-radius: 20px;
-  font-size: .7rem; font-weight: 600;
-  background: var(--purple-lt, #EDE9FE);
-  color: #7C3AED;
-  border: 1px solid #C4B5FD;
-}
 </style>
 
 <form action="{{ $action }}" method="POST" enctype="multipart/form-data" id="element-form">
@@ -256,52 +228,19 @@
               @error('slug') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
-            {{-- ── Series (charms) or Group (beads/figures) ───────────── --}}
-            @if($lockedCat === 'charms')
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small mb-1">
-                Series
-                <small class="text-muted fw-normal" style="font-size:.7rem;">
-                  (optional)
-                </small>
-              </label>
-              <div class="series-select-wrap">
-                <select name="series_id"
-                        class="form-select form-select-sm @error('series_id') is-invalid @enderror">
-                  <option value="">— No series —</option>
-                  @foreach($seriesList ?? [] as $s)
-                    <option value="{{ $s->id }}"
-                      {{ (old('series_id', $currentSeriesId) == $s->id) ? 'selected' : '' }}>
-                      {{ $s->name }}
-                    </option>
-                  @endforeach
-                </select>
-                <i data-lucide="chevron-down" class="series-select-icon"
-                   style="width:13px;height:13px;"></i>
-              </div>
-              @error('series_id')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-              <div class="form-text">
-                Charms are listed and filtered by series.
-                @if(route('admin.element-series.index') ?? false)
-                  <a href="{{ route('admin.element-series.index') }}"
-                     target="_blank" style="color:#7C3AED;text-decoration:none;">
-                    Manage series →
-                  </a>
-                @endif
-              </div>
-            </div>
-            @else
+            {{-- Group — used for ALL categories including charms ────────── --}}
             <div class="col-md-6">
               <label class="form-label fw-semibold small mb-1">Group</label>
               <input type="text" name="group" id="group-input"
                      value="{{ $old('group') }}"
                      class="form-control form-control-sm"
-                     placeholder="Auto-fills on shape pick"/>
-              <div class="form-text">Auto-filled when you pick a shape.</div>
+                     placeholder="{{ $lockedCat === 'charms' ? 'e.g. Hello Kitty, BTS, Sanrio…' : 'Auto-fills on shape pick' }}"/>
+              <div class="form-text">
+                {{ $lockedCat === 'charms'
+                    ? 'Charms with the same group are displayed together.'
+                    : 'Auto-filled when you pick a shape.' }}
+              </div>
             </div>
-            @endif
 
             <div class="col-md-3">
               <label class="form-label fw-semibold small mb-1">
@@ -687,16 +626,6 @@
             @endif
           </div>
 
-          {{-- Series info badge for charms ─────────────────────────────── --}}
-          @if($lockedCat === 'charms')
-          <div id="series-preview-row"
-               style="margin-bottom:12px;min-height:24px;display:flex;align-items:center;gap:7px;">
-            <i data-lucide="layers" style="width:13px;height:13px;color:var(--grey-400);"></i>
-            <span id="series-preview-label"
-                  style="font-size:.75rem;color:var(--grey-400);">No series selected</span>
-          </div>
-          @endif
-
           @if($lockedCat !== 'charms')
           <div class="d-flex gap-2 mb-3 align-items-center">
             <div id="prev-main-chip"
@@ -797,11 +726,6 @@ const LOCKED_CAT   = '{{ $lockedCat }}';
 const CAT_LABEL    = '{{ $catLabel }}';
 const SHAPE_GROUPS = @json($shapeToGroup);
 
-// Series name map for live preview (charms only)
-const SERIES_MAP = @json(
-  collect($seriesList ?? [])->mapWithKeys(fn($s) => [$s->id => $s->name])
-);
-
 let previewTimer   = null;
 let variationIndex = 0;
 let varSectionOpen = false;
@@ -835,28 +759,6 @@ function previewUploadedImage(input) {
     if (ph)  ph.style.display = 'none';
   };
   reader.readAsDataURL(input.files[0]);
-}
-
-/* ── Series preview (charms) ─────────────────────────────────────────────── */
-function initSeriesPreview() {
-  const sel = document.querySelector('select[name="series_id"]');
-  if (!sel) return;
-  sel.addEventListener('change', () => updateSeriesPreview(sel.value));
-  updateSeriesPreview(sel.value);
-}
-
-function updateSeriesPreview(seriesId) {
-  const label = document.getElementById('series-preview-label');
-  if (!label) return;
-  if (seriesId && SERIES_MAP[seriesId]) {
-    label.innerHTML = `<span class="series-badge">
-      <i data-lucide="layers" style="width:10px;height:10px;"></i>
-      ${SERIES_MAP[seriesId]}
-    </span>`;
-  } else {
-    label.textContent = 'No series selected';
-  }
-  if (window.lucide) lucide.createIcons();
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1195,8 +1097,6 @@ function init() {
   if (LOCKED_CAT !== 'charms') {
     document.querySelectorAll('.shape-tile-canvas').forEach(c => ArtshapeRenderer.draw(c));
     updatePreview();
-  } else {
-    initSeriesPreview();
   }
   if (window.lucide) lucide.createIcons();
   updateSmartButton();
@@ -1205,10 +1105,9 @@ function init() {
 if (window.ArtshapeRenderer) { init(); }
 else { window.addEventListener('artshape:ready', init); }
 
-// If no ArtshapeRenderer (charm form), still init
+// For charm form (no ArtshapeRenderer needed), still init
 if (LOCKED_CAT === 'charms') {
   document.addEventListener('DOMContentLoaded', () => {
-    initSeriesPreview();
     lucide.createIcons();
     updateSmartButton();
   });
