@@ -111,19 +111,19 @@ class ElementSeeder extends Seeder
         // group replaces series_id — uses the former series name as a plain string
         $charms = [
             // Hello Kitty
-            ['slug'=>'fg1',  'name'=>'Hello Kitty 1', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/01.png', 'price'=>35, 'is_large'=>true],
-            ['slug'=>'fg2',  'name'=>'Hello Kitty 2', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/02.png', 'price'=>35, 'is_large'=>true],
-            ['slug'=>'fg3',  'name'=>'Hello Kitty 3', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/03.png', 'price'=>35, 'is_large'=>true],
-            ['slug'=>'fg4',  'name'=>'Hello Kitty 4', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/04.png', 'price'=>35, 'is_large'=>true, 'stock'=>'low'],
-            ['slug'=>'fg5',  'name'=>'Hello Kitty 5', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/05.png', 'price'=>35, 'is_large'=>true],
+            ['slug'=>'fg1',  'name'=>'Hello Kitty 1', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/01.png', 'price'=>35, 'is_large'=>false],
+            ['slug'=>'fg2',  'name'=>'Hello Kitty 2', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/02.png', 'price'=>35, 'is_large'=>false],
+            ['slug'=>'fg3',  'name'=>'Hello Kitty 3', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/03.png', 'price'=>35, 'is_large'=>false],
+            ['slug'=>'fg4',  'name'=>'Hello Kitty 4', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/04.png', 'price'=>35, 'is_large'=>false, 'stock'=>'low'],
+            ['slug'=>'fg5',  'name'=>'Hello Kitty 5', 'category'=>'charms', 'group'=>'Hello Kitty', 'use_img'=>true, 'img_path'=>'hello kitty/05.png', 'price'=>35, 'is_large'=>false],
             // BTS
-            ['slug'=>'bts1', 'name'=>'BTS RM',        'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/1.png', 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts2', 'name'=>'BTS Jin',       'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/2.png', 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts3', 'name'=>'BTS Suga',      'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/3.png', 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts4', 'name'=>'BTS J-Hope',    'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/4.png', 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts5', 'name'=>'BTS Jimin',     'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/5.png', 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts6', 'name'=>'BTS V',         'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/6.png', 'price'=>40, 'is_large'=>true],
-            ['slug'=>'bts7', 'name'=>'BTS Jungkook',  'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/7.png', 'price'=>40, 'is_large'=>true],
+            ['slug'=>'bts1', 'name'=>'BTS RM',        'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/1.png', 'price'=>40, 'is_large'=>false],
+            ['slug'=>'bts2', 'name'=>'BTS Jin',       'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/2.png', 'price'=>40, 'is_large'=>false],
+            ['slug'=>'bts3', 'name'=>'BTS Suga',      'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/3.png', 'price'=>40, 'is_large'=>false],
+            ['slug'=>'bts4', 'name'=>'BTS J-Hope',    'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/4.png', 'price'=>40, 'is_large'=>false],
+            ['slug'=>'bts5', 'name'=>'BTS Jimin',     'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/5.png', 'price'=>40, 'is_large'=>false],
+            ['slug'=>'bts6', 'name'=>'BTS V',         'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/6.png', 'price'=>40, 'is_large'=>false],
+            ['slug'=>'bts7', 'name'=>'BTS Jungkook',  'category'=>'charms', 'group'=>'BTS', 'use_img'=>true, 'img_path'=>'bts/7.png', 'price'=>40, 'is_large'=>false],
         ];
 
         // ── Merge defaults and insert ─────────────────────────────────────────

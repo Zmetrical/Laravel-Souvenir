@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
  
 class Element extends Model
 {
-protected $fillable = [
-    'slug', 'name', 'category', 'group', 'shape',
-    'color', 'detail_color', 'use_img', 'img_path',
-    'series_id', 'is_small', 'is_large',
-    'price', 'stock', 'is_active',
-];
+    protected $fillable = [
+        'slug', 'name', 'category', 'group', 'shape',
+        'color', 'detail_color', 'use_img', 'img_path',
+        'is_small', 'is_large',                          // ← removed series_id
+        'price', 'stock', 'is_active',
+    ];
  
     protected $casts = [
         'use_img'   => 'boolean',
@@ -20,11 +20,8 @@ protected $fillable = [
         'is_active' => 'boolean',
     ];
  
-    public function series()
-    {
-        return $this->belongsTo(ElementSeries::class, 'series_id');
-    }
- 
+    // ── series() relationship REMOVED ────────────────────────────────────────
+
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
@@ -42,37 +39,39 @@ protected $fillable = [
     }
  
     // ── Canvas-ready JSON shape ───────────────────────────────────────────────
-    // Matches the structure your JS data.js files expect
 public function toCanvasArray(): array
 {
     return [
         // ── Identity ─────────────────────────────────────────────────
-        'id'       => $this->slug,          // JS uses slug as id
+        'id'       => $this->slug,      // JS uses this
+        'slug'     => $this->slug,      // Blade uses this
         'name'     => $this->name,
-        'category' => $this->category,      // 'beads' | 'figures' | 'charms'
-        'group'    => $this->group,         // ← was group_label (wrong)
+        'category' => $this->category,
+        'group'    => $this->group,
 
-        // ── Shape / Color (canvas drawing) ───────────────────────────
+        // ── Shape / Color ────────────────────────────────────────────
         'shape'    => $this->shape,
         'color'    => $this->color,
-        'detail'   => $this->detail_color,  // ← DB: detail_color → JS: detail
+        'detail'   => $this->detail_color,  // JS key
+        'detail_color' => $this->detail_color,  // Blade key (if needed)
 
         // ── Image-based charms ───────────────────────────────────────
-        'useImg'   => (bool) $this->use_img,              // ← DB: use_img → JS: useImg
-        'imgSrc' => $this->img_path
+        'useImg'   => (bool) $this->use_img,    // JS key
+        'use_img'  => (bool) $this->use_img,    // Blade key
+        'imgSrc'   => $this->img_path
             ? asset('img/builder/' . $this->img_path)
-            : null,
+            : null,                             // JS key (full URL)
+        'img_path' => $this->img_path,          // Blade key (raw path)
 
         // ── Size flags ───────────────────────────────────────────────
-        'small'    => (bool) $this->is_small,  // ← DB: is_small → JS: small
-        'large'    => (bool) $this->is_large,  // ← DB: is_large → JS: large
-    
+        'small'    => (bool) $this->is_small,   // JS key
+        'is_small' => (bool) $this->is_small,   // Blade key
+        'large'    => (bool) $this->is_large,   // JS key
+        'is_large' => (bool) $this->is_large,   // Blade key
+
         // ── Pricing / Stock ──────────────────────────────────────────
         'price'    => $this->price,
-        'stock'    => $this->stock,             // 'in' | 'low' | 'out'
-
-        // ── Charms series name ───────────────────────────────────────
-        'series'   => $this->series?->name,     // used by buildCharmsGrid
+        'stock'    => $this->stock,
     ];
 }
 }

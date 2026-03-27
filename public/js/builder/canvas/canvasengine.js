@@ -1,5 +1,6 @@
 import { BeadShapes }      from './shapes/beads.js';
 import { CubeShapes }      from './shapes/cubes.js';
+import { FigureShapes }    from './shapes/figures.js';
 import { drawImageElement } from './shapes/charms.js';
 
 export class CanvasEngine {
@@ -355,6 +356,12 @@ export class CanvasEngine {
       const drawFn = CubeShapes[el.shape];
       if (drawFn) drawFn(ctx, R, color, detail, this.roundRect.bind(this));
       ctx.restore();
+      return;
+    }
+
+    const figureFn = FigureShapes[el.shape];
+    if (figureFn) {
+      figureFn(ctx, R, color, detail, this._lighten.bind(this));
       return;
     }
 

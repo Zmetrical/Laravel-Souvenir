@@ -5,12 +5,14 @@
  *
  * $elements is injected by the controller as a collection/array of all active elements.
  */
-$charmGroups = collect($elements ?? [])
-    ->where('category', 'charms')
-    ->groupBy('group');          // group is now a plain string, no FK needed
+$charmGroups = collect($elements['charms'] ?? [])
+    ->groupBy('group');
+
+$figureGroups = collect($elements['figures'] ?? [])->groupBy('group');
 ?>
+
 <div class="rpanel">
-  <div class="rhead">Element Library </div>
+  <div class="rhead">Element Library</div>
 
   <div class="dir-toggle">
     <span class="dir-lbl">Insert At:</span>
@@ -27,84 +29,133 @@ $charmGroups = collect($elements ?? [])
     <div class="ltab"        data-tab="letters" onclick="app.ui.switchTab(this)">A–Z</div>
   </div>
 
-  <!-- Beads tab -->
-  <div id="tab-beads" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
+  <!-- ══════════════════════════════════════
+       BEADS TAB
+  ══════════════════════════════════════ -->
+  <div id="tab-beads" style="display:flex;flex-direction:column;flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;">
     <div class="bead-groups" id="bead-groups"></div>
   </div>
 
-  <!-- Figures tab — shaped decorative charms (hearts, stars, bows, etc.) -->
-  <div id="tab-figures" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
-    <div class="lsrch">
-      <input type="text" placeholder="Search figures..." oninput="app.ui.filterCharms(this, 'grid-figures')"/>
+  <!-- ══════════════════════════════════════
+       FIGURES TAB
+  ══════════════════════════════════════ -->
+  <div id="tab-figures" style="display:none;flex-direction:column;flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;">
+    <div class="lsrch" style="position:sticky;top:0;z-index:2;">
+      <input type="text" placeholder="Search figures…" oninput="app.ui.filterCharms(this, 'grid-figures')"/>
     </div>
     <div class="lgrid" id="grid-figures" style="overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;"></div>
   </div>
 
-  <!-- Charms tab — image-based groups (Hello Kitty, BTS, etc.) grouped by `group` field -->
-  <div id="tab-charms" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
-    <div class="lsrch">
-      <input type="text" placeholder="Search charms..." oninput="app.ui.filterCharms(this, 'charms-groups-wrap')"/>
+  <!-- ══════════════════════════════════════
+       CHARMS TAB
+       Uses .bgroup / .bgroup-* for the
+       collapsible group headers (same
+       pattern as bead groups) and
+       .lgrid + .ecard for the item tiles.
+  ══════════════════════════════════════ -->
+  <div id="tab-charms" style="display:none;flex-direction:column;flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;">
+
+    <div class="lsrch" style="position:sticky;top:0;z-index:2;">
+      <input type="text"
+             placeholder="Search charms…"
+             oninput="app.ui.filterCharms(this, 'charms-groups-wrap')"/>
     </div>
 
-    <div id="charms-groups-wrap" style="overflow-y:auto;flex:1;min-height:0;padding:8px 0;">
+    <div id="charms-groups-wrap" style="overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;padding:7px 8px;display:flex;flex-direction:column;gap:5px;background:var(--white);">
 
       @forelse ($charmGroups as $groupName => $charms)
-        <div class="charm-group" data-group="{{ $groupName }}">
 
-          <!-- Group header -->
-          <div class="charm-group-hd">
-            <span class="charm-group-label">{{ $groupName }}</span>
-            <span class="charm-group-count">{{ $charms->count() }}</span>
+        {{-- Collapsible group — reuses the .bgroup structure from the stylesheet --}}
+        <div class="bgroup open" data-group="{{ Str::slug($groupName) }}">
+
+          {{-- Group header --}}
+          <div class="bgroup-head" onclick="this.closest('.bgroup').classList.toggle('open')">
+            <div class="bgroup-head-l">
+              <span class="bgroup-lbl">{{ $groupName }}</span>
+            </div>
+            <div class="bgroup-head-r">
+              {{-- item count badge --}}
+              <span class="sbd s-in">{{ $charms->count() }}</span>
+              <svg class="bgroup-arr" viewBox="0 0 12 12">
+                <polyline points="2,4 6,8 10,4"/>
+              </svg>
+            </div>
           </div>
 
-          <!-- Charm grid for this group -->
-          <div class="lgrid charm-group-grid">
-            @foreach ($charms as $charm)
-              <div class="litem charm-litem
-                          {{ $charm['stock'] === 'out'  ? 'litem-out'  : '' }}
-                          {{ $charm['stock'] === 'low'  ? 'litem-low'  : '' }}
-                          {{ $charm['is_large']         ? 'litem-large': '' }}"
-                   data-slug="{{ $charm['slug'] }}"
-                   data-name="{{ $charm['name'] }}"
-                   data-search="{{ strtolower($charm['name'] . ' ' . $groupName) }}"
-                   onclick="{{ $charm['stock'] !== 'out' ? 'app.ui.addElement(\'' . $charm['slug'] . '\')' : '' }}"
-                   title="{{ $charm['name'] }}{{ $charm['stock'] === 'low' ? ' — Low Stock' : '' }}{{ $charm['stock'] === 'out' ? ' — Out of Stock' : '' }}">
+          {{-- Charm grid for this group — max-height keeps each group independently scrollable --}}
+          <div class="bgroup-body" style="padding:8px;max-height:220px;overflow-y:auto;overflow-x:hidden;">
+            <div class="lgrid"
+                 style="grid-template-columns:1fr 1fr;gap:7px;padding:0;overflow:visible;">
 
-                @if ($charm['use_img'] && $charm['img_path'])
-                  <img src="{{ asset('img/builder/' . $charm['img_path']) }}"
-                       alt="{{ $charm['name'] }}"
-                       class="charm-img"
-                       loading="lazy"/>
-                @else
-                  <div class="charm-placeholder">{{ substr($charm['name'], 0, 1) }}</div>
-                @endif
+              @foreach ($charms as $charm)
 
-                @if ($charm['stock'] === 'low')
-                  <span class="stock-pip low">!</span>
-                @elseif ($charm['stock'] === 'out')
-                  <span class="stock-pip out">✕</span>
-                @endif
+                <div class="ecard figure
+                            {{ $charm['stock'] === 'out' ? 'out' : '' }}"
+                     data-slug="{{ $charm['slug'] }}"
+                     data-search="{{ strtolower($charm['name'] . ' ' . $groupName) }}"
+                     onclick="{{ $charm['stock'] !== 'out' ? "app.ui.addElement('" . $charm['slug'] . "')" : '' }}"
+                     title="{{ $charm['name'] }}{{ $charm['stock'] === 'low' ? ' — Low Stock' : '' }}{{ $charm['stock'] === 'out' ? ' — Out of Stock' : '' }}">
 
-                <div class="litem-lbl">{{ $charm['name'] }}</div>
-                <div class="litem-price">₱{{ $charm['price'] }}</div>
-              </div>
-            @endforeach
-          </div>
+                  {{-- Thumbnail --}}
+                  <div class="eprev-img">
+                    @if ($charm['use_img'] && $charm['img_path'])
+                      <img src="{{ asset('img/builder/' . $charm['img_path']) }}"
+                           alt="{{ $charm['name'] }}"
+                           loading="lazy"/>
+                    @else
+                      {{-- Fallback initial placeholder --}}
+                      <div style="
+                        width:52px;height:52px;border-radius:var(--r-sm);
+                        background:var(--pink-lt);border:1.5px solid var(--pink-bd);
+                        display:flex;align-items:center;justify-content:center;
+                        font-family:var(--fh);font-size:1.1rem;font-weight:800;
+                        color:var(--pink-dk);">
+                        {{ strtoupper(substr($charm['name'], 0, 1)) }}
+                      </div>
+                    @endif
+                  </div>
 
-        </div>
+                  {{-- Name --}}
+                  <div class="ename">{{ $charm['name'] }}</div>
+
+                  {{-- Price --}}
+                  <div style="font-size:.6rem;font-weight:800;color:var(--pink);">
+                    ₱{{ $charm['price'] }}
+                  </div>
+
+                  {{-- Stock badge --}}
+                  @if ($charm['stock'] === 'low')
+                    <span class="sbd s-low">Low</span>
+                  @elseif ($charm['stock'] === 'out')
+                    <span class="sbd s-out">Out</span>
+                  @endif
+
+                </div>
+
+              @endforeach
+
+            </div>{{-- /.lgrid --}}
+          </div>{{-- /.bgroup-body --}}
+
+        </div>{{-- /.bgroup --}}
+
       @empty
-        <div class="dempty" style="padding:24px;text-align:center;color:var(--grey-400);">
+
+        <div class="dempty">
           <div class="dempty-icon">✽</div>
           No charms available.
         </div>
+
       @endforelse
 
-    </div>
-  </div>
+    </div>{{-- /#charms-groups-wrap --}}
+  </div>{{-- /#tab-charms --}}
 
-  <!-- Letters tab -->
-  <div id="tab-letters" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
-    <div class="lshape-row">
+  <!-- ══════════════════════════════════════
+       LETTERS TAB
+  ══════════════════════════════════════ -->
+  <div id="tab-letters" style="display:none;flex-direction:column;flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;">
+    <div class="lshape-row" style="position:sticky;top:0;z-index:2;">
       <span class="dir-lbl">Tile Shape:</span>
       <div class="lshape-btns">
         <button class="lshape-btn active" onclick="app.ui.setLetterShape('square', this)">
@@ -115,7 +166,7 @@ $charmGroups = collect($elements ?? [])
         </button>
       </div>
     </div>
-    <div class="lclr">
+    <div class="lclr" style="position:sticky;top:38px;z-index:2;">
       <div class="slbl" style="margin:0;font-size:.65rem;white-space:nowrap;">Color</div>
       <div class="swatches" id="ltr-sw">
         <div class="sw active" style="background:#fff;"    onclick="app.ui.setLtrCol('#ffffff','#333344',this)"></div>
@@ -127,6 +178,7 @@ $charmGroups = collect($elements ?? [])
         <div class="sw"        style="background:#3D3D52;" onclick="app.ui.setLtrCol('#3D3D52','#ffffff',this)"></div>
       </div>
     </div>
-    <div class="lgrid-ltrs" id="grid-ltrs"></div>
+    <div class="lgrid-ltrs" id="grid-ltrs" style="overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;"></div>
   </div>
-</div>
+
+</div>{{-- /.rpanel --}}

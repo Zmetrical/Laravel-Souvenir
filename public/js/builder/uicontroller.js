@@ -374,78 +374,49 @@ export class UIController {
   // Each section reuses the existing .bgroup accordion classes from the Beads/Charms tabs.
   // To add a new section (e.g. Pendants): push one object into the array below.
 
-  _getFigureSections(items) {
-    if (this._figureSections) return this._figureSections;
+buildFiguresGrid(items) {
+  const container = document.getElementById('grid-figures');
+  if (!container) return;
 
-    const cubeItems = items.filter(i => i.category === 'figures');
-    const cubeGroups = {};
-    cubeItems.forEach(item => {
-      const g = item.group || 'Other';
-      if (!cubeGroups[g]) cubeGroups[g] = [];
-      cubeGroups[g].push(item);
-    });
+  container.style.cssText =
+    'overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;padding:7px 8px;display:flex;flex-direction:column;gap:5px;';
 
-    this._figureSections = [
-      {
-        key:         'cubes',
-        label:       'Cube',
-        open:        true,
-        groups:      cubeGroups,
-        activeGroup: Object.keys(cubeGroups)[0] || '',
-      },
-      // Add future sections here, e.g.:
-      // { key: 'pendants', label: 'Pendant', open: false, groups: {}, activeGroup: '' },
-    ];
-    return this._figureSections;
-  }
+  // ── Group figures by their `group` field (same as beads tab) ──────────
+  const figItems = items.filter(i => i.category === 'figures');
+  const groups   = {};
+  figItems.forEach(item => {
+    const g = item.group || 'Other';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(item);
+  });
 
-  buildFiguresGrid(items) {
-    const container = document.getElementById('grid-figures');
-    if (!container) return;
-
-    container.style.cssText = 'overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;padding:7px 8px;display:flex;flex-direction:column;gap:5px;';
-
-    const sections = this._getFigureSections(items);
-
-    container.innerHTML = sections.map((sec, idx) => {
-      const groupNames  = Object.keys(sec.groups);
-      const firstItem   = (sec.groups[groupNames[0]] || [])[0];
-      const swatchesHtml = this._buildFigureSwatches(sec);
-
-      return `
-        <div class="bgroup${sec.open ? ' open' : ''}" data-fig-key="${sec.key}">
-          <div class="bgroup-head" onclick="app.ui.toggleFigureSection('${sec.key}')">
-            <div class="bgroup-head-l">
-              ${firstItem ? `<img class="bgroup-preview" src="${firstItem.imgUrl}" alt="${sec.label}"/>` : ''}
-              <span class="bgroup-lbl">${sec.label}</span>
-            </div>
-            <div class="bgroup-head-r">
-              <svg class="bgroup-arr" viewBox="0 0 10 10"><polyline points="2,3 5,7 8,3"/></svg>
-            </div>
-          </div>
-          <div class="bgroup-body">
-            <!-- Type pills -->
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
-              ${groupNames.map(name => {
-                const short  = name.replace(' Cubes','').replace(' Cube','');
-                const active = name === sec.activeGroup;
-                return `<button
-                  class="cpill fig-type-pill${active ? ' active' : ''}"
-                  data-section="${sec.key}"
-                  data-group="${name}"
-                  onclick="app.ui.setFigureType('${sec.key}','${name}')">
-                  ${short}
-                </button>`;
-              }).join('')}
-            </div>
-            <!-- Color swatches -->
-            <div class="bgroup-swatches fig-swatches" data-section="${sec.key}">
-              ${swatchesHtml}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-  }
+  // ── Render one accordion per group ────────────────────────────────────
+  container.innerHTML = Object.entries(groups).map(([groupName, beads], idx) => `
+    <div class="bgroup${idx === 0 ? ' open' : ''}" id="figgroup-${groupName.toLowerCase().replace(/\s+/g,'-')}">
+      <div class="bgroup-head" onclick="this.closest('.bgroup').classList.toggle('open')">
+        <div class="bgroup-head-l">
+          <img class="bgroup-preview" src="${beads[0].imgUrl}" alt="${groupName}"/>
+          <span class="bgroup-lbl">${groupName}</span>
+        </div>
+        <div class="bgroup-head-r">
+          <span class="bgroup-price">₱${beads[0].price}</span>
+          <svg class="bgroup-arr" viewBox="0 0 10 10"><polyline points="2,3 5,7 8,3"/></svg>
+        </div>
+      </div>
+      <div class="bgroup-body">
+        <div class="bgroup-swatches">
+          ${beads.map(item => `
+            <div class="bswatch${item.stock === 'out' ? ' out' : ''}"
+                 onclick="${item.stock !== 'out' ? `app.ui.addElement('${item.id}')` : ''}"
+                 title="${item.name}"
+                 style="width:34px;height:34px;border-radius:6px;">
+              <img src="${item.imgUrl}" alt="${item.name}" style="border-radius:4px;"/>
+              ${item.stock === 'low' ? '<span class="bswatch-low">!</span>' : ''}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
 
   _buildFigureSwatches(sec) {
     return (sec.groups[sec.activeGroup] || []).map(item => `
@@ -458,28 +429,7 @@ export class UIController {
       </div>`).join('');
   }
 
-  toggleFigureSection(key) {
-    const sec = (this._figureSections || []).find(s => s.key === key);
-    if (!sec) return;
-    sec.open = !sec.open;
-    const el = document.querySelector(`.bgroup[data-fig-key="${key}"]`);
-    if (el) el.classList.toggle('open', sec.open);
-  }
-
-  setFigureType(sectionKey, groupName) {
-    const sec = (this._figureSections || []).find(s => s.key === sectionKey);
-    if (!sec) return;
-    sec.activeGroup = groupName;
-
-    // Update pill active state using existing .cpill.active class
-    document.querySelectorAll(`.fig-type-pill[data-section="${sectionKey}"]`).forEach(b => {
-      b.classList.toggle('active', b.dataset.group === groupName);
-    });
-
-    // Re-render swatches
-    const swatchEl = document.querySelector(`.fig-swatches[data-section="${sectionKey}"]`);
-    if (swatchEl) swatchEl.innerHTML = this._buildFigureSwatches(sec);
-  }
+ 
 
   // Charms tab — image-based series grouped in accordions
   buildCharmsGrid(items) {

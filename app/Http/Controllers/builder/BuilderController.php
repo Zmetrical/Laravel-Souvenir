@@ -13,9 +13,8 @@ abstract class BuilderController extends Controller
     // This replaces the static data.js files — injected into the page as JSON
     protected function getElementsPayload(): array
     {
-        $elements = Element::with('series')
-            ->active()
-            ->get();
+        $elements = Element::active()->get();
+
 
         return [
             'beads'   => $elements->where('category', 'beads')
