@@ -1,0 +1,335 @@
+Create a web page for ArtsyCrate local business
+description:
+➝ Prints, customs & creative fun
+➝ For business, gifts & souvenirs
+➝ Make your own bag charms & keychains in-store, w/ lots of 
+
+The shop Artsy Crate uses a vibrant, fun color scheme centered around:
+
+Hot pink / magenta — dominant color seen in the banner, shelving, and products
+Turquoise / teal — used on walls, shelves, and accent pieces in the physical store
+White — as a clean neutral base throughout
+Purple — appearing in some product designs and signage
+
+very playful, girly, and eye-catching, which fits perfectly with their creative/crafty brand identity
+
+use lucid for icons
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+and use bootstrap for base ui
+customize the bootstrap class for flexible design
+
+Custom Order & Design Studio A web app where customers can design their own keychain or bag charm online before ordering.
+Drag-and-drop charm/bead builder with a live preview canvas
+Submit custom orders with design specs attached
+Admin dashboard to manage incoming orders and statuses
+Stack: React + Canvas API / Fabric.js, Node.js/Express, PostgreSQL
+how can i do that with laralvel mysql
+but first we can talk about requirments
+or the structure
+
+📋 Feature Modules (in build order)
+Phase 1 — Design Builder ⭐ Hero Feature
+
+Canvas workspace (Fabric.js on the frontend)
+Drag-and-drop beads, charms, and accessories onto a base product
+Change colors, resize, reposition elements
+Save design as a JSON snapshot + exported image (stored via Laravel)
+"Add to Order" button to carry design into checkout
+
+Phase 2 — Order Submission & Tracking
+
+Customer fills out order form (quantity, notes, contact info)
+Design snapshot attached to the order automatically
+Order confirmation page with a unique order code
+Customer can check order status via their account
+
+Phase 3 — Admin Dashboard
+
+View all incoming orders (with design preview)
+Update order status: Pending → Confirmed → In Progress → Ready → Completed
+Basic sales summary (total orders, revenue)
+
+Phase 4 — Product/Inventory Management
+
+CRUD for products (keychains, bag charms, print types)
+CRUD for charm/bead elements (what appears on the canvas)
+Stock tracking per item
+
+LayerTool
+
+BackendLaravel 12
+DatabaseMySQL
+FrontendBlade + Fabric.js (canvas) + Alpine.js (light interactivity)
+StylingTailwind CSS
+AuthLaravel Breeze
+File StorageLaravel Storage (local or S3)
+Canvas ExportFabric.js toDataURL() → sent to Laravel as base64
+
+--
+-- Database: `artsy_pbs`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cache`
+--
+
+CREATE TABLE `cache` (
+  `key` varchar(255) NOT NULL,
+  `value` mediumtext NOT NULL,
+  `expiration` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cache_locks`
+--
+
+CREATE TABLE `cache_locks` (
+  `key` varchar(255) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `expiration` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `elements`
+--
+
+CREATE TABLE `elements` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `category` enum('beads','figures','charms','letters') NOT NULL,
+  `group` varchar(255) DEFAULT NULL,
+  `shape` varchar(255) DEFAULT NULL,
+  `color` varchar(10) DEFAULT NULL,
+  `detail_color` varchar(10) DEFAULT NULL,
+  `use_img` tinyint(1) NOT NULL DEFAULT 0,
+  `img_path` varchar(255) DEFAULT NULL,
+  `series_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `is_small` tinyint(1) NOT NULL DEFAULT 0,
+  `is_large` tinyint(1) NOT NULL DEFAULT 0,
+  `price` int(10) UNSIGNED NOT NULL DEFAULT 8,
+  `stock` enum('in','low','out') NOT NULL DEFAULT 'in',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `element_series`
+--
+
+CREATE TABLE `element_series` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `failed_jobs`
+--
+
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `jobs`
+--
+
+CREATE TABLE `jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) UNSIGNED NOT NULL,
+  `reserved_at` int(10) UNSIGNED DEFAULT NULL,
+  `available_at` int(10) UNSIGNED NOT NULL,
+  `created_at` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_batches`
+--
+
+CREATE TABLE `job_batches` (
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `total_jobs` int(11) NOT NULL,
+  `pending_jobs` int(11) NOT NULL,
+  `failed_jobs` int(11) NOT NULL,
+  `failed_job_ids` longtext NOT NULL,
+  `options` mediumtext DEFAULT NULL,
+  `cancelled_at` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  `finished_at` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `migrations`
+--
+
+CREATE TABLE `migrations` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orders`
+--
+
+CREATE TABLE `orders` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `order_code` varchar(255) NOT NULL,
+  `first_name` varchar(255) NOT NULL,
+  `last_name` varchar(255) NOT NULL,
+  `contact_number` varchar(20) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `product_id` bigint(20) UNSIGNED NOT NULL,
+  `length` varchar(255) NOT NULL,
+  `base_price` int(10) UNSIGNED NOT NULL,
+  `elements_cost` int(10) UNSIGNED NOT NULL,
+  `total_price` int(10) UNSIGNED NOT NULL,
+  `status` enum('pending','confirmed','in_progress','ready','completed','cancelled') NOT NULL DEFAULT 'pending',
+  `confirmed_at` timestamp NULL DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_designs`
+--
+
+CREATE TABLE `order_designs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `order_id` bigint(20) UNSIGNED NOT NULL,
+  `design_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`design_json`)),
+  `snapshot_path` varchar(255) DEFAULT NULL,
+  `str_color` varchar(10) DEFAULT NULL,
+  `str_type` varchar(20) DEFAULT NULL,
+  `clasp` varchar(20) DEFAULT NULL,
+  `view` varchar(20) DEFAULT NULL,
+  `length` varchar(20) DEFAULT NULL,
+  `keychain_strands` tinyint(4) NOT NULL DEFAULT 1,
+  `ring_type` varchar(20) DEFAULT NULL,
+  `ring_color` varchar(10) DEFAULT NULL,
+  `letter_bg_color` varchar(10) DEFAULT NULL,
+  `letter_text_color` varchar(10) DEFAULT NULL,
+  `letter_shape` varchar(10) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_items`
+--
+
+CREATE TABLE `order_items` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `order_id` bigint(20) UNSIGNED NOT NULL,
+  `element_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `letter` char(1) DEFAULT NULL,
+  `letter_bg` varchar(10) DEFAULT NULL,
+  `letter_text_color` varchar(10) DEFAULT NULL,
+  `letter_shape` varchar(10) DEFAULT NULL,
+  `strand` tinyint(4) NOT NULL DEFAULT 0,
+  `sort_order` smallint(5) UNSIGNED NOT NULL,
+  `price_at_order` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `products`
+--
+
+CREATE TABLE `products` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `label` varchar(255) NOT NULL,
+  `base_price` int(11) NOT NULL,
+  `max_beads` int(11) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

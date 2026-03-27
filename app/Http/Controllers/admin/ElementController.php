@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\builder\Element;
+use App\Models\builder\ElementSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -69,49 +70,60 @@ class ElementController extends Controller
     // ── GET /admin/elements/charms ─────────────────────────────────────────
     public function charms(Request $request)
     {
-        $query = Element::where('category', 'charms')->latest();
+        $query = Element::where('category', 'charms')
+                        ->with('series')
+                        ->latest();
 
-        if ($request->filled('search')) $query->where('name', 'like', '%' . $request->search . '%');
-        if ($request->filled('stock'))  $query->where('stock', $request->stock);
-        if ($request->filled('group'))  $query->where('group', $request->group);
+        if ($request->filled('search'))    $query->where('name', 'like', '%' . $request->search . '%');
+        if ($request->filled('stock'))     $query->where('stock', $request->stock);
+        if ($request->filled('series_id')) $query->where('series_id', $request->series_id);
 
-        $elements = $query->paginate(24)->withQueryString();
-        $groups   = Element::where('category', 'charms')->whereNotNull('group')->distinct()->pluck('group');
+        $elements   = $query->paginate(24)->withQueryString();
+        $seriesList = ElementSeries::where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.elements.charms', compact('elements', 'groups'));
+        return view('admin.elements.charms', compact('elements', 'seriesList'));
     }
 
     // ── GET /admin/elements/create ─────────────────────────────────────────
     public function create(Request $request)
     {
         $preCategory = $request->query('cat', 'beads');
-        return view('admin.elements.create', compact('preCategory'));
+        $seriesList  = ElementSeries::where('is_active', true)->orderBy('name')->get();
+        return view('admin.elements.create', compact('preCategory', 'seriesList'));
     }
 
     // ── POST /admin/elements ───────────────────────────────────────────────
     public function store(Request $request)
     {
+        $isCharm = $request->input('category') === 'charms';
+
         // ── Bulk mode ─────────────────────────────────────────────────────
         if ($request->input('_mode') === 'bulk') {
 
             // ── Charm bulk (each variation has its own image) ──────────────
-            if ($request->input('category') === 'charms') {
+            if ($isCharm) {
                 $request->validate([
-                    'category'  => 'required|in:beads,figures,charms',
-                    'name'      => 'required|string|max:120',
-                    'slug'      => 'required|string|max:120',
-                    'group'     => 'nullable|string|max:80',
-                    'price'     => 'required|numeric|min:1',
-                    'stock'     => 'required|in:in,low,out',
-                    'variations' => 'required|array|min:1',
+                    'category'            => 'required|in:beads,figures,charms',
+                    'name'                => 'required|string|max:120',
+                    'slug'                => 'required|string|max:120',
+                    'series_id'           => 'nullable|exists:element_series,id',
+                    'price'               => 'required|numeric|min:1',
+                    'stock'               => 'required|in:in,low,out',
+                    'variations'          => 'required|array|min:1',
                     'variations.*.suffix' => 'nullable|string|max:80',
                 ]);
 
-                $folder   = Str::slug($request->group ?? 'charms');
+                $seriesId = $request->series_id ?: null;
+                $folder   = 'charms';
+                if ($seriesId) {
+                    $series = ElementSeries::find($seriesId);
+                    if ($series) $folder = Str::slug($series->name);
+                }
+
                 $varFiles = $request->file('variations') ?? [];
                 $created  = 0;
 
-                // Create the primary charm (top-level img_file)
+                // Primary charm (top-level img_file)
                 $primarySlug    = $this->uniqueSlug($request->slug);
                 $primaryImgPath = null;
                 if ($request->hasFile('img_file')) {
@@ -121,7 +133,7 @@ class ElementController extends Controller
                     'category'  => 'charms',
                     'name'      => $request->name,
                     'slug'      => $primarySlug,
-                    'group'     => $request->group,
+                    'series_id' => $seriesId,
                     'price'     => $request->price,
                     'stock'     => $request->stock,
                     'is_active' => $request->boolean('is_active'),
@@ -131,7 +143,7 @@ class ElementController extends Controller
                 ]);
                 $created++;
 
-                // Create each additional variation
+                // Additional variations
                 foreach ($request->variations as $idx => $v) {
                     $suffix = trim($v['suffix'] ?? '');
                     $name   = $suffix ? $request->name . ' ' . $suffix : $request->name;
@@ -149,7 +161,7 @@ class ElementController extends Controller
                         'category'  => 'charms',
                         'name'      => $name,
                         'slug'      => $slug,
-                        'group'     => $request->group,
+                        'series_id' => $seriesId,
                         'price'     => $request->price,
                         'stock'     => $request->stock,
                         'is_active' => $request->boolean('is_active'),
@@ -167,14 +179,14 @@ class ElementController extends Controller
 
             // ── Bead / Figure bulk (color variations) ─────────────────────
             $request->validate([
-                'category'           => 'required|in:beads,figures,charms',
-                'shape'              => 'required|string',
-                'name'               => 'required|string|max:120',
-                'slug'               => 'required|string|max:120',
-                'group'              => 'nullable|string|max:80',
-                'price'              => 'required|numeric|min:1',
-                'stock'              => 'required|in:in,low,out',
-                'variations'         => 'required|array|min:1',
+                'category'            => 'required|in:beads,figures,charms',
+                'shape'               => 'required|string',
+                'name'                => 'required|string|max:120',
+                'slug'                => 'required|string|max:120',
+                'group'               => 'nullable|string|max:80',
+                'price'               => 'required|numeric|min:1',
+                'stock'               => 'required|in:in,low,out',
+                'variations'          => 'required|array|min:1',
                 'variations.*.color'  => 'required|string|max:20',
                 'variations.*.detail' => 'required|string|max:20',
             ]);
@@ -209,10 +221,18 @@ class ElementController extends Controller
         }
 
         // ── Single mode ────────────────────────────────────────────────────
-        $validated = $this->validateElement($request);
+        $validated = $isCharm
+            ? $this->validateCharm($request)
+            : $this->validateElement($request);
 
         if ($request->hasFile('img_file')) {
-            $folder = Str::slug($validated['group'] ?? 'charms');
+            $folder = 'charms';
+            if ($isCharm && !empty($validated['series_id'])) {
+                $series = ElementSeries::find($validated['series_id']);
+                if ($series) $folder = Str::slug($series->name);
+            } elseif (!$isCharm) {
+                $folder = Str::slug($validated['group'] ?? 'charms');
+            }
             $validated['img_path'] = $this->handleImageUpload($request, $folder);
         }
         unset($validated['img_file']);
@@ -232,20 +252,31 @@ class ElementController extends Controller
     public function edit(Element $element)
     {
         $preCategory = $element->category;
-        return view('admin.elements.edit', compact('element', 'preCategory'));
+        $seriesList  = ElementSeries::where('is_active', true)->orderBy('name')->get();
+        return view('admin.elements.edit', compact('element', 'preCategory', 'seriesList'));
     }
 
     // ── PUT /admin/elements/{element} ──────────────────────────────────────
     public function update(Request $request, Element $element)
     {
-        $validated = $this->validateElement($request, $element->id);
+        $isCharm = $element->category === 'charms';
+
+        $validated = $isCharm
+            ? $this->validateCharm($request, $element->id)
+            : $this->validateElement($request, $element->id);
 
         if ($request->hasFile('img_file')) {
             if ($element->img_path) {
                 $oldPath = public_path('img/builder/' . $element->img_path);
                 if (file_exists($oldPath)) unlink($oldPath);
             }
-            $folder = Str::slug($validated['group'] ?? 'charms');
+            $folder = 'charms';
+            if ($isCharm && !empty($validated['series_id'])) {
+                $series = ElementSeries::find($validated['series_id']);
+                if ($series) $folder = Str::slug($series->name);
+            } elseif (!$isCharm) {
+                $folder = Str::slug($validated['group'] ?? 'charms');
+            }
             $validated['img_path'] = $this->handleImageUpload($request, $folder);
         }
         unset($validated['img_file']);
@@ -277,6 +308,7 @@ class ElementController extends Controller
 
     // ── PRIVATE HELPERS ────────────────────────────────────────────────────
 
+    /** Validate for beads / figures */
     private function validateElement(Request $request, ?int $ignoreId = null): array
     {
         $slugRule = $ignoreId
@@ -302,13 +334,33 @@ class ElementController extends Controller
         ]);
     }
 
-    /** Handle a file from $request->file('img_file') */
+    /** Validate for charms (uses series_id instead of group) */
+    private function validateCharm(Request $request, ?int $ignoreId = null): array
+    {
+        $slugRule = $ignoreId
+            ? "required|string|max:30|unique:elements,slug,{$ignoreId}"
+            : 'required|string|max:30|unique:elements,slug';
+
+        return $request->validate([
+            'slug'      => $slugRule,
+            'name'      => 'required|string|max:255',
+            'category'  => 'required|in:charms',
+            'series_id' => 'nullable|exists:element_series,id',
+            'use_img'   => 'boolean',
+            'img_path'  => 'nullable|string|max:255',
+            'img_file'  => 'nullable|image|mimes:png,jpg,webp|max:2048',
+            'is_large'  => 'boolean',
+            'price'     => 'required|integer|min:1|max:9999',
+            'stock'     => 'required|in:in,low,out',
+            'is_active' => 'boolean',
+        ]);
+    }
+
     private function handleImageUpload(Request $request, string $folderName): string
     {
         return $this->handleImageFile($request->file('img_file'), $folderName);
     }
 
-    /** Handle an already-resolved UploadedFile instance */
     private function handleImageFile(\Illuminate\Http\UploadedFile $file, string $folderName): string
     {
         $dir = public_path('img/builder/' . $folderName);
@@ -323,7 +375,6 @@ class ElementController extends Controller
         return $folderName . '/' . $filename;
     }
 
-    /** Return a slug that does not yet exist in the elements table */
     private function uniqueSlug(string $base): string
     {
         $slug = $base;
