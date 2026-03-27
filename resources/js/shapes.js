@@ -5,6 +5,7 @@
 
 import { BeadShapes } from '@shapes/beads.js';
 import { CubeShapes } from '@shapes/cubes.js';
+import { FigureShapes } from '@shapes/figures.js';
 
 // ── Helpers (same as before, but only defined ONCE now) ───────────────────
 
@@ -58,6 +59,8 @@ function draw(canvas, opts) {
 
     if (CubeShapes[shape]) {
         CubeShapes[shape](ctx, R, color, detail, roundRect);
+    } else if (FigureShapes[shape]) {
+        FigureShapes[shape](ctx, R, color, detail, lighten);
     } else if (BeadShapes[shape]) {
         BeadShapes[shape](ctx, R, color, detail, lighten);
     } else {

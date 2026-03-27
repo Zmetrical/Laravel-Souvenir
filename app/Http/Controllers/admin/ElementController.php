@@ -112,26 +112,69 @@ class ElementController extends Controller
     }
 
     // ── POST /admin/elements ───────────────────────────────────────────────
-    public function store(Request $request)
-    {
-        $validated = $this->validateElement($request);
+public function store(Request $request)
+{
+    // ── Bulk mode ────────────────────────────────────────────────────────
+    if ($request->input('_mode') === 'bulk') {
 
-        if ($request->hasFile('img_file')) {
-            $validated['img_path'] = $this->handleImageUpload($request, $validated['series_slug'] ?? 'charms');
+        $request->validate([
+            'category'       => 'required|in:beads,figures,charms',
+            'shape'          => 'required|string',
+            'name'           => 'required|string|max:120',
+            'slug'           => 'required|string|max:120',
+            'group'          => 'nullable|string|max:80',
+            'price'          => 'required|numeric|min:1',
+            'stock'          => 'required|in:in,low,out',
+            'variations'     => 'required|array|min:1',
+            'variations.*.color'  => 'required|string|max:20',
+            'variations.*.detail' => 'required|string|max:20',
+        ]);
+
+        $created = 0;
+        foreach ($request->variations as $v) {
+            $suffix = trim($v['suffix'] ?? '');
+            $name   = $suffix ? $request->name . ' ' . $suffix : $request->name;
+            $slug   = $suffix
+                ? $request->slug . '-' . Str::slug($suffix)
+                : $request->slug;
+
+            // Ensure slug is unique
+            $slug = $this->uniqueSlug($slug);
+
+            Element::create([
+                'category'     => $request->category,
+                'shape'        => $request->shape,
+                'name'         => $name,
+                'slug'         => $slug,
+                'group'        => $request->group,
+                'price'        => $request->price,
+                'stock'        => $request->stock,
+                'is_active'    => $request->boolean('is_active'),
+                'color'        => $v['color'],
+                'detail_color' => $v['detail'],
+            ]);
+            $created++;
         }
-        unset($validated['series_slug'], $validated['img_file']);
 
-        if (empty($validated['slug'])) {
-            $validated['slug'] = $this->generateSlug($validated['name']);
-        }
-
-        Element::create($validated);
-
-        // Redirect back to the right category page
-        $category = $validated['category'];
-        return redirect()->route('admin.elements.' . $category)
-            ->with('success', 'Element "' . $validated['name'] . '" added successfully.');
+        return redirect()
+            ->route('admin.elements.' . $request->category)
+            ->with('success', "{$created} variation(s) created successfully!");
     }
+
+    // ── Single mode (existing logic below) ───────────────────────────────
+    // ... your current store code ...
+}
+
+// Helper — appends -2, -3 etc. if slug already exists
+private function uniqueSlug(string $base): string
+{
+    $slug = $base;
+    $i    = 2;
+    while (Element::where('slug', $slug)->exists()) {
+        $slug = $base . '-' . $i++;
+    }
+    return $slug;
+}
 
     // ── GET /admin/elements/{element}/edit ─────────────────────────────────
     public function edit(Element $element)
