@@ -111,10 +111,12 @@ class ElementController extends Controller
         return view('admin.elements.create', compact('seriesList', 'preCategory'));
     }
 
+
+
     // ── POST /admin/elements ───────────────────────────────────────────────
-public function store(Request $request)
-{
-    // ── Bulk mode ────────────────────────────────────────────────────────
+    public function store(Request $request)
+    {
+            // ── Bulk mode ────────────────────────────────────────────────────────
     if ($request->input('_mode') === 'bulk') {
 
         $request->validate([
@@ -160,21 +162,45 @@ public function store(Request $request)
             ->route('admin.elements.' . $request->category)
             ->with('success', "{$created} variation(s) created successfully!");
     }
+        $validated = $this->validateElement($request);
 
-    // ── Single mode (existing logic below) ───────────────────────────────
-    // ... your current store code ...
-}
+        if ($request->hasFile('img_file')) {
+            $validated['img_path'] = $this->handleImageUpload($request, $validated['series_slug'] ?? 'charms');
+        }
+        unset($validated['series_slug'], $validated['img_file']);
 
-// Helper — appends -2, -3 etc. if slug already exists
-private function uniqueSlug(string $base): string
-{
-    $slug = $base;
-    $i    = 2;
-    while (Element::where('slug', $slug)->exists()) {
-        $slug = $base . '-' . $i++;
+        if (empty($validated['slug'])) {
+            $validated['slug'] = $this->generateSlug($validated['name']);
+        }
+
+        Element::create($validated);
+
+        // Redirect back to the right category page
+        $category = $validated['category'];
+        return redirect()->route('admin.elements.' . $category)
+            ->with('success', 'Element "' . $validated['name'] . '" added successfully.');
     }
-    return $slug;
-}
+
+    
+    private function uniqueSlug(string $base): string
+    {
+        $slug = $base;
+        $i    = 2;
+        while (Element::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+            if (empty($validated['slug'])) {
+                $validated['slug'] = $this->generateSlug($validated['name']);
+            }
+
+            Element::create($validated);
+
+            // Redirect back to the right category page
+            $category = $validated['category'];
+            return redirect()->route('admin.elements.' . $category)
+                ->with('success', 'Element "' . $validated['name'] . '" added successfully.');
+        }
+        return $slug;
+    }
 
     // ── GET /admin/elements/{element}/edit ─────────────────────────────────
     public function edit(Element $element)
