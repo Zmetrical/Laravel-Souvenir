@@ -7,7 +7,6 @@
         'shop'      => ['href' => '#shop',      'label' => 'Shop'],
         'customize' => ['href' => '#customize', 'label' => 'Customize'],
         'gifts'     => ['href' => '#gifts',     'label' => 'Gifts'],
-        'business'  => ['href' => '#business',  'label' => 'Business'],
         'about'     => ['href' => '#about',     'label' => 'About'],
     ];
 @endphp
