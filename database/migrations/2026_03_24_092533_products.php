@@ -10,10 +10,17 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('slug')->unique();         // bracelet | necklace | keychain
-            $table->string('label');                  // Bracelet | Necklace | Keychain / Bag Charm
-            $table->integer('base_price');            // 80 | 100 | 65
-            $table->integer('max_beads');             // 20 | 28 | 12
+            $table->string('slug')->unique();          // bracelet | necklace | keychain
+            $table->string('label');                   // Bracelet | Necklace | Keychain / Bag Charm
+            $table->integer('base_price');             // 80 | 100 | 65
+            $table->integer('max_beads');              // 20 | 28 | 12
+
+            // ── Revision cap ───────────────────────────────────────────────────
+            // How many free design revisions the customer gets before admin
+            // is flagged that the limit has been exceeded.
+            // Admin can still accept more — this is a soft cap, not a hard block.
+            $table->unsignedTinyInteger('max_revisions')->default(2);
+
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

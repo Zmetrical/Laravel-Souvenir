@@ -69,4 +69,6 @@ class Order extends Model
     {
         return static::$statuses[$this->status] ?? ucfirst($this->status);
     }
+
+    
 }

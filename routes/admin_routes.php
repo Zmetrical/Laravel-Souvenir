@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ElementController;
+use App\Http\Controllers\Admin\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\ElementController;
 | Name   : admin.
 |--------------------------------------------------------------------------
 */
+Route::middleware('admin')->group(function () {
 
 // ── Elements Overview ──────────────────────────────────────────────────────
 Route::get('elements',                [ElementController::class, 'overview'])->name('elements.index');
@@ -29,6 +31,8 @@ Route::get(   'elements/{element}/edit', [ElementController::class, 'edit'   ])-
 Route::put(   'elements/{element}',      [ElementController::class, 'update' ])->name('elements.update');
 Route::delete('elements/{element}',      [ElementController::class, 'destroy'])->name('elements.destroy');
 
+
+
 // ── Products (coming soon) ─────────────────────────────────────────────────
 // Route::get(    'products',             [ProductController::class, 'index'  ])->name('products.index');
 // Route::get(    'products/create',      [ProductController::class, 'create' ])->name('products.create');
@@ -38,6 +42,9 @@ Route::delete('elements/{element}',      [ElementController::class, 'destroy'])-
 // Route::delete( 'products/{product}',   [ProductController::class, 'destroy'])->name('products.destroy');
 
 // ── Orders (coming soon) ───────────────────────────────────────────────────
-// Route::get(   'orders',                [OrderController::class, 'index'    ])->name('orders.index');
-// Route::get(   'orders/{order}',        [OrderController::class, 'show'     ])->name('orders.show');
-// Route::patch( 'orders/{order}/status', [OrderController::class, 'status'   ])->name('orders.status');
+Route::get('/orders',                   [OrderController::class, 'index'])       ->name('orders.index');
+Route::get('/orders/{order}',           [OrderController::class, 'show'])        ->name('orders.show');
+Route::post('/orders/{order}/status',   [OrderController::class, 'updateStatus'])->name('orders.status');
+Route::get('/orders/{order}/print',     [OrderController::class, 'printView'])   ->name('orders.print');
+
+});

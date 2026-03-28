@@ -690,32 +690,254 @@ filterCharms(input, target) {
     this.renderToCanvas(document.getElementById('preview-canvas'), 460, 320);
   }
 
-  openOrder() {
-    const state = this.app.state;
-    const ec = state.elems.reduce((s, e) => s + (e.price || 8), 0);
-    const lenVal = document.getElementById('length-sel').value;
-    const lenMap = { small: '16cm', medium: '18cm', large: '20cm', custom: 'Custom' };
-    const prodMap = { bracelet: 'Bracelet', necklace: 'Necklace', keychain: 'Keychain' };
+openOrder() {
+  const state = this.app.state;
 
-    document.getElementById('os-prod').textContent = `${prodMap[state.product]} · ${lenMap[lenVal]}`;
-    document.getElementById('os-base').textContent = `₱${state.basePrice}`;
-    document.getElementById('os-elems').textContent = `${state.elems.length} elements`;
-    document.getElementById('os-ecost').textContent = `₱${ec}`;
-    document.getElementById('os-total').textContent = `₱${state.basePrice + ec}.00`;
-    document.getElementById('order-modal').classList.add('open');
-
-    if (state.elems.length) {
-      document.getElementById('order-design-thumb').style.display = 'block';
-      this.renderToCanvas(document.getElementById('order-canvas'), 300, 140);
-    }
+  if (!state.elems.length) {
+    this.showToast('Add at least one element first!');
+    return;
   }
+
+  // 1. Render canvas → base64 PNG snapshot
+  const ec = document.createElement('canvas');
+  ec.width  = 680;
+  ec.height = 480;
+  const ctx = ec.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, 680, 480);
+  const savedSel = state.selectedId;
+  state.selectedId = null;
+  this.app.canvasEngine.draw(ec, state, false);
+  state.selectedId = savedSel;
+  const snapshot = ec.toDataURL('image/png');
+
+  // 2. Read the length select text
+  const lenEl   = document.getElementById('length-sel');
+  const lenText = lenEl?.selectedOptions[0]?.text || lenEl?.value || '';
+
+  // 3. Read the string type select
+  const strTypeEl = document.getElementById('str-type');
+
+  // 4. Build a hidden form and POST to /order/preview
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'order/preview';  
+  form.style.display = 'none';
+
+
+  const fields = {
+    _token:           document.querySelector('meta[name="csrf-token"]')?.content || '',
+    // design (matches controller validation key)
+    design:           JSON.stringify(state.elems),
+    snapshot:         snapshot,
+    // product (matches controller validation key)
+    product_slug:     state.product,
+    length:           lenText,
+    // canvas state
+    str_color:        state.strColor          || '',
+    str_type:         strTypeEl?.value        || state.strType || '',
+    clasp:            state.clasp             || '',
+    view:             state.view              || '',
+    keychain_strands: state.keychainStrands   || 1,
+    ring_type:        state.ringType          || '',
+    ring_color:       state.ringColor         || '',
+    letter_bg_color:  state.ltrColor?.bg      || '',
+    letter_text_color: state.ltrColor?.text   || '',
+    letter_shape:     state.letterShape       || '',
+  };
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = value ?? '';
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+}
 
   closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-  submitOrder() {
-    this.showToast('Order submitted! We will message you soon.');
-    this.closeModal('order-modal');
+// ── submitOrder() ────────────────────────────────────────────────────────────
+// Replace your existing submitOrder() with this version.
+async submitOrder() {
+  const state = this.app.state;
+ 
+  // ── 1. Validate form inputs ─────────────────────────────────────────────
+  const firstName = document.getElementById('order-first-name')?.value.trim();
+  const lastName  = document.getElementById('order-last-name')?.value.trim();
+  const contact   = document.getElementById('order-contact')?.value.trim();
+  const notes     = document.getElementById('order-notes')?.value.trim();
+  const errorEl   = document.getElementById('order-error');
+ 
+  const hide = () => { if (errorEl) errorEl.style.display = 'none'; };
+  const show = (msg) => {
+    if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+  };
+ 
+  hide();
+ 
+  if (!firstName) { show('Please enter your first name.'); return; }
+  if (!lastName)  { show('Please enter your last name.');  return; }
+  if (!contact)   { show('Please enter your contact number.'); return; }
+  if (state.elems.length === 0) { show('Your design is empty — add at least one element.'); return; }
+ 
+  // ── 2. Disable button + show loading state ──────────────────────────────
+  const btn = document.getElementById('order-submit-btn');
+  const originalText = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Submitting…'; }
+ 
+  try {
+    // ── 3. Capture the design snapshot ─────────────────────────────────────
+    const snapshotDataUrl = this._captureSnapshot(680, 480);
+ 
+    // ── 4. Gather the length + product info from the DOM ───────────────────
+    const lengthSelect  = document.getElementById('length-sel');
+    const lengthText    = lengthSelect?.selectedOptions[0]?.text || lengthSelect?.value || '';
+    const elemCost      = state.elems.reduce((s, e) => s + (e.price || 8), 0);
+    const totalPrice    = state.basePrice + elemCost;
+ 
+    // ── 5. Build order items from state.elems ──────────────────────────────
+    const items = state.elems.map((el, i) => ({
+      element_slug      : el.isLetter ? null : (el.slug || el.id || null),
+      letter            : el.isLetter ? el.label : null,
+      letter_bg         : el.isLetter ? el.ltrBg   : null,
+      letter_text_color : el.isLetter ? el.ltrText  : null,
+      letter_shape      : el.isLetter ? (el.letterShape || null) : null,
+      strand            : el.strand ?? 0,
+      price             : el.price || 8,
+    }));
+ 
+    // ── 6. Build the full payload ───────────────────────────────────────────
+    const payload = {
+      // Customer
+      first_name     : firstName,
+      last_name      : lastName,
+      contact_number : contact,
+      notes          : notes || null,
+ 
+      // Product
+      product_slug   : window.BUILDER_PRODUCT?.product
+                         ? this._productToSlug(window.BUILDER_PRODUCT.product)
+                         : 'keychain-standard',
+      length         : lengthText,
+      base_price     : state.basePrice,
+      elements_cost  : elemCost,
+      total_price    : totalPrice,
+ 
+      // Design
+      design_json    : JSON.stringify(state.elems),
+      snapshot       : snapshotDataUrl,
+ 
+      // Design specs
+      str_color      : state.strColor   || null,
+      str_type       : state.strType    || null,
+      clasp          : state.clasp      || null,
+      view           : state.view       || null,
+      keychain_strands : state.keychainStrands || 1,
+      ring_type      : state.ringType   || null,
+      ring_color     : state.ringColor  || null,
+      letter_bg_color   : state.ltrColor?.bg   || null,
+      letter_text_color : state.ltrColor?.text  || null,
+      letter_shape      : state.letterShape    || null,
+ 
+      // Items
+      items,
+    };
+ 
+    // ── 7. POST to Laravel ─────────────────────────────────────────────────
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                   || window.CSRF_TOKEN
+                   || '';
+ 
+    const response = await fetch('/builder/order', {
+      method : 'POST',
+      headers: {
+        'Content-Type'    : 'application/json',
+        'Accept'          : 'application/json',
+        'X-CSRF-TOKEN'    : csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify(payload),
+    });
+ 
+    const data = await response.json();
+ 
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Server error. Please try again.');
+    }
+ 
+    // ── 8. Show success view ───────────────────────────────────────────────
+    const codeEl = document.getElementById('success-order-code');
+    if (codeEl) codeEl.textContent = data.order_code;
+ 
+    document.getElementById('order-form-view').style.display    = 'none';
+    document.getElementById('order-success-view').style.display = 'block';
+ 
+  } catch (err) {
+    show(err.message || 'Something went wrong. Please try again.');
+    console.error('[ArtsyCrate] Order submission error:', err);
+  } finally {
+    // Re-enable the button regardless of outcome
+    if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
   }
+}
+
+// ── _productToSlug(product) ───────────────────────────────────────────────────
+// NEW helper — maps the JS product key to your products table slug.
+// Update these values to match your actual `products.slug` rows.
+_productToSlug(product) {
+  const map = {
+    bracelet : 'bracelet-standard',
+    necklace : 'necklace-standard',
+    keychain : 'keychain-standard',
+  };
+  return map[product] || product;
+}
+ 
+// ── _resetOrderModal() ────────────────────────────────────────────────────────
+// NEW helper — resets the modal back to the form view (called on close / Done).
+_resetOrderModal() {
+  const formView    = document.getElementById('order-form-view');
+  const successView = document.getElementById('order-success-view');
+  const errorEl     = document.getElementById('order-error');
+ 
+  if (formView)    formView.style.display    = 'block';
+  if (successView) successView.style.display = 'none';
+  if (errorEl)     errorEl.style.display     = 'none';
+}
+ 
+
+ 
+// ── _captureSnapshot(W, H) ────────────────────────────────────────────────────
+// NEW helper method — renders the current state to an offscreen canvas
+// and returns a base64 PNG data URL.
+_captureSnapshot(W = 680, H = 480) {
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = W;
+  offscreen.height = H;
+ 
+  const ctx = offscreen.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+ 
+  // White background so PNGs look clean
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, W, H);
+ 
+  // Temporarily deselect so the glow ring doesn't appear in the snapshot
+  const savedSelection = this.app.state.selectedId;
+  this.app.state.selectedId = null;
+ 
+  this.app.canvasEngine.draw(offscreen, this.app.state, false);
+ 
+  // Restore selection
+  this.app.state.selectedId = savedSelection;
+ 
+  return offscreen.toDataURL('image/png');
+}
 
   showToast(msg) {
     const t = document.getElementById('toast');

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\builder;
-
+use App\Http\Controllers\Controller;
 class BraceletController extends BuilderController
 {
     public function index()

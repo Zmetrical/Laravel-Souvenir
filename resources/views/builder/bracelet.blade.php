@@ -12,7 +12,10 @@ $productConfig = ['product' => 'bracelet', 'basePrice' => 80, 'maxBeads' => $max
   <title>ArtsyCrate — Bracelet Builder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/></head>
+<link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/>
+<meta name="csrf-token" content="{{ csrf_token() }}"/>
+
+</head>
 <body>
 
 @include('builder.includes.topbar')

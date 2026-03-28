@@ -1,31 +1,9 @@
-Create a web page for ArtsyCrate local business
-description:
-➝ Prints, customs & creative fun
-➝ For business, gifts & souvenirs
-➝ Make your own bag charms & keychains in-store, w/ lots of 
+Custom Order & Design Studio 
 
-The shop Artsy Crate uses a vibrant, fun color scheme centered around:
-
-Hot pink / magenta — dominant color seen in the banner, shelving, and products
-Turquoise / teal — used on walls, shelves, and accent pieces in the physical store
-White — as a clean neutral base throughout
-Purple — appearing in some product designs and signage
-
-very playful, girly, and eye-catching, which fits perfectly with their creative/crafty brand identity
-
-use lucid for icons
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-and use bootstrap for base ui
-customize the bootstrap class for flexible design
-
-Custom Order & Design Studio A web app where customers can design their own keychain or bag charm online before ordering.
+A web app where customers can design their own keychain or bag charm online before ordering.
 Drag-and-drop charm/bead builder with a live preview canvas
 Submit custom orders with design specs attached
 Admin dashboard to manage incoming orders and statuses
-Stack: React + Canvas API / Fabric.js, Node.js/Express, PostgreSQL
-how can i do that with laralvel mysql
-but first we can talk about requirments
-or the structure
 
 📋 Feature Modules (in build order)
 Phase 1 — Design Builder ⭐ Hero Feature
@@ -110,10 +88,26 @@ CREATE TABLE `elements` (
   `detail_color` varchar(10) DEFAULT NULL,
   `use_img` tinyint(1) NOT NULL DEFAULT 0,
   `img_path` varchar(255) DEFAULT NULL,
+  `series_id` bigint(20) UNSIGNED DEFAULT NULL,
   `is_small` tinyint(1) NOT NULL DEFAULT 0,
   `is_large` tinyint(1) NOT NULL DEFAULT 0,
   `price` int(10) UNSIGNED NOT NULL DEFAULT 8,
   `stock` enum('in','low','out') NOT NULL DEFAULT 'in',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `element_series`
+--
+
+CREATE TABLE `element_series` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -316,3 +310,4 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

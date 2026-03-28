@@ -345,8 +345,8 @@
   </div>
 
   <div class="nav-section" style="margin-top:8px;">Store</div>
-  <a href="#" class="nav-link"><i data-lucide="package"></i> Orders</a>
-  <a href="#" class="nav-link"><i data-lucide="box"></i> Products</a>
+  <a href="{{ route('admin.orders.index') }}" class="nav-link"><i data-lucide="package"></i> Orders</a>
+  {{-- <a href="{{ route('admin.products.index') }}" class="nav-link"><i data-lucide="box"></i> Products</a> --}}
 
   <div style="margin-top:auto; padding:12px 8px;">
 
