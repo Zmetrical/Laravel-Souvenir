@@ -9,6 +9,8 @@ use App\Models\builder\OrderDesign;
 use App\Models\builder\OrderItem;
 use App\Models\builder\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\builder\OrderThread;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,6 +60,11 @@ class BuilderOrderController extends Controller
 
         $elementsCost = collect($elems)->sum(fn($e) => $e['price'] ?? 8);
         $total        = $product->base_price + $elementsCost;
+
+       OrderThread::create([
+            'order_id'        => $order->id,
+            'approval_status' => 'awaiting_mockup',
+        ]);
 
         return view('order.create', compact('product', 'elems', 'elementsCost', 'total'));
     }

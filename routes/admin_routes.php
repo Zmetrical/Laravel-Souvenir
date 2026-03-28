@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\OrderController;
 | Name   : admin.
 |--------------------------------------------------------------------------
 */
-Route::middleware('admin')->group(function () {
 
 // ── Elements Overview ──────────────────────────────────────────────────────
 Route::get('elements',                [ElementController::class, 'overview'])->name('elements.index');
@@ -46,5 +45,3 @@ Route::get('/orders',                   [OrderController::class, 'index'])      
 Route::get('/orders/{order}',           [OrderController::class, 'show'])        ->name('orders.show');
 Route::post('/orders/{order}/status',   [OrderController::class, 'updateStatus'])->name('orders.status');
 Route::get('/orders/{order}/print',     [OrderController::class, 'printView'])   ->name('orders.print');
-
-});

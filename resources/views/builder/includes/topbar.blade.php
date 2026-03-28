@@ -1,6 +1,6 @@
 <?php
 // $activePage must be set by the parent page before including this file
-// Accepted values: 'bracelet' | 'necklace' | 'keychain'
+// Accepted values: 'bracelet' | 'necklace' | 'keychain' | '' (index)
 $activePage = $activePage ?? 'bracelet';
 
 $navLinks = [
@@ -8,7 +8,6 @@ $navLinks = [
   'necklace' => ['href' => route('builder.necklace'), 'icon' => '⌒', 'label' => 'Necklace'],
   'keychain' => ['href' => route('builder.keychain'), 'icon' => '⊟', 'label' => 'Keychain'],
 ];
-
 ?>
 <div class="topbar">
   <div class="topbar-l">
@@ -24,6 +23,9 @@ $navLinks = [
     </nav>
   </div>
   <div class="topbar-r">
-    <button class="btn-order" onclick="app.ui.openOrder()">Order This →</button>
+    {{-- Only show "Order This" inside the builder pages, not on the landing page --}}
+    @if($activePage)
+      <button class="btn-order" onclick="app.ui.openOrder()">Order This →</button>
+    @endif
   </div>
 </div>

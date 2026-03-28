@@ -129,76 +129,6 @@
     .btn-outline:hover { background: var(--grey-50); border-color: var(--grey-300); }
     .btn-outline i[data-lucide] { width: 14px; height: 14px; }
 
-    /* ── Bead string visual ── */
-    .hero-visual-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      height: 100%;
-      min-height: 200px;
-    }
-
-    .bead-string {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-    /* The cord */
-    .bead-string::before {
-      content: '';
-      position: absolute;
-      top: 0; bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 3px;
-      background: var(--grey-200);
-      border-radius: 2px;
-      z-index: 0;
-    }
-
-    .bs-ring {
-      width: 26px;
-      height: 26px;
-      border: 3px solid var(--grey-300);
-      border-radius: 50%;
-      margin-bottom: 6px;
-      position: relative;
-      z-index: 2;
-      background: var(--white);
-    }
-    .bs-bead {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      position: relative;
-      z-index: 1;
-      box-shadow: 0 2px 8px rgba(0,0,0,.12);
-      margin: 5px 0;
-      flex-shrink: 0;
-    }
-    .bs-bead.sm { width: 28px; height: 28px; }
-    .bs-bead.lg { width: 52px; height: 52px; }
-
-    /* Floating label chips beside the string */
-    .hv-chip {
-      position: absolute;
-      background: var(--white);
-      border: 1.5px solid var(--grey-200);
-      border-radius: var(--r-md);
-      padding: 7px 13px;
-      font-family: var(--fb);
-      font-size: .65rem;
-      font-weight: 700;
-      box-shadow: var(--sh-sm);
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .hv-chip i[data-lucide] { width: 10px; height: 10px; }
-
     /* ══════════════════════════════
        PRODUCTS SECTION
     ══════════════════════════════ */
@@ -247,11 +177,7 @@
       color: inherit;
     }
 
-    /* Solid color top strip (no gradient) */
-    .pcard-strip {
-      height: 5px;
-      flex-shrink: 0;
-    }
+    .pcard-strip { height: 5px; flex-shrink: 0; }
     .strip-pink   { background: var(--pink); }
     .strip-purple { background: var(--purple); }
     .strip-teal   { background: var(--teal); }
@@ -276,20 +202,6 @@
       flex-shrink: 0;
     }
     .pcard-icon i[data-lucide] { width: 24px; height: 24px; }
-
-    .pcard-badge {
-      font-family: var(--fb);
-      font-size: .58rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      border-radius: var(--r-pill);
-      padding: 3px 10px;
-      white-space: nowrap;
-    }
-    .badge-pink   { background: var(--pink-lt);   color: var(--pink-dk);   border: 1.5px solid var(--pink-bd); }
-    .badge-purple { background: var(--purple-lt); color: var(--purple-dk); border: 1.5px solid var(--purple-bd); }
-    .badge-teal   { background: var(--teal-lt);   color: var(--teal-dk);   border: 1.5px solid var(--teal-bd); }
 
     .pcard-body {
       padding: 0 22px 22px;
@@ -323,44 +235,6 @@
       margin-bottom: 16px;
       flex: 1;
     }
-
-    /* Little bead preview row */
-    .pcard-beads {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .pb {
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0,0,0,.13);
-      flex-shrink: 0;
-    }
-    .pb.white { border: 1.5px solid var(--grey-200); }
-    .pb-more  { font-size: .68rem; font-weight: 800; color: var(--ink4); }
-
-    /* Spec chips */
-    .pcard-specs {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-    .spec-pill {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--grey-50);
-      border: 1px solid var(--grey-200);
-      border-radius: var(--r-pill);
-      padding: 3px 9px;
-      font-size: .62rem;
-      font-weight: 700;
-      color: var(--ink2);
-    }
-    .spec-pill i[data-lucide] { width: 10px; height: 10px; }
 
     .pcard-foot {
       padding-top: 16px;
@@ -407,7 +281,6 @@
       gap: 0;
       position: relative;
     }
-    /* Connecting line between step icons */
     .step-row::before {
       content: '';
       position: absolute;
@@ -479,7 +352,6 @@
     }
     .footer-logo b { color: var(--pink); }
 
-    /* ── Overrides ── */
     .container { max-width: 1080px; }
     html { scroll-behavior: smooth; }
 
@@ -507,6 +379,7 @@
       <div class="container">
         <div class="row align-items-center g-4 g-lg-5">
 
+          {{-- Copy --}}
           <div class="col-lg-6">
             <div class="hero-eyebrow fu fu-1">
               <i data-lucide="sparkles" style="width:11px;height:11px;"></i>
@@ -530,31 +403,6 @@
             </div>
           </div>
 
-          <div class="col-lg-6 d-flex justify-content-center fu fu-2">
-            <div class="hero-visual-wrap">
-              <div class="bead-string">
-                <div class="bs-ring"></div>
-                <div class="bs-bead sm" style="background:#E8257A;"></div>
-                <div class="bs-bead"    style="background:#FDEEF5;border:1.5px solid var(--pink-bd);"></div>
-                <div class="bs-bead lg" style="background:#A855F7;"></div>
-                <div class="bs-bead"    style="background:#1AC8C4;"></div>
-                <div class="bs-bead"    style="background:#FFD700;"></div>
-                <div class="bs-bead sm" style="background:#E8257A;"></div>
-                <div class="bs-bead"    style="background:#3B82F6;"></div>
-                <div class="bs-bead lg" style="background:#fff;border:1.5px solid var(--grey-200);"></div>
-                <div class="bs-bead sm" style="background:#0DBCB4;"></div>
-                <div class="bs-bead"    style="background:#E8257A;"></div>
-              </div>
-              <div class="hv-chip" style="right:calc(50% + 52px);top:28%;color:var(--pink-dk);">
-                <i data-lucide="palette" style="color:var(--pink);"></i>
-                Pick your colors
-              </div>
-              <div class="hv-chip" style="left:calc(50% + 52px);bottom:30%;color:var(--teal-dk);">
-                <i data-lucide="zap" style="color:var(--teal-dk);"></i>
-                Order instantly
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>
@@ -580,26 +428,12 @@
                 <div class="pcard-icon" style="border-color:var(--pink-bd);">
                   <i data-lucide="circle" style="color:var(--pink);"></i>
                 </div>
-                <span class="pcard-badge badge-pink">Most Popular</span>
               </div>
               <div class="pcard-body">
                 <div class="pcard-type" style="color:var(--pink);">Wrist Jewelry</div>
                 <div class="pcard-name">Bracelet</div>
                 <p class="pcard-desc">Beaded bracelet with your choice of string, clasp, and up to 20 beads — mix charms, figures, and letters.</p>
-                <div class="pcard-beads">
-                  <div class="pb" style="background:#E8257A;"></div>
-                  <div class="pb white"></div>
-                  <div class="pb" style="background:#1AC8C4;"></div>
-                  <div class="pb" style="background:#A855F7;"></div>
-                  <div class="pb" style="background:#FFD700;"></div>
-                  <div class="pb" style="background:#3B82F6;"></div>
-                  <span class="pb-more">···</span>
-                </div>
-                <div class="pcard-specs">
-                  <span class="spec-pill"><i data-lucide="layers"></i> Up to 20 beads</span>
-                  <span class="spec-pill"><i data-lucide="ruler"></i> 16–20 cm</span>
-                  <span class="spec-pill"><i data-lucide="link"></i> Clasp options</span>
-                </div>
+
                 <div class="pcard-foot">
                   <div>
                     <div class="pcard-price-lbl">Starts at</div>
@@ -619,26 +453,12 @@
                 <div class="pcard-icon" style="border-color:var(--purple-bd);">
                   <i data-lucide="gem" style="color:var(--purple);"></i>
                 </div>
-                <span class="pcard-badge badge-purple">Long-Length</span>
               </div>
               <div class="pcard-body">
                 <div class="pcard-type" style="color:var(--purple);">Neck Jewelry</div>
                 <div class="pcard-name">Necklace</div>
                 <p class="pcard-desc">From choker to matinee — up to 28 beads, charms, and letter tiles on your choice of chain or cord.</p>
-                <div class="pcard-beads">
-                  <div class="pb" style="background:#A855F7;"></div>
-                  <div class="pb" style="background:#E8257A;"></div>
-                  <div class="pb white"></div>
-                  <div class="pb" style="background:#FFD700;"></div>
-                  <div class="pb" style="background:#A855F7;"></div>
-                  <div class="pb" style="background:#1AC8C4;"></div>
-                  <span class="pb-more">···</span>
-                </div>
-                <div class="pcard-specs">
-                  <span class="spec-pill"><i data-lucide="layers"></i> Up to 28 beads</span>
-                  <span class="spec-pill"><i data-lucide="ruler"></i> 40–50 cm</span>
-                  <span class="spec-pill"><i data-lucide="link"></i> Chain or cord</span>
-                </div>
+
                 <div class="pcard-foot">
                   <div>
                     <div class="pcard-price-lbl">Starts at</div>
@@ -658,25 +478,11 @@
                 <div class="pcard-icon" style="border-color:var(--teal-bd);">
                   <i data-lucide="key" style="color:var(--teal-dk);"></i>
                 </div>
-                <span class="pcard-badge badge-teal">Multi-Strand</span>
               </div>
               <div class="pcard-body">
                 <div class="pcard-type" style="color:var(--teal-dk);">Bag / Key Charm</div>
                 <div class="pcard-name">Keychain / Charm</div>
                 <p class="pcard-desc">Beaded keychain or bag charm with 1–3 strands. Mix charms, letters, and beads across strands for a unique look.</p>
-                <div class="pcard-beads">
-                  <div class="pb" style="background:#1AC8C4;"></div>
-                  <div class="pb" style="background:#A855F7;"></div>
-                  <div class="pb" style="background:#E8257A;"></div>
-                  <div class="pb white"></div>
-                  <div class="pb" style="background:#FFD700;"></div>
-                  <span class="pb-more">···</span>
-                </div>
-                <div class="pcard-specs">
-                  <span class="spec-pill"><i data-lucide="layers"></i> Up to 12 beads</span>
-                  <span class="spec-pill"><i data-lucide="git-branch"></i> 1–3 strands</span>
-                  <span class="spec-pill"><i data-lucide="circle"></i> Ring styles</span>
-                </div>
                 <div class="pcard-foot">
                   <div>
                     <div class="pcard-price-lbl">Starts at</div>

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use App\Models\builder\Order;
 use Illuminate\Http\Request;
- 
+ use Illuminate\Support\Facades\DB;
+use App\Models\Builder\OrderThread;
+use App\Models\Builder\OrderMessage;
 class OrderController extends Controller
 {
     // ── GET /admin/orders ──────────────────────────────────────────────────
@@ -82,4 +84,68 @@ class OrderController extends Controller
         $order->load(['product', 'design', 'items.element']);
         return view('admin.orders.print', compact('order'));
     }
+
+    // ── POST /admin/orders/{order}/mockup ─────────────────────────────────────────
+// Admin uploads a physical mockup photo → sets approval_status to mockup_sent
+public function uploadMockup(Request $request, Order $order)
+{
+    $request->validate([
+        'mockup_photo' => 'required|image|mimes:png,jpg,jpeg,webp|max:8192',
+        'note'         => 'nullable|string|max:500',
+    ]);
+ 
+    DB::transaction(function () use ($request, $order) {
+        // Store the photo
+        $path = $request->file('mockup_photo')
+            ->store("mockups/{$order->order_code}", 'public');
+ 
+        // Ensure thread exists
+        $thread = OrderThread::firstOrCreate(
+            ['order_id' => $order->id],
+            ['approval_status' => 'awaiting_mockup']
+        );
+ 
+        // Create the message
+        OrderMessage::create([
+            'order_id'    => $order->id,
+            'sender_type' => 'admin',
+            'sender_id'   => auth()->id(),
+            'type'        => 'mockup',
+            'body'        => $request->filled('note')
+                ? $request->note
+                : 'Here\'s your mockup! Please review it and let us know what you think.',
+            'mockup_path' => $path,
+        ]);
+ 
+        // Advance the approval state
+        $thread->update(['approval_status' => 'mockup_sent']);
+    });
+ 
+    return back()->with('success', "Mockup uploaded for order {$order->order_code}. Customer can now review.");
+}
+ 
+// ── POST /admin/orders/{order}/note ───────────────────────────────────────────
+// Admin sends a plain-text note to the customer
+public function sendNote(Request $request, Order $order)
+{
+    $request->validate([
+        'body' => 'required|string|max:1000',
+    ]);
+ 
+    OrderThread::firstOrCreate(
+        ['order_id' => $order->id],
+        ['approval_status' => 'awaiting_mockup']
+    );
+ 
+    OrderMessage::create([
+        'order_id'    => $order->id,
+        'sender_type' => 'admin',
+        'sender_id'   => auth()->id(),
+        'type'        => 'note',
+        'body'        => $request->body,
+    ]);
+ 
+    return back()->with('success', 'Note sent to customer.');
+}
+ 
 }

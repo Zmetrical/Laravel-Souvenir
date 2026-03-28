@@ -1,7 +1,10 @@
 <?php
 
 namespace App\Models\builder;
-
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
  
 class Order extends Model
@@ -70,5 +73,13 @@ class Order extends Model
         return static::$statuses[$this->status] ?? ucfirst($this->status);
     }
 
-    
+       public function thread(): HasOne
+   {
+       return $this->hasOne(OrderThread::class);
+   }
+
+   public function messages(): HasMany
+   {
+       return $this->hasMany(OrderMessage::class);
+   }
 }
