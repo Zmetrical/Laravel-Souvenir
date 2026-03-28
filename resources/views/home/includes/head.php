@@ -39,4 +39,4 @@ $canonicalUrl    = $canonicalUrl    ?? '';
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
 <!-- Site styles -->
-<link rel="stylesheet" href="<?= $stylesPath ?? 'styles.css' ?>"/>
+<link rel="stylesheet" href="{{ asset('css/main.css') }}"/>

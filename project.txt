@@ -43,6 +43,7 @@ AuthLaravel Breeze
 File StorageLaravel Storage (local or S3)
 Canvas ExportFabric.js toDataURL() → sent to Laravel as base64
 
+
 --
 -- Database: `artsy_pbs`
 --
@@ -88,26 +89,10 @@ CREATE TABLE `elements` (
   `detail_color` varchar(10) DEFAULT NULL,
   `use_img` tinyint(1) NOT NULL DEFAULT 0,
   `img_path` varchar(255) DEFAULT NULL,
-  `series_id` bigint(20) UNSIGNED DEFAULT NULL,
   `is_small` tinyint(1) NOT NULL DEFAULT 0,
   `is_large` tinyint(1) NOT NULL DEFAULT 0,
   `price` int(10) UNSIGNED NOT NULL DEFAULT 8,
   `stock` enum('in','low','out') NOT NULL DEFAULT 'in',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `element_series`
---
-
-CREATE TABLE `element_series` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `slug` varchar(255) NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -198,7 +183,7 @@ CREATE TABLE `orders` (
   `confirmed_at` timestamp NULL DEFAULT NULL,
   `completed_at` timestamp NULL DEFAULT NULL,
   `cancelled_at` timestamp NULL DEFAULT NULL,
-  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -253,6 +238,41 @@ CREATE TABLE `order_items` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `order_messages`
+--
+
+CREATE TABLE `order_messages` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `order_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `type` enum('mockup','approval','revision','note') NOT NULL,
+  `body` text DEFAULT NULL,
+  `image_path` varchar(255) DEFAULT NULL,
+  `design_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`design_json`)),
+  `snapshot_path` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_threads`
+--
+
+CREATE TABLE `order_threads` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `order_id` bigint(20) UNSIGNED NOT NULL,
+  `approval_status` enum('awaiting_mockup','mockup_sent','revision_requested','revised','approved','cancelled') NOT NULL DEFAULT 'awaiting_mockup',
+  `revision_count` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `password_reset_tokens`
 --
 
@@ -274,7 +294,34 @@ CREATE TABLE `products` (
   `label` varchar(255) NOT NULL,
   `base_price` int(11) NOT NULL,
   `max_beads` int(11) NOT NULL,
+  `max_revisions` tinyint(3) UNSIGNED NOT NULL DEFAULT 2,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `saved_designs`
+--
+
+CREATE TABLE `saved_designs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(120) NOT NULL DEFAULT 'My Design',
+  `product_slug` enum('bracelet','necklace','keychain') NOT NULL,
+  `design_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`design_json`)),
+  `snapshot_path` varchar(255) DEFAULT NULL,
+  `str_color` varchar(10) DEFAULT NULL,
+  `str_type` varchar(20) DEFAULT NULL,
+  `clasp` varchar(20) DEFAULT NULL,
+  `keychain_strands` tinyint(4) NOT NULL DEFAULT 1,
+  `ring_type` varchar(20) DEFAULT NULL,
+  `ring_color` varchar(10) DEFAULT NULL,
+  `letter_bg_color` varchar(10) DEFAULT NULL,
+  `letter_text_color` varchar(10) DEFAULT NULL,
+  `letter_shape` varchar(10) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -306,8 +353,8 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
+  `role` enum('customer','admin') NOT NULL DEFAULT 'customer',
   `remember_token` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
