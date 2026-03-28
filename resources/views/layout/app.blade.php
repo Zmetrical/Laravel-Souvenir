@@ -17,35 +17,15 @@
 </head>
 <body>
 
-    <x-navbar :active="$active ?? ''" />
+    @include('layout.navbar', ['active' => $active ?? ''])
 
     @yield('content')
 
-    <x-cta-band />
-    <x-footer />
+    @include('layout.cta-band')
+    @include('layout.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>lucide.createIcons();</script>
-
-    {{-- Scroll reveal + nav shadow, shared on every page --}}
-    <script>
-    (function () {
-        const nav = document.getElementById('mainNav');
-        if (nav) {
-            window.addEventListener('scroll', () => {
-                nav.classList.toggle('scrolled', window.scrollY > 30);
-            }, { passive: true });
-        }
-        if ('IntersectionObserver' in window) {
-            const io = new IntersectionObserver(entries => {
-                entries.forEach(e => {
-                    if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); }
-                });
-            }, { threshold: 0.1 });
-            document.querySelectorAll('.fade-up, .fade-left, .fade-right').forEach(el => io.observe(el));
-        }
-    })();
-    </script>
 
     @stack('scripts')
 </body>

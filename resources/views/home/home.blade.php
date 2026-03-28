@@ -1,17 +1,15 @@
 @php
-  $pageTitle   = 'ArtsyCrate — Prints, Customs & Creative Fun';
-  $pageDescription = 'Your one-stop creative shop for personalized gifts, custom prints, bag charms, keychains, and 3D printed wonders. Walk in. Create. Smile.';
-  $activePage  = 'home';
+    $title       = 'ArtsyCrate — Prints, Customs & Creative Fun';
+    $description = 'Your one-stop creative shop for personalized gifts, custom prints, bag charms, keychains, and 3D printed wonders. Walk in. Create. Smile.';
+    $active      = 'home';
 @endphp
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  @include('home.includes.head')
-</head>
-<body>
+@extends('layout.app')
 
-@include('home.includes.navbar')
+{{-- ═══════════════════════════════════════
+     SECTION: CONTENT
+═══════════════════════════════════════ --}}
+@section('content')
 
 {{-- ═══════════════════════════════════════
      INFO BAR
@@ -245,11 +243,12 @@
   </div>
   <div class="sl-counter" id="slCounter"><span class="cur" id="slCur">01</span> / 04</div>
 </div>
+{{-- / #acSlider --}}
 
 {{-- ═══════════════════════════════════════
      SERVICES STRIP
 ═══════════════════════════════════════ --}}
-<div class="svc-strip" id="shop">
+<section class="svc-strip" id="shop">
   <div class="container">
     <div class="svc-grid">
       <div class="svc-cell">
@@ -284,13 +283,14 @@
       </div>
     </div>
   </div>
-</div>
+</section>
 
 {{-- ═══════════════════════════════════════
      GET PERSONALIZED
 ═══════════════════════════════════════ --}}
-<div id="customize">
+<section id="customize">
 
+  {{-- Intro heading --}}
   <div class="pers-intro">
     <div class="container">
       <div class="row justify-content-center text-center">
@@ -351,6 +351,9 @@
             <span class="rchip rc-l">Resin Craft</span>
             <span class="rchip rc-l">Pins &amp; Badges</span>
           </div>
+          <a href="{{ route('builder.keychain') }}" class="btn-r br-l">
+            <i data-lucide="scissors" style="width:15px;height:15px;"></i> Design Online
+          </a>
         </div>
         <div class="col-lg-6 fade-left">
           <div class="row-vis">
@@ -397,99 +400,125 @@
     </div>
   </div>
 
-</div>{{-- /#customize --}}
+</section>
+{{-- / #customize --}}
 
-@include('home.includes.cta-band')
-@include('home.includes.footer')
+@endsection
+{{-- / @section('content') --}}
 
+
+{{-- ═══════════════════════════════════════
+     PUSH: SLIDER JAVASCRIPT
+     Injected into @stack('scripts') in layout
+═══════════════════════════════════════ --}}
+@push('scripts')
 <script>
-(function(){
-  /* Navbar shadow */
-  const nav = document.getElementById('mainNav');
-  if(nav){
-    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 30), { passive:true });
-  }
+(function () {
+    /* ── Navbar shadow on scroll ── */
+    const nav = document.getElementById('mainNav');
+    if (nav) {
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 30);
+        }, { passive: true });
+    }
 
-  /* Scroll reveal */
-  const revEls = document.querySelectorAll('.fade-up,.fade-left,.fade-right');
-  if('IntersectionObserver' in window){
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('vis'); io.unobserve(e.target); } });
-    },{ threshold:0.1 });
-    revEls.forEach(el => io.observe(el));
-  } else {
-    revEls.forEach(el => el.classList.add('vis'));
-  }
+    /* ── Scroll-reveal (shared with layout, but safe to double-call) ── */
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-up, .fade-left, .fade-right').forEach(el => io.observe(el));
+    } else {
+        document.querySelectorAll('.fade-up, .fade-left, .fade-right').forEach(el => el.classList.add('vis'));
+    }
 
-  /* ── Slider ── */
-  const slides  = Array.from(document.querySelectorAll('.ac-slide'));
-  const dots    = Array.from(document.querySelectorAll('.sl-dot'));
-  const curEl   = document.getElementById('slCur');
-  const TOTAL   = slides.length;
-  const AUTO_MS = 5000;
-  let current = 0, autoTimer = null;
+    /* ── Hero Slider ── */
+    const slides   = Array.from(document.querySelectorAll('.ac-slide'));
+    const dots     = Array.from(document.querySelectorAll('.sl-dot'));
+    const curEl    = document.getElementById('slCur');
+    const TOTAL    = slides.length;
+    const AUTO_MS  = 5000;
+    let current    = 0;
+    let autoTimer  = null;
 
-  function pad(n){ return String(n).padStart(2,'0'); }
+    function pad(n) { return String(n).padStart(2, '0'); }
 
-  function playEntrances(slide){
-    slide.querySelectorAll('[data-enter]').forEach(el => {
-      el.classList.remove('entered');
-      void el.offsetWidth;
-      setTimeout(() => el.classList.add('entered'), parseInt(el.dataset.delay || 0));
+    function playEntrances(slide) {
+        slide.querySelectorAll('[data-enter]').forEach(el => {
+            el.classList.remove('entered');
+            void el.offsetWidth; // force reflow
+            setTimeout(() => el.classList.add('entered'), parseInt(el.dataset.delay || 0));
+        });
+    }
+
+    function resetEntrances(slide) {
+        slide.querySelectorAll('[data-enter]').forEach(el => el.classList.remove('entered'));
+    }
+
+    function goTo(idx) {
+        if (idx === current) return;
+        const out = slides[current];
+        const inn = slides[idx];
+
+        out.classList.remove('is-active');
+        out.classList.add('is-exiting', 'is-prev');
+        resetEntrances(out);
+        setTimeout(() => out.classList.remove('is-exiting', 'is-prev'), 560);
+
+        inn.classList.add('is-active');
+        playEntrances(inn);
+
+        dots[current].classList.remove('active');
+        dots[idx].classList.add('active');
+        if (curEl) curEl.textContent = pad(idx + 1);
+        current = idx;
+    }
+
+    function startAuto() { autoTimer = setInterval(() => goTo((current + 1) % TOTAL), AUTO_MS); }
+    function resetAuto()  { clearInterval(autoTimer); startAuto(); }
+
+    playEntrances(slides[0]);
+    startAuto();
+
+    /* Arrow buttons */
+    const btnPrev = document.getElementById('slPrev');
+    const btnNext = document.getElementById('slNext');
+    if (btnPrev) btnPrev.addEventListener('click', () => { goTo((current - 1 + TOTAL) % TOTAL); resetAuto(); });
+    if (btnNext) btnNext.addEventListener('click', () => { goTo((current + 1) % TOTAL); resetAuto(); });
+
+    /* Dot buttons */
+    dots.forEach(dot => dot.addEventListener('click', () => {
+        goTo(parseInt(dot.dataset.idx));
+        resetAuto();
+    }));
+
+    /* Touch / swipe */
+    const sl = document.getElementById('acSlider');
+    let tx = 0;
+    sl.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+    sl.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - tx;
+        if (Math.abs(dx) > 50) { goTo(dx < 0 ? (current + 1) % TOTAL : (current - 1 + TOTAL) % TOTAL); resetAuto(); }
     });
-  }
-  function resetEntrances(slide){
-    slide.querySelectorAll('[data-enter]').forEach(el => el.classList.remove('entered'));
-  }
-  function goTo(idx){
-    if(idx === current) return;
-    const out = slides[current], inn = slides[idx];
-    out.classList.remove('is-active');
-    out.classList.add('is-exiting','is-prev');
-    resetEntrances(out);
-    setTimeout(() => out.classList.remove('is-exiting','is-prev'), 560);
-    inn.classList.add('is-active');
-    playEntrances(inn);
-    dots[current].classList.remove('active');
-    dots[idx].classList.add('active');
-    curEl.textContent = pad(idx + 1);
-    current = idx;
-  }
 
-  playEntrances(slides[0]);
-  function startAuto(){ autoTimer = setInterval(() => goTo((current+1)%TOTAL), AUTO_MS); }
-  function resetAuto(){ clearInterval(autoTimer); startAuto(); }
-  startAuto();
-
-  document.getElementById('slPrev').addEventListener('click', () => { goTo((current-1+TOTAL)%TOTAL); resetAuto(); });
-  document.getElementById('slNext').addEventListener('click', () => { goTo((current+1)%TOTAL); resetAuto(); });
-  dots.forEach(dot => dot.addEventListener('click', () => { goTo(parseInt(dot.dataset.idx)); resetAuto(); }));
-
-  let tx = 0;
-  const sl = document.getElementById('acSlider');
-  sl.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive:true });
-  sl.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - tx;
-    if(Math.abs(dx) > 50){ goTo(dx < 0 ? (current+1)%TOTAL : (current-1+TOTAL)%TOTAL); resetAuto(); }
-  });
-
-  const STRENGTH = 12;
-  let mx = 0, my = 0, raf = null;
-  sl.addEventListener('mousemove', e => {
-    const r = sl.getBoundingClientRect();
-    mx = ((e.clientX - r.left) / r.width  - .5) * 2;
-    my = ((e.clientY - r.top)  / r.height - .5) * 2;
-    if(!raf) raf = requestAnimationFrame(() => {
-      raf = null;
-      slides.forEach(s => {
-        const bg = s.querySelector('.sl-bg');
-        if(bg) bg.style.transform = `translate(${-mx*STRENGTH}px,${-my*STRENGTH*.6}px)`;
-      });
+    /* Parallax on mouse-move */
+    const STRENGTH = 12;
+    let mx = 0, my = 0, raf = null;
+    sl.addEventListener('mousemove', e => {
+        const r = sl.getBoundingClientRect();
+        mx = ((e.clientX - r.left) / r.width  - .5) * 2;
+        my = ((e.clientY - r.top)  / r.height - .5) * 2;
+        if (!raf) raf = requestAnimationFrame(() => {
+            raf = null;
+            slides.forEach(s => {
+                const bg = s.querySelector('.sl-bg');
+                if (bg) bg.style.transform = `translate(${-mx * STRENGTH}px,${-my * STRENGTH * .6}px)`;
+            });
+        });
     });
-  });
-  sl.addEventListener('mouseleave', () => { mx = 0; my = 0; });
+    sl.addEventListener('mouseleave', () => { mx = 0; my = 0; });
 })();
 </script>
-
-</body>
-</html>
+@endpush

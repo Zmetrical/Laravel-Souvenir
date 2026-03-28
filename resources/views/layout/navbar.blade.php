@@ -1,13 +1,15 @@
-@props(['active' => ''])
-
 @php
-$links = [
-    'shop'      => ['href' => '#shop',      'label' => 'Shop'],
-    'customize' => ['href' => '#customize', 'label' => 'Customize'],
-    'gifts'     => ['href' => '#gifts',     'label' => 'Gifts'],
-    'business'  => ['href' => '#business',  'label' => 'Business'],
-    'about'     => ['href' => '#about',     'label' => 'About'],
-];
+    // When included via @include, $active is passed as the second argument array.
+    // Fallback to empty string if not provided.
+    $active = $active ?? '';
+
+    $links = [
+        'shop'      => ['href' => '#shop',      'label' => 'Shop'],
+        'customize' => ['href' => '#customize', 'label' => 'Customize'],
+        'gifts'     => ['href' => '#gifts',     'label' => 'Gifts'],
+        'business'  => ['href' => '#business',  'label' => 'Business'],
+        'about'     => ['href' => '#about',     'label' => 'About'],
+    ];
 @endphp
 
 <nav class="ac-nav navbar navbar-expand-lg py-2" id="mainNav">
