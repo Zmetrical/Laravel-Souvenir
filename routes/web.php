@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\auth\PasswordResetLinkController;
 use App\Http\Controllers\auth\NewPasswordController;
 // ── Root ───────────────────────────────────────────────────────────────────────
-Route::get('/', fn () => view('home/home'))->name('home');
+Route::get('/', fn () => view('home.home'))->name('home');
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
