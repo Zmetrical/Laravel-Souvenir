@@ -11,35 +11,6 @@
 ═══════════════════════════════════════ --}}
 @section('content')
 
-{{-- ═══════════════════════════════════════
-     INFO BAR
-═══════════════════════════════════════ --}}
-<div class="info-bar">
-  <div class="container">
-    <div class="info-bar-inner">
-      <span class="info-pill">
-        <i data-lucide="map-pin" style="width:13px;height:13px;color:var(--teal);"></i>
-        Parañaque City, Metro Manila
-      </span>
-      <span class="info-pill">
-        <i data-lucide="clock" style="width:13px;height:13px;color:var(--pink);"></i>
-        Open Daily · 10AM – 9PM
-      </span>
-      <span class="info-pill">
-        <i data-lucide="sparkles" style="width:13px;height:13px;color:var(--yellow);"></i>
-        DIY In-Store · Walk-ins Welcome!
-      </span>
-      <span class="info-pill">
-        <i data-lucide="package" style="width:13px;height:13px;color:var(--purple);"></i>
-        Bulk Orders Available
-      </span>
-      <span class="info-pill">
-        <i data-lucide="zap" style="width:13px;height:13px;color:var(--orange);"></i>
-        Same-Day Rush Orders
-      </span>
-    </div>
-  </div>
-</div>
 
 {{-- ═══════════════════════════════════════
      HERO SLIDER

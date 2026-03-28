@@ -3,12 +3,12 @@
     // Fallback to empty string if not provided.
     $active = $active ?? '';
 
-    $links = [
-        'shop'      => ['href' => '#shop',      'label' => 'Shop'],
-        'customize' => ['href' => '#customize', 'label' => 'Customize'],
-        'gifts'     => ['href' => '#gifts',     'label' => 'Gifts'],
-        'about'     => ['href' => '#about',     'label' => 'About'],
-    ];
+$links = [
+    'Home'     => ['href' => route('home'), 'label' => 'Home'],
+    'shop'      => ['href' => route('products'),  'label' => 'Shop'],
+    'customize' => ['href' => route('customize'), 'label' => 'Customize'],
+'contact' => ['href' => route('contact'), 'label' => 'Contact'],
+];
 @endphp
 
 <nav class="ac-nav navbar navbar-expand-lg py-2" id="mainNav">

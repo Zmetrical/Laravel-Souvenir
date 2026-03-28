@@ -10,6 +10,7 @@ use App\Http\Controllers\auth\NewPasswordController;
 Route::get('/', fn () => view('home.home'))->name('home');
 Route::get('/products', fn () => view('home.products'))->name('products');
 Route::get('/customize', fn () => view('home.customize'))->name('customize');
+Route::get('/contact', fn () => view('home.contact'))->name('contact');
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
