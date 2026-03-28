@@ -41,11 +41,13 @@ class OrderController extends Controller
     }
  
     // ── GET /admin/orders/{order} ──────────────────────────────────────────
-    public function show(Order $order)
-    {
-        $order->load(['product', 'design', 'items.element', 'user']);
-        return view('admin.orders.show', compact('order'));
-    }
+public function show(Order $order)
+{
+    $order->load(['product', 'design', 'items.element', 'user', 'thread']);
+    $thread   = $order->thread;
+    $messages = $order->messages()->orderBy('created_at')->get();
+    return view('admin.orders.show', compact('order', 'thread', 'messages'));
+}
  
     // ── POST /admin/orders/{order}/status ──────────────────────────────────
     public function updateStatus(Request $request, Order $order)

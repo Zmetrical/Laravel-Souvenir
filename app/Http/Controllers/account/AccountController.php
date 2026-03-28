@@ -75,5 +75,13 @@ class AccountController extends Controller
 
         return back()->with('success', 'Design deleted.');
     }
+public function orderShow(string $code)
+{
+    $order = Order::with(['product', 'design', 'items.element'])
+        ->where('order_code', $code)
+        ->where('user_id', auth()->id()) // security: only their own orders
+        ->firstOrFail();
 
+    return view('account.orders.show', compact('order'));
+}
 }

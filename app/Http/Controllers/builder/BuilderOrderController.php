@@ -61,11 +61,6 @@ class BuilderOrderController extends Controller
         $elementsCost = collect($elems)->sum(fn($e) => $e['price'] ?? 8);
         $total        = $product->base_price + $elementsCost;
 
-       OrderThread::create([
-            'order_id'        => $order->id,
-            'approval_status' => 'awaiting_mockup',
-        ]);
-
         return view('order.create', compact('product', 'elems', 'elementsCost', 'total'));
     }
 
@@ -111,9 +106,12 @@ class BuilderOrderController extends Controller
                 'elements_cost'  => $elementsCost,
                 'total_price'    => $totalPrice,
                 'status'         => 'pending',
-                'user_id'        => auth()->id(),
+                'user_id'        => auth()->id()?? 1,
             ]);
-
+            OrderThread::create([
+                'order_id'        => $order->id,
+                'approval_status' => 'awaiting_mockup',
+            ]);
             $snapshotPath = null;
             if ($raw = session('order_snapshot')) {
                 $binary = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $raw));

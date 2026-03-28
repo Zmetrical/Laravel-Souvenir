@@ -42,11 +42,10 @@ Route::middleware(['auth', 'customer'])
     ->prefix('account')
     ->name('account.')
     ->group(function () {
-        Route::get('/',        [AccountController::class, 'dashboard'])->name('dashboard');
-        Route::get('/orders',  [AccountController::class, 'orders'])->name('orders');
-        Route::get('/designs', [AccountController::class, 'designs'])->name('designs');
+        Route::get('/',                        [AccountController::class, 'dashboard'])->name('dashboard');
+        Route::get('/orders',                  [AccountController::class, 'orders'])->name('orders');
+        Route::get('/orders/{code}',           [AccountController::class, 'orderShow'])->name('orders.show'); // ← add this
 
-        // add this
-        Route::delete('/designs/{design}', [AccountController::class, 'destroyDesign'])
-             ->name('designs.destroy');
+        Route::get('/designs',                 [AccountController::class, 'designs'])->name('designs');       // ← was wrongly named orders.show
+        Route::delete('/designs/{design}',     [AccountController::class, 'destroyDesign'])->name('designs.destroy');
     });
