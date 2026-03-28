@@ -12,7 +12,7 @@ $navLinks = [
 ?>
 <div class="topbar">
   <div class="topbar-l">
-    <a href="<?= route('builder.bracelet') ?>" class="logo">Artsy<b>Crate</b></a>
+    <a href="<?= route('builder.index') ?>" class="logo">Artsy<b>Crate</b></a>
     <nav class="builder-nav">
       <?php foreach ($navLinks as $key => $link): ?>
       <a class="bnav-link {{ $activePage === $key ? 'active' : '' }}"

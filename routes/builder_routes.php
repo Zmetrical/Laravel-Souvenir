@@ -6,6 +6,8 @@ use App\Http\Controllers\builder\KeychainController;
 use App\Http\Controllers\builder\NecklaceController;
 use App\Http\Controllers\builder\BuilderOrderController;
 
+Route::get('/', fn() => view('builder.index'))->name('index');
+
 // ── Builder pages ─────────────────────────────────────────────────────────────
 Route::get('/keychain', [KeychainController::class, 'index'])->name('keychain');
 Route::get('/bracelet', [BraceletController::class, 'index'])->name('bracelet');
