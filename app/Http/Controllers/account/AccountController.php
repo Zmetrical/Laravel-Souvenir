@@ -84,4 +84,24 @@ public function orderShow(string $code)
 
     return view('account.orders.show', compact('order'));
 }
+
+public function approveOrder($code)
+{
+    // Find the order by its code
+    $order = Order::where('order_code', $code)->firstOrFail();
+
+    // Ensure the order belongs to the logged-in user
+    if ($order->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    // Update the status (assuming you have a status column)
+    $order->update([
+        'status' => 'approved' // or whatever your status name is
+    ]);
+
+    // Redirect back to the order page with a success message
+    return redirect()->back()->with('success', 'Order approved successfully! We will start crafting it soon.');
+}
+
 }

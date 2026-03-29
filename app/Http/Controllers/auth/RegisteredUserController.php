@@ -27,26 +27,24 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name'  => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'   => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => 'customer',   // registration always creates customers
-                                        // admins are created via db:seed or tinker
+            'first_name' => $validated['first_name'],
+            'last_name'  => $validated['last_name'],
+            'email'      => $validated['email'],
+            'password'   => Hash::make($validated['password']),
+            'role'       => 'customer', 
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        // ── Restore pending design if the user was redirected from builder ─────
-        // JS will pick up the localStorage key and pre-fill the builder.
-        return redirect()->route('account.dashboard')
-            ->with('welcome', true);
+        return redirect()->route('account.dashboard')->with('welcome', true);
     }
 }

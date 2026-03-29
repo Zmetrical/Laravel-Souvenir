@@ -5,239 +5,167 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Order Placed — ArtsyCrate</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  
   <link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/>
 
   <style>
-    body { overflow: auto !important; height: auto !important; background: var(--grey-50); display: block !important; }
-
-    /* ── Topbar ── */
-    .topbar {
-      background: var(--white); padding: 0 24px; height: 48px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--grey-200); position: sticky; top: 0; z-index: 50;
-    }
-    .logo { font-family: var(--fh); font-size: 1.1rem; font-weight: 800; color: var(--ink); text-decoration: none; }
-    .logo b { color: var(--pink); }
-
-    /* ── Page ── */
-    .conf-page { max-width: 560px; margin: 0 auto; padding: 52px 20px 72px; }
-
-    /* ── Success ring ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--offwhite); overflow-y: auto !important; height: auto !important; display: block !important; }
+    
+    .conf-page { max-width: 500px; margin: 60px auto; padding: 0 20px; text-align: center; }
+    
     .success-ring {
       width: 80px; height: 80px; border-radius: 50%;
-      background: var(--pink-lt); border: 2.5px solid var(--pink-bd);
+      background: var(--pink-bg); border: 3px solid var(--pink);
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 22px;
-      box-shadow: 0 0 0 10px rgba(232,37,122,.06);
-      animation: popIn .4s cubic-bezier(.22,1,.36,1) both;
+      margin: 0 auto 24px;
+      box-shadow: 0 0 0 12px rgba(255,95,160,0.1);
+      animation: popIn 0.5s cubic-bezier(.22,1,.36,1) both;
     }
-    .success-ring i[data-lucide] { width: 30px; height: 30px; color: var(--pink); }
+    .success-ring i { color: var(--pink-dk); width: 36px; height: 36px; }
     @keyframes popIn { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    .conf-title {
-      font-family: var(--fh); font-size: 1.8rem; font-weight: 800;
-      color: var(--ink); text-align: center; margin-bottom: 6px;
-      letter-spacing: -.025em;
-    }
-    .conf-sub {
-      text-align: center; font-size: .84rem; font-weight: 600;
-      color: var(--ink2); line-height: 1.65; margin-bottom: 28px;
-    }
-
-    /* ── Order code box ── */
     .order-code-box {
-      background: var(--white); border: 2px dashed var(--pink-bd);
-      border-radius: var(--r-md); padding: 20px 24px; margin-bottom: 24px;
-      text-align: center; box-shadow: var(--sh-xs);
+      background: #fff; border: 2px dashed var(--pink);
+      border-radius: 16px; padding: 24px; margin: 32px 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04);
     }
-    .ocb-lbl {
-      font-size: .6rem; font-weight: 800; color: var(--ink3);
-      letter-spacing: .10em; text-transform: uppercase; margin-bottom: 7px;
-    }
-    .ocb-code {
-      font-family: var(--fh); font-size: 1.75rem; font-weight: 800;
-      color: var(--pink-dk); letter-spacing: .05em;
-    }
-    .ocb-hint { font-size: .72rem; font-weight: 600; color: var(--ink3); margin-top: 5px; }
+    .ocb-code { font-family: var(--fh); font-size: 2.2rem; color: var(--pink-dk); letter-spacing: 0.1em; }
 
-    /* ── Detail card ── */
-    .detail-card {
-      background: var(--white); border: 1.5px solid var(--grey-200);
-      border-radius: var(--r-md); overflow: hidden; margin-bottom: 16px;
-      box-shadow: var(--sh-xs);
+    /* Elements Dropdown Styles */
+    .elements-dropdown { background: #fff; border: 1.5px solid var(--grey-200); border-radius: 12px; margin-bottom: 24px; overflow: hidden; text-align: left; }
+    .elements-dropdown summary {
+      padding: 14px 16px; font-family: var(--fb); font-size: 0.9rem; font-weight: 800; color: var(--ink);
+      cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+      background: var(--offwhite); transition: background 0.2s;
     }
-    .dc-head {
-      padding: 11px 18px; border-bottom: 1px solid var(--grey-200);
-      background: var(--grey-50);
-      font-size: .6rem; font-weight: 800; letter-spacing: .08em;
-      text-transform: uppercase; color: var(--ink3);
-      display: flex; align-items: center; gap: 7px;
+    .elements-dropdown summary::-webkit-details-marker { display: none; }
+    .elements-dropdown[open] summary { border-bottom: 1.5px solid var(--grey-200); }
+    .elements-dropdown[open] summary .chevron { transform: rotate(180deg); }
+    
+    .elem-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--grey-100); }
+    .elem-row:last-child { border-bottom: none; }
+    .elem-thumb {
+      width: 40px; height: 40px; border-radius: 8px; background: #fff;
+      border: 1.5px solid var(--grey-200); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; overflow: hidden;
     }
-    .dc-head i[data-lucide] { width: 13px; height: 13px; }
-    .dc-body { padding: 16px 18px; }
+    .strand-header { background: var(--grey-50); padding: 6px 16px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: var(--ink-md); border-bottom: 1px solid var(--grey-100); }
 
-    .dc-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 7px 0; border-bottom: 1px solid var(--grey-100);
-      font-size: .81rem;
-    }
-    .dc-row:last-child { border: none; padding-bottom: 0; }
-    .dc-lbl { color: var(--ink2); font-weight: 600; }
-    .dc-val { font-weight: 700; color: var(--ink); }
-    .dc-val.total { font-family: var(--fh); font-size: 1.05rem; color: var(--pink-dk); }
-
-    /* Status badge */
-    .sbd {
-      display: inline-flex; align-items: center; gap: 4px;
-      border-radius: var(--r-pill); padding: 3px 10px;
-      font-size: .62rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-    }
-    .sbd::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-    .s-pending { background: #FFF7E0; color: #B47D00; border: 1px solid #F0D080; }
-
-    /* Snapshot */
-    .snapshot-wrap {
-      border-radius: var(--r-sm); overflow: hidden;
-      border: 1px solid var(--grey-200); margin-bottom: 14px;
-      background: var(--grey-50);
-    }
-    .snapshot-wrap img { width: 100%; display: block; }
-
-    /* ── Notice ── */
-    .notice {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 12px 15px; border-radius: var(--r-sm);
-      font-size: .76rem; font-weight: 600; line-height: 1.55;
-      margin-bottom: 20px;
-    }
-    .notice-teal { background: var(--teal-lt); border: 1.5px solid var(--teal-bd); color: var(--teal-dk); }
-    .notice i[data-lucide] { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
-
-    /* ── CTA buttons ── */
-    .conf-actions { display: flex; flex-direction: column; gap: 9px; }
     .conf-btn-primary {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: var(--pink); color: var(--white);
-      border: none; border-radius: var(--r-sm); padding: 13px;
-      font-family: var(--fb); font-weight: 800; font-size: .88rem;
-      text-decoration: none; cursor: pointer;
-      box-shadow: 0 6px 18px rgba(232,37,122,.24);
-      transition: background .14s, transform .12s;
+      background: var(--ink); color: #fff; border: none; border-radius: 12px; padding: 16px;
+      font-family: var(--fh); font-size: 1.1rem; text-decoration: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(30,30,46,0.2); transition: all 0.2s; margin-bottom: 12px;
     }
-    .conf-btn-primary:hover { background: var(--pink-dk); transform: translateY(-1px); color: var(--white); }
-    .conf-btn-primary i[data-lucide] { width: 16px; height: 16px; }
+    .conf-btn-primary:hover { background: #000; transform: translateY(-2px); color: #fff; }
 
     .conf-btn-ghost {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: var(--white); color: var(--ink2);
-      border: 1.5px solid var(--grey-200); border-radius: var(--r-sm); padding: 12px;
-      font-family: var(--fb); font-weight: 700; font-size: .84rem;
-      text-decoration: none; cursor: pointer;
-      transition: border-color .13s, background .13s;
+      background: #fff; color: var(--ink-md); border: 1.5px solid var(--grey-200); border-radius: 12px; padding: 16px;
+      font-family: var(--fb); font-weight: 800; font-size: 0.95rem; text-decoration: none; transition: all 0.2s;
     }
-    .conf-btn-ghost:hover { border-color: var(--grey-300); background: var(--grey-50); color: var(--ink); }
-    .conf-btn-ghost i[data-lucide] { width: 15px; height: 15px; }
+    .conf-btn-ghost:hover { background: var(--grey-50); color: var(--ink); border-color: var(--grey-300); }
   </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a href="{{ route('builder.index') }}" class="logo">Artsy<b>Crate</b></a>
+@php
+  // Extract and group the elements directly from the saved order JSON!
+  $elems = json_decode($order->design_json ?? '[]', true) ?? [];
+  $byStrand  = [];
+  foreach ($elems as $i => $el) {
+    $byStrand[$el['strand'] ?? 0][] = array_merge($el, ['_pos' => $i]);
+  }
+  $multiStrand = count($byStrand) > 1;
+@endphp
+
+<div class="topbar" style="padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 1.5px solid var(--grey-200);">
+  <a href="{{ route('builder.index') }}" class="logo" style="font-family: var(--fh); font-size: 1.4rem; color: var(--ink); text-decoration: none;">Artsy<b style="color: var(--pink);">Crate</b></a>
   @auth
-    <a href="{{ route('account.dashboard') }}" style="display:flex;align-items:center;gap:6px;font-size:.76rem;font-weight:800;color:var(--ink2);text-decoration:none;">
-      <i data-lucide="user" style="width:14px;height:14px;"></i> My Account
+    <a href="{{ route('account.dashboard') }}" style="display:flex; align-items:center; gap:6px; font-weight:800; color:var(--ink-md); text-decoration:none; font-size: 0.85rem;">
+      <i data-lucide="user" style="width:16px;"></i> My Account
     </a>
   @endauth
 </div>
 
 <div class="conf-page">
 
-  {{-- Success icon --}}
-  <div class="success-ring">
-    <i data-lucide="check"></i>
-  </div>
+  <div class="success-ring"><i data-lucide="check"></i></div>
 
-  <h1 class="conf-title">Order Placed! 🌸</h1>
-  <p class="conf-sub">
+  <h1 style="font-family: var(--fh); font-size: 2.2rem; color: var(--ink); margin-bottom: 8px;">Order Placed!</h1>
+  <p style="font-size: 0.95rem; font-weight: 700; color: var(--ink-md); line-height: 1.6;">
     Thanks, <strong>{{ $order->first_name }}</strong>! We've received your custom order
-    and will message you at <strong>{{ $order->contact_number }}</strong> to confirm.
+    and will message you at <strong style="color: var(--ink);">{{ $order->contact_number }}</strong> to confirm.
   </p>
 
-  {{-- Order code --}}
   <div class="order-code-box">
-    <div class="ocb-lbl">Your Order Code</div>
+    <div style="font-size: 0.75rem; font-weight: 800; color: var(--ink-md); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Your Tracking Code</div>
     <div class="ocb-code">{{ $order->order_code }}</div>
-    <div class="ocb-hint">Show this at the store or use it to track your order online.</div>
   </div>
 
-  {{-- Design snapshot --}}
-  @if($order->design && $order->design->snapshot_path)
-    <div class="detail-card">
-      <div class="dc-head"><i data-lucide="image"></i> Your Design</div>
-      <div class="dc-body" style="padding:12px;">
-        <div class="snapshot-wrap" style="margin-bottom:0;">
-          <img src="{{ Storage::url($order->design->snapshot_path) }}" alt="Design snapshot"/>
-        </div>
+  {{-- ⭐️ NEW: ELEMENTS DROPDOWN ON CONFIRMATION PAGE ⭐️ --}}
+  @if(count($elems))
+  <details class="elements-dropdown">
+    <summary>
+      <span><i data-lucide="layers" style="width: 16px; margin-right: 8px; vertical-align: text-bottom;"></i> View Design Details</span>
+      <i data-lucide="chevron-down" class="chevron" style="width: 16px; transition: transform 0.2s;"></i>
+    </summary>
+    
+    @if($order->design && $order->design->snapshot_path)
+      <div style="padding: 16px; background: var(--offwhite); text-align: center; border-bottom: 1.5px solid var(--grey-200);">
+        <img src="{{ Storage::url($order->design->snapshot_path) }}" alt="Design snapshot" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1.5px solid var(--grey-200);"/>
       </div>
+    @endif
+
+    <div style="max-height: 280px; overflow-y: auto;">
+      @foreach($byStrand as $strandIdx => $strandElems)
+        @if($multiStrand)
+          <div class="strand-header">Strand {{ $strandIdx + 1 }}</div>
+        @endif
+        @foreach($strandElems as $el)
+          <div class="elem-row">
+            <span style="font-size: 0.75rem; font-weight: 800; color: var(--ink-md); width: 18px;">{{ $el['_pos'] + 1 }}</span>
+            <div class="elem-thumb">
+              @if(!empty($el['useImg']) && !empty($el['imgUrl']))
+                <img src="{{ $el['imgUrl'] }}" style="width:80%; height:80%; object-fit:contain;">
+              @elseif(!empty($el['isLetter']))
+                <div style="background:{{ $el['ltrBg'] ?? '#fff' }}; color:{{ $el['ltrText'] ?? '#000' }}; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem; border-radius: {{ ($el['letterShape'] ?? 'square') === 'square' ? '6px' : '50%' }};">
+                  {{ strtoupper($el['label'] ?? '') }}
+                </div>
+              @else
+                <div style="background:{{ $el['color'] ?? '#ccc' }}; width:60%; height:60%; border-radius:50%;"></div>
+              @endif
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 800; font-size: 0.85rem; color: var(--ink);">{{ $el['name'] ?? 'Element' }}</div>
+              <div style="font-size: 0.65rem; font-weight: 800; color: var(--ink-md); text-transform: uppercase;">{{ $el['category'] ?? 'bead' }}</div>
+            </div>
+            <div style="font-weight: 800; color: var(--pink);">₱{{ $el['price'] ?? 8 }}</div>
+          </div>
+        @endforeach
+      @endforeach
     </div>
+  </details>
   @endif
 
-  {{-- Order details --}}
-  <div class="detail-card">
-    <div class="dc-head"><i data-lucide="receipt"></i> Order Details</div>
-    <div class="dc-body">
-      <div class="dc-row">
-        <span class="dc-lbl">Status</span>
-        <span class="dc-val"><span class="sbd s-pending">Pending Review</span></span>
-      </div>
-      <div class="dc-row">
-        <span class="dc-lbl">Product</span>
-        <span class="dc-val">{{ $order->product?->label ?? ucfirst($order->product_id) }}</span>
-      </div>
-      <div class="dc-row">
-        <span class="dc-lbl">Length</span>
-        <span class="dc-val">{{ $order->length }}</span>
-      </div>
-      <div class="dc-row">
-        <span class="dc-lbl">Base Price</span>
-        <span class="dc-val">₱{{ number_format($order->base_price) }}</span>
-      </div>
-      <div class="dc-row">
-        <span class="dc-lbl">Elements</span>
-        <span class="dc-val">₱{{ number_format($order->elements_cost) }}</span>
-      </div>
-      <div class="dc-row">
-        <span class="dc-lbl">Estimated Total</span>
-        <span class="dc-val total">₱{{ number_format($order->total_price) }}.00</span>
-      </div>
-    </div>
-  </div>
-
-  {{-- Notice --}}
-  <div class="notice notice-teal">
-    <i data-lucide="info"></i>
-    Keep your order code handy — you'll need it to check your order status. We'll confirm pricing and availability before we begin crafting your piece.
-  </div>
-
-  {{-- Actions --}}
-  <div class="conf-actions">
+  <div style="display: flex; flex-direction: column;">
     @auth
       <a href="{{ route('account.orders') }}" class="conf-btn-primary">
-        <i data-lucide="package"></i> Track My Order
+        Track My Order <i data-lucide="arrow-right" style="width: 18px;"></i>
       </a>
     @endauth
     <a href="{{ route('builder.index') }}" class="conf-btn-ghost">
-      <i data-lucide="wand-2"></i> Design Another Piece
+      <i data-lucide="wand-2" style="width: 16px;"></i> Design Another Piece
     </a>
   </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
 </body>
 </html>

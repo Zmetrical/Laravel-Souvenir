@@ -13,568 +13,268 @@
     'cancelled'   => ['bg' => '#FEE2E2', 'text' => '#991B1B'],
   ];
 
+  /* 👇 UPDATED TO USE YOUR THEME VARIABLES 👇 */
   $nextStatus = match($order->status) {
-    'pending'     => ['status' => 'confirmed',   'label' => 'Confirm Order',  'color' => '#1D4ED8', 'icon' => 'check'],
-    'confirmed'   => ['status' => 'in_progress', 'label' => 'Start Working',  'color' => '#7C3AED', 'icon' => 'wrench'],
-    'in_progress' => ['status' => 'ready',       'label' => 'Mark as Ready',  'color' => '#059669', 'icon' => 'package-check'],
-    'ready'       => ['status' => 'completed',   'label' => 'Complete Order', 'color' => '#065F46', 'icon' => 'circle-check'],
+    'pending'     => ['status' => 'confirmed',   'label' => 'Confirm Order',  'color' => 'var(--teal)',   'icon' => 'check'],
+    'confirmed'   => ['status' => 'in_progress', 'label' => 'Start Working',  'color' => 'var(--purple)', 'icon' => 'wrench'],
+    'in_progress' => ['status' => 'ready',       'label' => 'Mark as Ready',  'color' => 'var(--teal)',   'icon' => 'package-check'],
+    'ready'       => ['status' => 'completed',   'label' => 'Complete Order', 'color' => 'var(--ink)',    'icon' => 'circle-check'],
     default       => null,
   };
 
   $canCancel = ! in_array($order->status, ['completed', 'cancelled']);
-  $sc  = $tabColors[$order->status] ?? ['bg' => '#F3F4F6', 'text' => '#374151'];
-  $tsc = $thread?->statusColor() ?? ['bg' => '#F3F4F6', 'text' => '#374151', 'border' => '#E5E7EB'];
+  $sc  = $tabColors[$order->status] ?? ['bg' => 'var(--grey-100)', 'text' => 'var(--ink-md)'];
+  
+  $tsc = ['bg' => 'var(--grey-100)', 'text' => 'var(--ink-md)', 'border' => 'var(--grey-200)'];
+  if (isset($thread)) {
+      $tsc = $thread->statusColor();
+  }
 @endphp
 
 <style>
-  /* ── Thread ─────────────────────────────────────────────────────────────── */
-  .thread-msg { display:flex; gap:9px; padding:10px 0; }
-  .thread-msg.from-admin    { justify-content:flex-start; }
-  .thread-msg.from-customer { justify-content:flex-end; }
+  /* ── Thread ── */
+  .thread-wrap { display: flex; flex-direction: column; }
+  .msg-row { display: flex; gap: 12px; padding: 16px 24px; }
+  .msg-row.msg-admin    { justify-content: flex-end; }
+  .msg-row.msg-customer { justify-content: flex-start; }
 
-  .thread-av {
-    width:30px;height:30px;border-radius:50%;flex-shrink:0;align-self:flex-end;
-    display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:900;
-  }
-  .av-admin    { background:var(--pink-lt,#FFD6E8);color:var(--pink-dk,#C0136A); }
-  .av-customer { background:#D1FAE5;color:#065F46; }
+  .msg-avatar { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; flex-shrink: 0; align-self: flex-end; }
+  .msg-avatar.admin-av    { background: var(--pink-lt); color: var(--pink-dk); }
+  .msg-avatar.customer-av { background: var(--teal-bg); color: var(--teal-dk); border: 1.5px solid var(--teal); }
 
-  .thread-bw { max-width:72%;display:flex;flex-direction:column; }
-  .from-admin    .thread-bw { align-items:flex-start; }
-  .from-customer .thread-bw { align-items:flex-end; }
+  .msg-bubble-wrap { max-width: 75%; display: flex; flex-direction: column; }
+  .msg-row.msg-admin    .msg-bubble-wrap { align-items: flex-end; }
+  .msg-row.msg-customer .msg-bubble-wrap { align-items: flex-start; }
 
-  .thread-sender { font-size:.62rem;font-weight:700;color:var(--grey-400);margin-bottom:3px;padding:0 3px; }
+  .msg-sender-name { font-size: 0.75rem; font-weight: 800; color: var(--ink-md); text-transform: uppercase; margin-bottom: 6px; padding: 0 4px; }
+  .msg-bubble { border-radius: 16px; padding: 14px 18px; font-size: 0.9rem; font-weight: 700; line-height: 1.5; }
+  
+  /* Bubbles */
+  .admin-bub    { background: var(--pink-bg); border: 1.5px solid var(--pink-bd); color: var(--pink-dk); border-bottom-right-radius: 4px; }
+  .customer-bub { background: var(--offwhite); border: 1.5px solid var(--grey-200); color: var(--ink); border-bottom-left-radius: 4px; }
+  .approval-bub { background: var(--lime-bg); border: 1.5px solid var(--lime); color: var(--lime-dk); border-bottom-left-radius: 4px; }
+  .revision-bub { background: var(--purple-bg); border: 1.5px solid var(--purple); color: var(--purple-dk); border-bottom-left-radius: 4px; }
 
-  .thread-bubble { padding:10px 13px;border-radius:12px;font-size:.8rem;font-weight:600;line-height:1.5; }
-  .bub-admin    { background:var(--grey-50);border:1.5px solid var(--grey-200);color:var(--ink);border-bottom-left-radius:3px; }
-  .bub-customer { background:#F0FDF4;border:1.5px solid #A7F3D0;color:#065F46;border-bottom-right-radius:3px; }
-  .bub-approval { background:#D1FAE5;border-color:#6EE7B7; }
-  .bub-revision { background:#F3E8FF;border-color:#DDD6FE;color:#6D28D9;border-bottom-right-radius:3px; }
-  .bub-note-customer { background:#FEF3C7;border-color:#FDE68A;color:#92400E;border-bottom-right-radius:3px; }
+  .msg-time { font-size: 0.7rem; color: var(--ink-md); font-weight: 700; margin-top: 6px; padding: 0 4px; }
+  .msg-type-badge { display: inline-block; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 6px; padding: 4px 10px; margin-bottom: 8px; }
 
-  .thread-type-badge {
-    display:inline-block;font-size:.58rem;font-weight:800;
-    text-transform:uppercase;letter-spacing:.05em;
-    border-radius:4px;padding:2px 6px;margin-bottom:5px;
-  }
+  /* Images */
+  .msg-mockup-img { margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--pink-bd); max-width: 320px; }
+  .msg-mockup-img img { width: 100%; display: block; cursor: pointer; }
+  .msg-snapshot { margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--purple); max-width: 260px; }
+  .msg-snapshot img { width: 100%; display: block; }
+  .snap-label { text-align: center; padding: 8px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--purple-dk); background: var(--purple-bg); }
 
-  .thread-time { font-size:.6rem;color:var(--grey-400);font-weight:600;margin-top:4px;padding:0 3px; }
+  .thread-date-divider { display: flex; align-items: center; gap: 12px; padding: 12px 24px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-md); }
+  .thread-date-divider::before, .thread-date-divider::after { content: ''; flex: 1; height: 1.5px; background: var(--grey-200); }
 
-  /* Mockup image uses image_path */
-  .mockup-img-wrap {
-    margin-top:9px;border-radius:9px;overflow:hidden;
-    border:1.5px solid var(--grey-200);max-width:260px;cursor:pointer;
-  }
-  .mockup-img-wrap img { width:100%;display:block;transition:opacity .13s; }
-  .mockup-img-wrap img:hover { opacity:.88; }
-  .mockup-img-footer {
-    text-align:center;padding:5px;font-size:.65rem;font-weight:700;
-    color:var(--grey-400);background:var(--grey-50);border-top:1px solid var(--grey-200);
-  }
-
-  /* Revised design snapshot */
-  .snap-wrap { margin-top:9px;border-radius:9px;overflow:hidden;border:1.5px solid #DDD6FE;max-width:200px; }
-  .snap-wrap img { width:100%;display:block; }
-  .snap-foot { text-align:center;padding:5px;font-size:.65rem;font-weight:700;color:#6D28D9;background:#F3E8FF; }
-
-  .thread-date-sep {
-    display:flex;align-items:center;gap:10px;margin:6px 0;
-    font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--grey-300);
-  }
-  .thread-date-sep::before,.thread-date-sep::after { content:'';flex:1;height:1px;background:var(--grey-200); }
-
-  /* ── Upload form ─────────────────────────────────────────────────────────── */
-  .ac-form-label { display:block;font-size:.72rem;font-weight:700;color:var(--grey-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px; }
-  .ac-form-input { width:100%;padding:8px 11px;border:1.5px solid var(--grey-200);border-radius:8px;font-family:'Segoe UI',system-ui,sans-serif;font-size:.8rem;color:var(--ink);background:var(--white);outline:none;transition:border-color .13s; }
-  .ac-form-input:focus { border-color:var(--pink); }
-
-  .upload-zone {
-    position:relative;width:100%;padding:28px 16px;text-align:center;
-    border:2px dashed var(--grey-200);border-radius:10px;
-    background:var(--grey-50);cursor:pointer;transition:border-color .13s,background .13s;
-  }
-  .upload-zone:hover { border-color:var(--pink);background:#FFF8FB; }
-  .upload-zone input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
-  #upload-preview { width:100%;border-radius:8px;display:none;margin-top:10px;border:1px solid var(--grey-200); }
-
-  .btn-send-mockup {
-    width:100%;padding:10px;border:none;border-radius:8px;cursor:pointer;
-    font-family:'Segoe UI',system-ui,sans-serif;font-weight:800;font-size:.84rem;
-    background:var(--pink);color:#fff;transition:background .13s;
-  }
-  .btn-send-mockup:hover { background:var(--pink-dk); }
-  .btn-send-mockup:disabled { background:var(--grey-300);cursor:not-allowed; }
-
-  .btn-send-note {
-    width:100%;padding:9px;border:none;border-radius:8px;cursor:pointer;
-    font-family:'Segoe UI',system-ui,sans-serif;font-weight:700;font-size:.8rem;
-    background:var(--ink);color:#fff;transition:background .13s;
-  }
-  .btn-send-note:hover { background:var(--ink-2); }
-
-  /* Lightbox */
-  .lb-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:center;justify-content:center; }
-  .lb-overlay.open { display:flex; }
-  .lb-overlay img { max-width:90vw;max-height:88vh;border-radius:12px; }
-  .lb-close { position:fixed;top:16px;right:20px;background:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1.1rem;font-weight:900;display:flex;align-items:center;justify-content:center; }
+  /* ── Upload form ── */
+  .upload-zone { position: relative; width: 100%; padding: 32px 16px; text-align: center; border: 2px dashed var(--grey-300); border-radius: 12px; background: var(--offwhite); cursor: pointer; transition: all 0.2s; }
+  .upload-zone:hover { border-color: var(--pink); background: var(--pink-bg); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  #upload-preview { width: 100%; border-radius: 8px; display: none; margin-top: 16px; border: 1.5px solid var(--grey-200); }
 </style>
 
-{{-- ── Page header ──────────────────────────────────────────────────────────── --}}
+{{-- ── Page header ── --}}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div class="d-flex align-items-center gap-3">
-    <a href="{{ route('admin.orders.index') }}"
-       style="color:var(--grey-400);text-decoration:none;font-size:.85rem;">← Orders</a>
-    <span style="color:var(--grey-200);">/</span>
+    <a href="{{ route('admin.orders.index') }}" class="btn-ghost"><i data-lucide="arrow-left" style="width: 14px;"></i> Orders</a>
     <div>
-      <h5 class="mb-0 fw-bold font-monospace" style="color:var(--ink);font-size:1rem;">
-        {{ $order->order_code }}
-      </h5>
-      <small style="color:var(--grey-400);">
-        Placed {{ $order->created_at->format('F d, Y \a\t h:i A') }}
-      </small>
+      <h5 class="mb-0" style="font-family: var(--fh); font-size: 1.8rem; color: var(--ink);">{{ $order->order_code }}</h5>
+      <small style="font-size: 0.85rem; font-weight: 700; color: var(--ink-md);">Placed {{ $order->created_at->format('F d, Y \a\t h:i A') }}</small>
     </div>
   </div>
   <div class="d-flex align-items-center gap-2">
-    <span style="padding:4px 14px;border-radius:20px;font-size:.77rem;font-weight:700;
-                 background:{{ $sc['bg'] }};color:{{ $sc['text'] }};">
-      {{ $order->statusLabel() }}
+    <span style="padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background:{{ $sc['bg'] }}; color:{{ $sc['text'] }}; border: 1.5px solid {{ $sc['text'] }};">
+      {{ $order->statusLabel() ?? ucfirst($order->status) }}
     </span>
-    @if($thread)
-      <span style="padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;
-                   background:{{ $tsc['bg'] }};color:{{ $tsc['text'] }};
-                   border:1px solid {{ $tsc['border'] }};">
-        {{ $thread->statusIcon() }} {{ $thread->statusLabel() }}
-      </span>
-    @endif
-    <a href="{{ route('admin.orders.print', $order) }}" target="_blank"
-       class="btn btn-sm"
-       style="background:var(--grey-100);color:var(--ink-2);border:1px solid var(--grey-200);
-              border-radius:7px;font-size:.78rem;padding:5px 12px;
-              display:inline-flex;align-items:center;gap:5px;">
-      <i data-lucide="printer" style="width:13px;height:13px;"></i> Print
+    <a href="{{ route('admin.orders.print', $order) }}" target="_blank" class="btn-ghost">
+      <i data-lucide="printer" style="width: 14px;"></i> Print
     </a>
   </div>
 </div>
 
-<div class="row g-3">
+<div class="row g-4">
 
-  {{-- ═══════════════════════════════════════════════════════════════════════
-       LEFT COLUMN
-  ══════════════════════════════════════════════════════════════════════════ --}}
+  {{-- ══ LEFT COLUMN ══ --}}
   <div class="col-lg-7">
 
-    {{-- Design Preview ──────────────────────────────────────────────────────── --}}
-    <div class="ac-card mb-3">
-      <div class="ac-card-header"><i data-lucide="palette"></i> Design Preview</div>
+    {{-- Design Preview --}}
+    <div class="ac-card mb-4">
+      <div class="ac-card-header"><i data-lucide="palette"></i> Design Snapshot</div>
       <div class="p-4">
-        @if($order->design)
-          @php $d = $order->design; @endphp
-          @if($d->snapshot_path)
-            <div class="text-center mb-3">
-              <img src="{{ asset('storage/' . $d->snapshot_path) }}"
-                   style="max-width:280px;width:100%;border-radius:12px;
-                          border:1px solid var(--grey-200);background:var(--grey-50);padding:8px;"
-                   alt="Design snapshot"/>
-            </div>
-          @else
-            <div style="text-align:center;padding:24px;background:var(--grey-50);
-                        border-radius:10px;border:1px dashed var(--grey-200);margin-bottom:16px;">
-              <i data-lucide="image-off" style="width:28px;height:28px;color:var(--grey-400);"></i>
-              <p class="mb-0 mt-2" style="font-size:.78rem;color:var(--grey-400);">No snapshot</p>
-            </div>
-          @endif
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:.8rem;">
-            @if($d->str_type)
-              <div>
-                <div style="color:var(--grey-400);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">String</div>
-                <div class="fw-semibold">{{ $d->str_type }}</div>
-              </div>
-            @endif
-            @if($d->str_color)
-              <div>
-                <div style="color:var(--grey-400);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Color</div>
-                <div class="d-flex align-items-center gap-2">
-                  <span style="width:14px;height:14px;border-radius:50%;display:inline-block;
-                               background:{{ $d->str_color }};border:1px solid rgba(0,0,0,.1);flex-shrink:0;"></span>
-                  <code style="font-size:.73rem;">{{ $d->str_color }}</code>
-                </div>
-              </div>
-            @endif
-            @if($d->clasp) <div><div style="color:var(--grey-400);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Clasp</div><div class="fw-semibold">{{ $d->clasp }}</div></div> @endif
-            @if($d->ring_type) <div><div style="color:var(--grey-400);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Ring</div><div class="fw-semibold">{{ $d->ring_type }}</div></div> @endif
-            @if($d->letter_shape) <div><div style="color:var(--grey-400);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Letter Shape</div><div class="fw-semibold">{{ $d->letter_shape }}</div></div> @endif
-            @if($d->keychain_strands > 1) <div><div style="color:var(--grey-400);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Strands</div><div class="fw-semibold">{{ $d->keychain_strands }}</div></div> @endif
+        @if($order->design && $order->design->snapshot_path)
+          <div class="text-center mb-4">
+            <img src="{{ asset('storage/' . $order->design->snapshot_path) }}" style="max-width: 320px; width: 100%; border-radius: 12px; border: 1.5px solid var(--grey-200); background: var(--offwhite); padding: 8px;" alt="Design snapshot"/>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.9rem;">
+            @if($order->design->str_type) <div><div class="form-label">String</div><div class="fw-bold">{{ $order->design->str_type }}</div></div> @endif
+            @if($order->design->str_color) <div><div class="form-label">Color</div><div class="d-flex align-items-center gap-2"><span style="width:16px;height:16px;border-radius:50%;background:{{ $order->design->str_color }};border:1.5px solid rgba(0,0,0,.1);"></span> <code style="font-size:0.8rem; font-weight: 800; color: var(--ink-md);">{{ $order->design->str_color }}</code></div></div> @endif
+            @if($order->design->clasp) <div><div class="form-label">Clasp</div><div class="fw-bold">{{ $order->design->clasp }}</div></div> @endif
+            @if($order->design->ring_type) <div><div class="form-label">Ring</div><div class="fw-bold">{{ $order->design->ring_type }}</div></div> @endif
           </div>
         @else
-          <div style="text-align:center;padding:24px;color:var(--grey-400);">
-            <i data-lucide="box" style="width:28px;height:28px;"></i>
-            <p class="mb-0 mt-2" style="font-size:.78rem;">No design attached.</p>
+          <div class="text-center py-4" style="color: var(--ink-md);">
+            <i data-lucide="image-off" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+            <div class="fw-bold">No snapshot attached</div>
           </div>
         @endif
       </div>
     </div>
 
-    {{-- Order Items ─────────────────────────────────────────────────────────── --}}
-    <div class="ac-card mb-3">
+    {{-- Thread --}}
+    <div class="ac-card mb-4">
       <div class="ac-card-header">
-        <i data-lucide="list-ordered"></i> Elements on Design
-        <span class="ms-auto badge" style="background:var(--grey-100);color:var(--grey-600);font-size:.7rem;">
-          {{ $order->items->count() }} items
-        </span>
-      </div>
-      @if($order->items->isEmpty())
-        <div class="p-4 text-center" style="color:var(--grey-400);font-size:.82rem;">No items recorded.</div>
-      @else
-        @php $byStrand = $order->items->groupBy('strand'); $multi = $byStrand->keys()->count() > 1; @endphp
-        @foreach($byStrand as $strand => $items)
-          @if($multi)
-            <div style="padding:8px 16px 2px;font-size:.65rem;font-weight:700;text-transform:uppercase;
-                        letter-spacing:.08em;color:var(--grey-400);border-top:1px solid var(--grey-100);">
-              Strand {{ $strand + 1 }}
-            </div>
-          @endif
-          <div style="padding:6px 12px;">
-            @foreach($items as $item)
-              <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;transition:background .1s;"
-                   onmouseenter="this.style.background='var(--grey-50)'"
-                   onmouseleave="this.style.background='transparent'">
-                <span style="width:22px;height:22px;border-radius:50%;background:var(--grey-100);
-                             color:var(--grey-600);font-size:.65rem;font-weight:700;flex-shrink:0;
-                             display:flex;align-items:center;justify-content:center;">
-                  {{ $item->sort_order + 1 }}
-                </span>
-                @if($item->isLetter())
-                  <div style="width:30px;height:30px;border-radius:6px;flex-shrink:0;
-                              background:{{ $item->letter_bg ?? '#F9B8CF' }};
-                              color:{{ $item->letter_text_color ?? '#C0136A' }};
-                              display:flex;align-items:center;justify-content:center;
-                              font-weight:900;font-size:.85rem;border:1px solid rgba(0,0,0,.08);">
-                    {{ strtoupper($item->letter) }}
-                  </div>
-                  <div style="flex:1;font-size:.8rem;font-weight:600;color:var(--ink);">Letter "{{ strtoupper($item->letter) }}"</div>
-                @else
-                  @php $el = $item->element; @endphp
-                  @if($el?->img_path)
-                    <img src="{{ asset('img/builder/' . $el->img_path) }}"
-                         style="width:30px;height:30px;object-fit:contain;border-radius:6px;
-                                background:var(--grey-100);border:1px solid var(--grey-200);flex-shrink:0;"/>
-                  @else
-                    <div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;
-                                background:{{ $el->color ?? '#F9B8CF' }};border:1.5px solid rgba(0,0,0,.08);"></div>
-                  @endif
-                  <div style="flex:1;font-size:.8rem;font-weight:600;color:var(--ink);">{{ $el->name ?? '(deleted)' }}</div>
-                @endif
-                <span style="font-size:.77rem;font-weight:700;color:var(--pink);flex-shrink:0;">₱{{ $item->price_at_order }}</span>
-              </div>
-            @endforeach
-          </div>
-        @endforeach
-      @endif
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════════════
-         COMMUNICATION THREAD
-    ══════════════════════════════════════════════════════════════════════ --}}
-    <div class="ac-card mb-3" id="thread-card">
-      <div class="ac-card-header">
-        <i data-lucide="message-circle"></i>
-        Communication Thread
-        @if($thread)
-          <span style="margin-left:6px;padding:2px 9px;border-radius:12px;font-size:.68rem;font-weight:700;
-                       background:{{ $tsc['bg'] }};color:{{ $tsc['text'] }};">
-            {{ $thread->statusIcon() }} {{ $thread->statusLabel() }}
+        <i data-lucide="message-circle"></i> Communication Thread
+        @if(isset($thread))
+          <span style="margin-left: auto; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; background:{{ $tsc['bg'] }}; color:{{ $tsc['text'] }}; border: 1.5px solid {{ $tsc['border'] }};">
+            {{ $thread->statusLabel() }}
           </span>
-          @if($thread->revision_count > 0)
-            <span style="font-size:.65rem;color:var(--grey-400);font-weight:600;margin-left:4px;">
-              · {{ $thread->revision_count }} revision{{ $thread->revision_count > 1 ? 's' : '' }}
-            </span>
-          @endif
         @endif
-        <a href="{{ route('account.orders.show', $order->order_code) }}" target="_blank"
-           class="ms-auto" style="font-size:.7rem;color:var(--grey-400);text-decoration:none;
-                                  display:flex;align-items:center;gap:4px;">
-          <i data-lucide="external-link" style="width:11px;height:11px;"></i>
-          Customer view
-        </a>
       </div>
 
-      {{-- Messages ─────────────────────────────────────────────────────────── --}}
-      <div id="thread-scroll"
-           style="padding:8px 20px;min-height:80px;max-height:500px;overflow-y:auto;">
-
-        @forelse($messages as $i => $msg)
-
-          @php
-            $showDate = $i === 0 ||
-              $msg->created_at->toDateString() !== $messages[$i-1]->created_at->toDateString();
-          @endphp
+      <div id="thread-scroll" style="min-height: 200px; max-height: 600px; overflow-y: auto;">
+        @forelse($messages ?? [] as $i => $msg)
+          @php $showDate = $i === 0 || $msg->created_at->toDateString() !== ($messages[$i-1]->created_at->toDateString() ?? ''); @endphp
 
           @if($showDate)
-            <div class="thread-date-sep">
-              {{ $msg->created_at->isToday() ? 'Today' : $msg->created_at->format('M d, Y') }}
-            </div>
+            <div class="thread-date-divider">{{ $msg->created_at->isToday() ? 'Today' : $msg->created_at->format('M d, Y') }}</div>
           @endif
 
-          {{-- Admin messages: mockup, note ────────────────────────────────── --}}
           @if($msg->isFromAdmin())
-            <div class="thread-msg from-admin">
-              <div class="thread-av av-admin">🌸</div>
-              <div class="thread-bw">
-                <div class="thread-sender">
-                  {{ $msg->user?->name ?? 'Admin' }}
-                </div>
-                <div class="thread-bubble bub-admin">
-                  <span class="thread-type-badge" style="{{ $msg->typeBadgeStyle() }}">
-                    {{ $msg->typeLabel() }}
-                  </span>
-                  @if($msg->body)
-                    <div>{{ $msg->body }}</div>
-                  @endif
-
-                  {{-- Mockup photo — uses image_path ───────────────────────── --}}
+            <div class="msg-row msg-admin">
+              <div class="msg-bubble-wrap">
+                <div class="msg-sender-name">You (Admin)</div>
+                <div class="msg-bubble admin-bub">
+                  <span class="msg-type-badge" style="{{ $msg->typeBadgeStyle() }}">{{ $msg->typeLabel() }}</span>
+                  @if($msg->body) <div>{{ $msg->body }}</div> @endif
                   @if($msg->hasImage())
-                    <div class="mockup-img-wrap"
-                         onclick="openLb('{{ asset('storage/' . $msg->image_path) }}')">
-                      <img src="{{ asset('storage/' . $msg->image_path) }}" alt="Mockup"/>
-                      <div class="mockup-img-footer">
-                        <i data-lucide="zoom-in" style="width:10px;height:10px;"></i>
-                        Click to enlarge
-                      </div>
+                    <div class="msg-mockup-img">
+                      <img src="{{ asset('storage/' . $msg->image_path) }}" alt="Mockup Photo" onclick="openLb('{{ asset('storage/' . $msg->image_path) }}')"/>
                     </div>
                   @endif
                 </div>
-                <div class="thread-time">{{ $msg->created_at->format('h:i A') }}</div>
+                <div class="msg-time">{{ $msg->created_at->format('h:i A') }}</div>
               </div>
+              <div class="msg-avatar admin-av"><i data-lucide="sparkles" style="width: 20px;"></i></div>
             </div>
-
-          {{-- Customer messages: approval, revision, note ───────────────────── --}}
           @else
-            @php
-              $extraClass = match($msg->type) {
-                'approval' => 'bub-approval',
-                'revision' => 'bub-revision',
-                'note'     => 'bub-note-customer',
-                default    => '',
-              };
-            @endphp
-            <div class="thread-msg from-customer">
-              <div class="thread-bw">
-                <div class="thread-sender">
-                  {{ $order->first_name }} {{ $order->last_name }}
-                </div>
-                <div class="thread-bubble bub-customer {{ $extraClass }}">
-                  <span class="thread-type-badge" style="{{ $msg->typeBadgeStyle() }}">
-                    {{ $msg->typeLabel() }}
-                  </span>
-                  @if($msg->body)
-                    <div>{{ $msg->body }}</div>
-                  @endif
-
-                  {{-- Revised design snapshot ────────────────────────────── --}}
+            @php $bubbleClass = match($msg->type) { 'approval' => 'approval-bub', 'revision' => 'revision-bub', default => 'customer-bub' }; @endphp
+            <div class="msg-row msg-customer">
+              <div class="msg-avatar customer-av">{{ strtoupper(substr($order->first_name, 0, 1)) }}</div>
+              <div class="msg-bubble-wrap">
+                <div class="msg-sender-name">{{ $order->first_name }}</div>
+                <div class="msg-bubble {{ $bubbleClass }}">
+                  <span class="msg-type-badge" style="{{ $msg->typeBadgeStyle() }}">{{ $msg->typeLabel() }}</span>
+                  @if($msg->body) <div>{{ $msg->body }}</div> @endif
                   @if($msg->hasSnapshot())
-                    <div class="snap-wrap">
+                    <div class="msg-snapshot">
                       <img src="{{ asset('storage/' . $msg->snapshot_path) }}" alt="Revised"/>
-                      <div class="snap-foot">Revised Design</div>
+                      <div class="snap-label">Revised Design</div>
                     </div>
                   @endif
                 </div>
-                <div class="thread-time">{{ $msg->created_at->format('h:i A') }}</div>
-              </div>
-              <div class="thread-av av-customer">
-                {{ strtoupper(substr($order->first_name, 0, 1)) }}
+                <div class="msg-time">{{ $msg->created_at->format('h:i A') }}</div>
               </div>
             </div>
           @endif
 
         @empty
-          <div style="text-align:center;padding:28px;color:var(--grey-400);">
-            <i data-lucide="message-circle" style="width:24px;height:24px;display:block;margin:0 auto 8px;"></i>
-            <div style="font-size:.78rem;font-weight:700;">No messages yet</div>
-            <div style="font-size:.7rem;margin-top:3px;">Upload a mockup below to start.</div>
+          <div class="text-center py-5" style="color: var(--ink-md);">
+            <i data-lucide="message-circle" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+            <div class="fw-bold">No messages yet</div>
+            <div style="font-size: 0.85rem;">Upload a mockup below to start the conversation.</div>
           </div>
         @endforelse
-
-      </div>{{-- /#thread-scroll --}}
-
+      </div>
     </div>
 
-  </div>{{-- /col-lg-7 --}}
+  </div>
 
-  {{-- ═══════════════════════════════════════════════════════════════════════
-       RIGHT COLUMN
-  ══════════════════════════════════════════════════════════════════════════ --}}
+  {{-- ══ RIGHT COLUMN ══ --}}
   <div class="col-lg-5">
 
-    {{-- Customer Info --}}
-    <div class="ac-card mb-3">
-      <div class="ac-card-header"><i data-lucide="user"></i> Customer</div>
+    {{-- Send Mockup --}}
+    <div class="ac-card mb-4">
+      <div class="ac-card-header"><i data-lucide="upload-cloud"></i> Send Mockup to Customer</div>
       <div class="p-4">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div style="width:42px;height:42px;border-radius:50%;background:var(--pink-lt,#FFD6E8);
-                      color:var(--pink);font-weight:800;font-size:1rem;
-                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            {{ strtoupper(substr($order->first_name, 0, 1)) }}
+        <form action="{{ route('admin.orders.mockup', $order) }}" method="POST" enctype="multipart/form-data">
+          @csrf
+          <div class="upload-zone mb-3">
+            <input type="file" name="mockup_photo" accept="image/png,image/jpeg,image/webp" onchange="previewPhoto(this)" required/>
+            <i data-lucide="camera" id="upload-icon" style="width: 36px; height: 36px; color: var(--pink); margin-bottom: 12px;"></i>
+            <div class="fw-bold mb-1" id="upload-text" style="color: var(--ink);">Click or drop photo here</div>
+            <div style="font-size: 0.75rem; color: var(--ink-md);">PNG, JPG, WEBP</div>
           </div>
-          <div>
-            <div class="fw-bold" style="color:var(--ink);">{{ $order->first_name }} {{ $order->last_name }}</div>
-            <div style="font-size:.8rem;color:var(--grey-400);">{{ $order->contact_number }}</div>
+          <img id="upload-preview" src="" alt="Preview"/>
+
+          <div class="mt-3 mb-3">
+            <label class="form-label">Message (optional)</label>
+            <textarea name="note" class="form-control" rows="2" placeholder="e.g. Here's your mockup! Let us know if you'd like any changes."></textarea>
           </div>
-        </div>
+
+          {{-- 👇 UPDATED TO PINK BUTTON 👇 --}}
+          <button type="submit" class="btn-pink w-100 justify-content-center" id="upload-btn" disabled style="padding: 14px; font-size: 1rem;">
+            <i data-lucide="send" style="width: 18px;"></i> Send Mockup
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {{-- Send Note --}}
+    <div class="ac-card mb-4">
+      <div class="ac-card-header"><i data-lucide="message-square"></i> Send Note</div>
+      <div class="p-4">
+        <form action="{{ route('admin.orders.note', $order) }}" method="POST">
+          @csrf
+          <div class="mb-3">
+            <textarea name="body" class="form-control" rows="3" required placeholder="Type a message..."></textarea>
+          </div>
+          {{-- 👇 UPDATED TO GHOST BUTTON 👇 --}}
+          <button type="submit" class="btn-ghost w-100 justify-content-center" style="padding: 14px; font-size: 1rem;">
+            <i data-lucide="message-square" style="width: 18px;"></i> Send Note
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {{-- Customer Details --}}
+    <div class="ac-card mb-4">
+      <div class="ac-card-header"><i data-lucide="user"></i> Customer Info</div>
+      <div class="p-4" style="font-size: 0.9rem;">
+        <div class="d-flex justify-content-between mb-2"><span class="form-label mb-0">Name</span><span class="fw-bold">{{ $order->first_name }} {{ $order->last_name }}</span></div>
+        <div class="d-flex justify-content-between mb-2"><span class="form-label mb-0">Contact</span><span class="fw-bold">{{ $order->contact_number }}</span></div>
         @if($order->notes)
-          <div style="background:var(--grey-50);border:1px solid var(--grey-200);border-radius:8px;padding:10px 12px;">
-            <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--grey-400);margin-bottom:4px;">Notes</div>
-            <p class="mb-0" style="font-size:.82rem;color:var(--ink-2);line-height:1.5;">{{ $order->notes }}</p>
+          <div class="mt-3 p-3 bg-light rounded border">
+            <div class="form-label">Special Notes</div>
+            <div style="font-weight: 700; color: var(--ink);">{{ $order->notes }}</div>
           </div>
         @endif
       </div>
     </div>
 
-    {{-- Order Summary --}}
-    <div class="ac-card mb-3">
-      <div class="ac-card-header"><i data-lucide="receipt"></i> Order Summary</div>
-      <div class="p-4" style="font-size:.82rem;">
-        <div class="d-flex justify-content-between mb-2"><span style="color:var(--grey-400);">Product</span><span class="fw-semibold">{{ $order->product->label ?? '—' }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span style="color:var(--grey-400);">Length</span><span class="fw-semibold">{{ $order->length }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span style="color:var(--grey-400);">Base Price</span><span>₱{{ number_format($order->base_price) }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span style="color:var(--grey-400);">Elements</span><span>₱{{ number_format($order->elements_cost) }}</span></div>
-        <div style="height:1px;background:var(--grey-200);margin:10px 0;"></div>
-        <div class="d-flex justify-content-between">
-          <span class="fw-bold">Total</span>
-          <span class="fw-bold" style="font-size:1.05rem;color:var(--pink);">₱{{ number_format($order->total_price) }}</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- ── Upload Mockup ─────────────────────────────────────────────────────── --}}
-    <div class="ac-card mb-3" style="border-color:#E8D5F7;">
-      <div class="ac-card-header" style="background:linear-gradient(135deg,#F3E8FF,#EDE9FE);">
-        <i data-lucide="upload-cloud"></i>
-        Upload Mockup Photo
-      </div>
-      <div class="p-4">
-        <form action="{{ route('admin.orders.mockup', $order) }}"
-              method="POST" enctype="multipart/form-data">
-          @csrf
-
-          <div class="upload-zone mb-3">
-            <input type="file" name="mockup_photo"
-                   accept="image/png,image/jpeg,image/webp"
-                   onchange="previewPhoto(this)" required/>
-            <div style="font-size:1.4rem;margin-bottom:6px;" id="upload-icon">📷</div>
-            <div style="font-size:.75rem;font-weight:700;color:var(--grey-400);" id="upload-text">
-              Click or drop a photo here
-            </div>
-            <div style="font-size:.67rem;color:var(--grey-300);margin-top:2px;">
-              PNG, JPG, WEBP — max 8 MB
-            </div>
-          </div>
-
-          <img id="upload-preview" src="" alt="Preview"/>
-
-          <div class="mb-3">
-            <label class="ac-form-label">Message to Customer (optional)</label>
-            <textarea name="note" class="ac-form-input" rows="2"
-                      placeholder="e.g. Here's your mockup! Let us know if you'd like any changes."></textarea>
-          </div>
-
-          <button type="submit" class="btn-send-mockup" id="upload-btn" disabled>
-            <i data-lucide="send" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i>
-            Send Mockup to Customer
-          </button>
-
-        </form>
-      </div>
-    </div>
-
-    {{-- ── Send Note ─────────────────────────────────────────────────────────── --}}
-    <div class="ac-card mb-3">
-      <div class="ac-card-header"><i data-lucide="message-square"></i> Send a Note</div>
-      <div class="p-4">
-        <form action="{{ route('admin.orders.note', $order) }}" method="POST">
-          @csrf
-          <div class="mb-3">
-            <label class="ac-form-label">Message</label>
-            <textarea name="body" class="ac-form-input" rows="3" required
-                      placeholder="e.g. We'll start on this tomorrow! Thanks for your patience."></textarea>
-          </div>
-          <button type="submit" class="btn-send-note">
-            <i data-lucide="send" style="width:13px;height:13px;display:inline;vertical-align:middle;"></i>
-            Send Note
-          </button>
-        </form>
-      </div>
-    </div>
-
-    {{-- Timeline --}}
-    <div class="ac-card mb-3">
-      <div class="ac-card-header"><i data-lucide="clock"></i> Timeline</div>
-      <div class="p-4">
-        @php
-          $timeline = [
-            ['label' => 'Order Placed', 'at' => $order->created_at,   'icon' => 'shopping-bag'],
-            ['label' => 'Confirmed',    'at' => $order->confirmed_at, 'icon' => 'check-circle'],
-            ['label' => 'Completed',    'at' => $order->completed_at, 'icon' => 'package-check'],
-            ['label' => 'Cancelled',    'at' => $order->cancelled_at, 'icon' => 'x-circle'],
-          ];
-          if($thread?->approved_at)
-            $timeline[] = ['label' => 'Design Approved', 'at' => $thread->approved_at, 'icon' => 'check-square'];
-        @endphp
-        @foreach($timeline as $t)
-          @if($t['at'])
-            <div class="d-flex gap-3 mb-3 align-items-start">
-              <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
-                          background:{{ $t['label']==='Cancelled' ? '#FEE2E2' : '#D1FAE5' }};
-                          color:{{ $t['label']==='Cancelled' ? '#991B1B' : '#065F46' }};
-                          display:flex;align-items:center;justify-content:center;">
-                <i data-lucide="{{ $t['icon'] }}" style="width:13px;height:13px;"></i>
-              </div>
-              <div>
-                <div style="font-size:.8rem;font-weight:600;color:var(--ink);">{{ $t['label'] }}</div>
-                <div style="font-size:.72rem;color:var(--grey-400);">
-                  {{ $t['at']->format('M d, Y · h:i A') }}
-                </div>
-              </div>
-            </div>
-          @endif
-        @endforeach
-      </div>
-    </div>
-
     {{-- Order Status Actions --}}
     @if($nextStatus || $canCancel)
-      <div class="ac-card">
+      <div class="ac-card mb-4">
         <div class="ac-card-header"><i data-lucide="zap"></i> Update Order Status</div>
         <div class="p-4 d-flex flex-column gap-2">
           @if($nextStatus)
             <form action="{{ route('admin.orders.status', $order) }}" method="POST">
               @csrf
               <input type="hidden" name="status" value="{{ $nextStatus['status'] }}"/>
-              <button type="submit" class="btn w-100 fw-bold"
-                      style="background:{{ $nextStatus['color'] }};color:#fff;border-radius:10px;
-                             padding:10px 16px;font-size:.88rem;border:none;cursor:pointer;
-                             display:flex;align-items:center;justify-content:center;gap:7px;">
-                <i data-lucide="{{ $nextStatus['icon'] }}" style="width:15px;height:15px;"></i>
-                {{ $nextStatus['label'] }}
+              {{-- 👇 UPDATED THEME-COLORED BUTTON 👇 --}}
+              <button type="submit" class="btn w-100 fw-bold justify-content-center d-flex align-items-center gap-2" style="background:{{ $nextStatus['color'] }}; color:#fff; border-radius:10px; padding:14px; font-size:1rem; border:none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                <i data-lucide="{{ $nextStatus['icon'] }}" style="width: 18px;"></i> {{ $nextStatus['label'] }}
               </button>
             </form>
-          @else
-            <div style="text-align:center;padding:8px;font-size:.82rem;color:var(--grey-400);">
-              @if($order->status === 'completed') ✅ Order fully completed.
-              @elseif($order->status === 'cancelled') ❌ Order cancelled.
-              @endif
-            </div>
           @endif
           @if($canCancel)
-            <form action="{{ route('admin.orders.status', $order) }}" method="POST"
-                  onsubmit="return confirm('Cancel order {{ $order->order_code }}?')">
+            <form action="{{ route('admin.orders.status', $order) }}" method="POST" onsubmit="return confirm('Cancel order {{ $order->order_code }}?')">
               @csrf
               <input type="hidden" name="status" value="cancelled"/>
-              <button type="submit" class="btn btn-sm w-100"
-                      style="background:#FEE2E2;color:#991B1B;border:none;border-radius:8px;
-                             padding:7px 16px;font-size:.8rem;font-weight:600;cursor:pointer;
-                             display:flex;align-items:center;justify-content:center;gap:6px;">
-                <i data-lucide="x" style="width:12px;height:12px;"></i>
-                Cancel Order
+              {{-- 👇 FIXED CANCEL BUTTON PADDING/STYLE 👇 --}}
+              <button type="submit" class="btn-danger-ghost w-100 mt-2 justify-content-center d-flex align-items-center gap-2" style="padding: 14px; font-size: 1rem; border-radius: 10px; background: #fff; color: #DC2626; border: 1.5px solid #FECACA; font-weight: 800;">
+                <i data-lucide="x-circle" style="width: 18px;"></i> Cancel Order
               </button>
             </form>
           @endif
@@ -582,27 +282,16 @@
       </div>
     @endif
 
-  </div>{{-- /col-lg-5 --}}
-
-</div>{{-- /row --}}
-
-{{-- Lightbox --}}
-<div class="lb-overlay" id="lightbox" onclick="closeLb()">
-  <button class="lb-close" onclick="closeLb()">×</button>
-  <img id="lb-img" src="" alt="" onclick="event.stopPropagation()"/>
+  </div>
 </div>
 
-@endsection
+{{-- Lightbox --}}
+<div class="overlay" id="lightbox" onclick="closeLb()" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+  <button onclick="closeLb()" style="position: absolute; top: 20px; right: 20px; background: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; font-weight: bold; cursor: pointer;">×</button>
+  <img id="lb-img" src="" style="max-width: 90vw; max-height: 90vh; border-radius: 12px;"/>
+</div>
 
-@push('scripts')
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    lucide.createIcons();
-    // Scroll thread to bottom
-    const s = document.getElementById('thread-scroll');
-    if (s) s.scrollTop = s.scrollHeight;
-  });
-
   function previewPhoto(input) {
     if (!input.files?.[0]) return;
     const reader = new FileReader();
@@ -610,7 +299,7 @@
       const img = document.getElementById('upload-preview');
       img.src = e.target.result;
       img.style.display = 'block';
-      document.getElementById('upload-icon').textContent = '✅';
+      document.getElementById('upload-icon').outerHTML = '<div style="font-size:2rem; margin-bottom:12px;">✅</div>';
       document.getElementById('upload-text').textContent = input.files[0].name;
       document.getElementById('upload-btn').disabled = false;
     };
@@ -619,10 +308,16 @@
 
   function openLb(src) {
     document.getElementById('lb-img').src = src;
-    document.getElementById('lightbox').classList.add('open');
+    document.getElementById('lightbox').style.display = 'flex';
   }
   function closeLb() {
-    document.getElementById('lightbox').classList.remove('open');
+    document.getElementById('lightbox').style.display = 'none';
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const s = document.getElementById('thread-scroll');
+    if (s) s.scrollTop = s.scrollHeight;
+  });
 </script>
-@endpush
+
+@endsection

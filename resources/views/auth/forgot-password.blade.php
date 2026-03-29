@@ -4,143 +4,90 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Forgot Password — ArtsyCrate</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --pink:     #FF5FA0; --pink-dk: #E8407E; --pink-lt: #FFE4F0;
-      --teal:     #1AC8C4; --teal-dk: #0FA8A4; --teal-bg: #E8FAF9;
-      --ink:      #1E1E2E; --ink-md:  #6B6B85; --ink-lt:  #E2E2EE;
-      --offwhite: #F7F7FC; --white:   #FFFFFF;
-      --fb: 'Nunito', sans-serif; --fh: 'Syne', sans-serif;
+    body { background: var(--offwhite); overflow-y: auto !important; height: auto !important; display: block !important; }
+    
+    .auth-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+    
+    .logo-container { margin-bottom: 32px; text-align: center; }
+    .logo { font-family: var(--fh); font-size: 2.2rem; color: var(--ink); text-decoration: none; }
+    .logo b { color: var(--pink); }
+
+    .auth-card {
+      background: #fff; border: 1.5px solid var(--grey-200);
+      border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      width: 100%; max-width: 420px; padding: 32px;
     }
-    body { font-family: var(--fb); background: var(--offwhite); min-height: 100vh; display: flex; flex-direction: column; }
 
-    .auth-wrap { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+    .auth-title { font-family: var(--fh); font-size: 1.8rem; color: var(--ink); margin-bottom: 8px; text-align: center; }
+    .auth-subtitle { font-size: 0.95rem; font-weight: 700; color: var(--ink-md); text-align: center; margin-bottom: 24px; }
+    
+    .auth-banner { border-radius: 12px; padding: 12px 16px; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; text-align: center; }
+    .auth-banner.success { background: var(--teal-bg); border: 1.5px solid var(--teal); color: var(--teal-dk); }
 
-    /* ── Left aside ── */
-    .auth-aside {
-      background: var(--ink); display: flex; flex-direction: column;
-      justify-content: space-between; padding: 48px 52px;
-      position: relative; overflow: hidden;
+    .form-group { margin-bottom: 24px; width: 100%; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--ink-md); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .form-control {
+      width: 100%; padding: 12px 16px; border: 1.5px solid var(--grey-200);
+      border-radius: 10px; font-family: var(--fb); font-size: 0.9rem; font-weight: 700;
+      color: var(--ink); background: var(--offwhite); transition: all 0.2s;
     }
-    .auth-aside::before {
-      content: ''; position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 60% 50% at 25% 35%, rgba(255,95,160,.2) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 75% 75%, rgba(26,200,196,.15) 0%, transparent 70%);
-      pointer-events: none;
+    .form-control:focus { outline: none; border-color: var(--pink); background: #fff; box-shadow: 0 0 0 4px var(--pink-bg); }
+    .form-control.is-error { border-color: var(--pink); background: var(--pink-bg); }
+    .error-msg { font-size: 0.75rem; font-weight: 800; color: var(--pink-dk); margin-top: 4px; display: block; }
+    
+    .btn-submit {
+      width: 100%; padding: 16px; background: var(--pink); color: #fff;
+      border: none; border-radius: 12px; font-family: var(--fh); font-size: 1.1rem;
+      cursor: pointer; box-shadow: 0 8px 24px rgba(255,95,160,0.25);
+      transition: all 0.2s;
     }
-    .aside-logo { font-family: var(--fh); font-size: 1.5rem; color: var(--white); text-decoration: none; position: relative; z-index: 1; }
-    .aside-logo b { color: var(--pink); }
-    .aside-body { position: relative; z-index: 1; }
-    .aside-title { font-family: var(--fh); font-size: clamp(2rem, 3.5vw, 2.6rem); color: var(--white); line-height: 1.1; margin-bottom: 18px; }
-    .aside-title span { color: var(--pink); }
-    .aside-sub { font-size: .88rem; font-weight: 600; color: rgba(255,255,255,.5); line-height: 1.75; max-width: 340px; }
-    .aside-foot { position: relative; z-index: 1; font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.3); }
+    .btn-submit:hover { background: var(--pink-dk); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,95,160,0.35); }
 
-    /* ── Right form ── */
-    .auth-main { display: flex; align-items: center; justify-content: center; padding: 48px 32px; background: var(--white); }
-    .auth-card { width: 100%; max-width: 420px; }
-
-    .back-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: .78rem; font-weight: 800; color: var(--ink-md);
-      text-decoration: none; margin-bottom: 28px;
-    }
-    .back-link:hover { color: var(--ink); }
-
-    .auth-card-title { font-family: var(--fh); font-size: 1.75rem; color: var(--ink); margin-bottom: 6px; }
-    .auth-card-sub { font-size: .85rem; font-weight: 700; color: var(--ink-md); margin-bottom: 28px; line-height: 1.65; }
-
-    .auth-banner { border-radius: 12px; padding: 12px 16px; font-size: .82rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
-    .auth-banner.success { background: var(--teal-bg); border: 1.5px solid rgba(26,200,196,.25); color: var(--teal-dk); }
-    .auth-banner.error   { background: #FFF1F5; border: 1.5px solid rgba(255,95,160,.25); color: var(--pink-dk); }
-
-    .frow { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
-    .flbl { font-size: .75rem; font-weight: 800; color: var(--ink); letter-spacing: .03em; }
-    .finput {
-      border: 1.5px solid var(--ink-lt); border-radius: 12px; padding: 12px 14px;
-      font-family: var(--fb); font-weight: 600; font-size: .9rem;
-      background: var(--offwhite); color: var(--ink); width: 100%;
-      transition: border-color .13s, background .13s, box-shadow .13s;
-    }
-    .finput:focus { outline: none; border-color: var(--teal); background: var(--white); box-shadow: 0 0 0 3px rgba(26,200,196,.12); }
-    .finput.is-error { border-color: var(--pink); background: #FFF8FA; }
-    .ferr { font-size: .72rem; font-weight: 800; color: var(--pink-dk); }
-
-    .fbtn {
-      width: 100%; padding: 14px; background: var(--pink); color: var(--white);
-      font-family: var(--fb); font-weight: 900; font-size: .95rem;
-      border: none; border-radius: 12px; cursor: pointer;
-      box-shadow: 0 6px 22px rgba(255,95,160,.32);
-      transition: background .14s, transform .12s, box-shadow .14s;
-    }
-    .fbtn:hover { background: var(--pink-dk); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,95,160,.4); }
-    .fbtn:active { transform: scale(.98); }
-
-    @media (max-width: 768px) {
-      .auth-wrap { grid-template-columns: 1fr; }
-      .auth-aside { display: none; }
-      .auth-main { padding: 40px 20px; }
-    }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: 0.9rem; font-weight: 700; color: var(--ink-md); }
+    .auth-footer a { color: var(--teal-dk); font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .auth-footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-<div class="auth-wrap">
 
-  <div class="auth-aside">
-    <a href="{{ route('home') }}" class="aside-logo">Artsy<b>Crate</b></a>
-    <div class="aside-body">
-      <h2 class="aside-title">No worries.<br><span>We've got you.</span></h2>
-      <p class="aside-sub">
-        Enter the email linked to your account and we'll send you a secure link
-        to reset your password. It expires in 60 minutes.
-      </p>
-    </div>
-    <div class="aside-foot">© {{ date('Y') }} ArtsyCrate. All rights reserved.</div>
+<div class="auth-page">
+  <div class="logo-container">
+    <a href="{{ route('home') }}" class="logo">Artsy<b>Crate</b></a>
   </div>
 
-  <div class="auth-main">
-    <div class="auth-card">
+  <div class="auth-card">
+    <h1 class="auth-title">Forgot Password?</h1>
+    <p class="auth-subtitle">We'll send you a secure link to reset it.</p>
 
-      <a class="back-link" href="{{ route('login') }}">← Back to Sign In</a>
+    @if (session('status'))
+      <div class="auth-banner success">✓ {{ session('status') }}</div>
+    @endif
 
-      <h1 class="auth-card-title">Forgot password? 🔑</h1>
-      <p class="auth-card-sub">
-        Type in your email address below and we'll send you a reset link right away.
-      </p>
+    <form method="POST" action="{{ route('password.email') }}" novalidate>
+      @csrf
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-control {{ $errors->has('email') ? 'is-error' : '' }}" type="email" id="email" name="email" value="{{ old('email') }}" required autofocus/>
+        @error('email')<span class="error-msg">{{ $message }}</span>@enderror
+      </div>
 
-      {{-- Success status --}}
-      @if (session('status'))
-        <div class="auth-banner success">
-          ✓ {{ session('status') }}
-        </div>
-      @endif
+      <button type="submit" class="btn-submit">Send Reset Link</button>
+    </form>
 
-      <form method="POST" action="{{ route('password.email') }}" novalidate>
-        @csrf
-
-        <div class="frow">
-          <label class="flbl" for="email">Email Address</label>
-          <input
-            class="finput {{ $errors->has('email') ? 'is-error' : '' }}"
-            id="email" name="email" type="email"
-            value="{{ old('email') }}"
-            placeholder="maria@example.com"
-            autocomplete="email" autofocus required/>
-          @error('email')
-            <span class="ferr">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <button type="submit" class="fbtn">Send Reset Link →</button>
-      </form>
-
+    <div class="auth-footer">
+      <a href="{{ route('login') }}"><i data-lucide="arrow-left" style="width: 14px;"></i> Back to Sign In</a>
     </div>
   </div>
-
 </div>
+
+<script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
 </body>
 </html>

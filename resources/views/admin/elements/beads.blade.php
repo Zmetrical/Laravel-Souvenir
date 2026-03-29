@@ -3,132 +3,87 @@
 
 @section('content')
 
-{{-- ── Page header ──────────────────────────────────────────────────────── --}}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div class="d-flex align-items-center gap-3">
-    <a href="{{ route('admin.elements.index') }}"
-       style="color:#999;text-decoration:none;font-size:.85rem;">
-      ← Elements
-    </a>
-    <span style="color:#DDD;">/</span>
+    <a href="{{ route('admin.elements.index') }}" class="btn-ghost"><i data-lucide="arrow-left" style="width: 14px;"></i> Elements</a>
     <div>
-      <h5 class="mb-0 fw-bold" style="color:#2D2D3A;">Beads</h5>
-      <small class="text-muted">{{ $elements->total() }} total</small>
+      <h5 class="mb-0" style="font-family: var(--fh); font-size: 1.8rem;">Beads</h5>
+      <small style="font-weight: 700; color: var(--grey-400);">Total: {{ $elements->total() }} pieces</small>
     </div>
   </div>
-  <a href="{{ route('admin.elements.create', ['cat' => 'beads']) }}"
-     class="btn btn-sm fw-semibold"
-     style="background:#FF5FA0;color:#fff;border-radius:8px;padding:7px 18px;">
-    + Add Bead
+  <a href="{{ route('admin.elements.create', ['cat' => 'beads']) }}" class="btn-pink">
+    <i data-lucide="plus"></i> Add Bead
   </a>
 </div>
 
-{{-- ── Main card ─────────────────────────────────────────────────────────── --}}
 <div class="ac-card">
-
-  {{-- Filter bar --}}
   <form method="GET" action="{{ route('admin.elements.beads') }}">
     <div class="filter-bar">
-      <input type="text" name="search" value="{{ request('search') }}"
-             placeholder="Search beads..." style="width:180px;"/>
-
-      <select name="group" style="width:150px;">
+      <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search name..."/>
+      
+      <select name="group" class="form-select">
         <option value="">All Groups</option>
         @foreach($groups as $g)
           <option value="{{ $g }}" {{ request('group') === $g ? 'selected' : '' }}>{{ $g }}</option>
         @endforeach
       </select>
 
-      <select name="stock" style="width:130px;">
+      <select name="stock" class="form-select">
         <option value="">All Stock</option>
-        <option value="in"  {{ request('stock') === 'in'  ? 'selected' : '' }}>In Stock</option>
+        <option value="in" {{ request('stock') === 'in' ? 'selected' : '' }}>In Stock</option>
         <option value="low" {{ request('stock') === 'low' ? 'selected' : '' }}>Low Stock</option>
         <option value="out" {{ request('stock') === 'out' ? 'selected' : '' }}>Out of Stock</option>
       </select>
 
       <button type="submit" class="btn-filter">Search</button>
       <a href="{{ route('admin.elements.beads') }}" class="btn-reset">Reset</a>
-
-      <span class="ms-auto" style="font-size:.75rem;color:#AAA;">
-        Showing {{ $elements->firstItem() }}–{{ $elements->lastItem() }} of {{ $elements->total() }}
-      </span>
     </div>
   </form>
 
-  {{-- Bead grid — grouped ───────────────────────────────────────────────── --}}
-  @if($elements->isEmpty())
-    <div class="text-center py-5 text-muted">
-      No beads found. <a href="{{ route('admin.elements.create', ['cat'=>'beads']) }}">Add one →</a>
-    </div>
-  @else
+  <div class="p-4">
     @php $grouped = $elements->groupBy('group'); @endphp
-
-    <div class="el-grid">
-      @foreach($grouped as $groupName => $items)
-
-        <div class="group-label">{{ $groupName ?: 'Ungrouped' }}</div>
-
+    @foreach($grouped as $groupName => $items)
+      <div class="group-label" style="font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em; color: var(--pink-dk); background: var(--pink-bg); padding: 4px 12px; border-radius: 6px; display: inline-block; margin-bottom: 15px; margin-top: {{ !$loop->first ? '20px' : '0' }};">
+        {{ strtoupper($groupName ?: 'Ungrouped') }}
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px;">
         @foreach($items as $el)
-        <div class="el-card {{ !$el->is_active ? 'inactive' : '' }}">
+          <div class="ac-card {{ !$el->is_active ? 'inactive' : '' }}" style="padding: 16px; text-align: center; position: relative;">
+            <div style="position: absolute; top: 8px; right: 8px;">
+              <a href="{{ route('admin.elements.edit', $el) }}" style="color: var(--grey-400);"><i data-lucide="pencil" style="width: 14px;"></i></a>
+            </div>
 
-          @if(!$el->is_active)
-            <div class="inactive-badge">off</div>
-          @endif
+            {{-- ── THE CANVAS ── --}}
+            <canvas class="shape-canvas" width="52" height="52" 
+                    data-shape="{{ $el->shape ?? 'round' }}" 
+                    data-color="{{ $el->color ?? '#F9B8CF' }}" 
+                    data-detail="{{ $el->detail_color ?? '#C0136A' }}" 
+                    data-small="{{ $el->is_small ? '1' : '0' }}" 
+                    style="display: block; margin: 0 auto 12px; width: 52px; height: 52px;">
+            </canvas>
 
-          <div class="el-actions">
-            <a href="{{ route('admin.elements.edit', $el) }}" class="btn-edit" title="Edit">
-              <i data-lucide="pencil" style="width:11px;height:11px;"></i>
-            </a>
-            <form action="{{ route('admin.elements.destroy', $el) }}" method="POST"
-                  onsubmit="return confirm('Delete {{ addslashes($el->name) }}?')">
-              @csrf @method('DELETE')
-              <button type="submit" class="btn-delete" title="Delete">
-                <i data-lucide="trash-2" style="width:11px;height:11px;"></i>
-              </button>
-            </form>
+            <div style="font-size: 0.85rem; font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $el->name }}</div>
+            <div style="font-size: 0.8rem; font-weight: 800; color: var(--pink);">₱{{ $el->price }}</div>
+            <div class="mt-2">
+               <span style="font-size: 0.65rem; font-weight: 900; text-transform: uppercase; color: {{ $el->stock === 'in' ? 'var(--lime-dk)' : ($el->stock === 'low' ? '#D97706' : '#DC2626') }};">
+                 {{ $el->stock }}
+               </span>
+            </div>
           </div>
-
-          {{-- Shape canvas — rendered by shared ArtshapeRenderer --}}
-          <canvas
-            class="shape-canvas"
-            width="52" height="52"
-            data-shape="{{ $el->shape ?? 'round' }}"
-            data-color="{{ $el->color ?? '#F9B8CF' }}"
-            data-detail="{{ $el->detail_color ?? '#C0136A' }}"
-            data-small="{{ $el->is_small ? '1' : '0' }}"
-            style="display:block; margin:0 auto 8px; border-radius:4px;">
-          </canvas>
-
-          <div class="el-name" title="{{ $el->name }}">{{ $el->name }}</div>
-          <div class="el-price">₱{{ $el->price }}</div>
-
-          <div class="mt-1">
-            <span class="badge stock-{{ $el->stock }}" style="font-size:.62rem;">
-              {{ ucfirst($el->stock) }}
-            </span>
-            @if($el->is_small)
-              <span class="badge" style="font-size:.6rem;background:#F3F4F6;color:#6B7280;">sm</span>
-            @endif
-          </div>
-
-        </div>
         @endforeach
-
-      @endforeach
-    </div>
-
-    @if($elements->hasPages())
-    <div class="px-4 pb-4 pt-2 d-flex justify-content-center">
-      {{ $elements->links() }}
-    </div>
-    @endif
-
-  @endif
-
+      </div>
+    @endforeach
+  </div>
 </div>
-
 @endsection
 
 @push('scripts')
-@vite(['resources/js/shapes.js']) 
+@vite(['resources/js/shapes.js'])
+<script>
+  // Force a redraw once the script is loaded
+  document.addEventListener('artshape:ready', () => {
+    if(window.ArtshapeRenderer) window.ArtshapeRenderer.renderAll();
+  });
+</script>
 @endpush

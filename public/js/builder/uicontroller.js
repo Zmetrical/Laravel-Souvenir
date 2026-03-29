@@ -1,5 +1,3 @@
-// import { BEADS, FIGURES, CHARMS, ELEM_MAP } from './data/index.js';
-// AFTER
 const { beads: BEADS, figures: FIGURES, charms: CHARMS } = window.BUILDER_ELEMENTS || {};
 const ELEM_MAP = {};
 [...(BEADS||[]), ...(FIGURES||[]), ...(CHARMS||[])].forEach(e => { ELEM_MAP[e.id] = e; });
@@ -14,9 +12,7 @@ export class UIController {
     this.dragStartIndex = -1;
     this.dragInitialState = null;
 
-    // design-list panel drag-and-drop
     this.listDragSrcIdx = -1;
-
     this.setupListeners();
   }
 
@@ -26,8 +22,11 @@ export class UIController {
     mainCanvas.addEventListener('mousemove', (e) => this.handleDragMove(e, mainCanvas));
     window.addEventListener('mouseup', (e) => this.handleDragEnd(e));
 
-    document.querySelectorAll('.overlay').forEach(m => {
-      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    // Bootstrap Modal handling for clicking outside (handled automatically by Bootstrap, but keeping fallback)
+    document.querySelectorAll('.modal').forEach(m => {
+      m.addEventListener('click', e => { 
+        if (e.target === m && typeof $ !== 'undefined') $(m).modal('hide'); 
+      });
     });
   }
 
@@ -60,7 +59,6 @@ export class UIController {
       this.draggedUid = hit;
       this.dragStartIndex = state.elems.findIndex(el => el.uid === hit);
       state.selectedId = hit;
-      // Auto-switch active strand when tapping an element on keychain
       const hitEl = state.elems[this.dragStartIndex];
       if (state.product === 'keychain' && hitEl?.strand != null) {
         state.activeStrand = hitEl.strand;
@@ -129,7 +127,6 @@ export class UIController {
     const beadMax = document.getElementById('bead-max');
 
     if (state.product === 'keychain' && state.keychainStrands > 1) {
-      // Show count for the active strand
       const cnt = this._getStrandBeadCount(state.activeStrand);
       if (beadCt)  beadCt.textContent  = `S${state.activeStrand + 1}: ${cnt}`;
       if (beadMax) beadMax.textContent = state.maxBeads;
@@ -137,9 +134,6 @@ export class UIController {
       if (beadCt)  beadCt.textContent  = state.elems.length;
       if (beadMax) beadMax.textContent = state.maxBeads;
     }
-
-    const emptyOver = document.getElementById('empty-over');
-    if (emptyOver) emptyOver.style.display = state.elems.length ? 'none' : 'flex';
   }
 
   updateHistoryButtons() {
@@ -153,7 +147,6 @@ export class UIController {
     if (!item) return;
     const state = this.app.state;
 
-    // Per-strand max for keychain, global max for others
     if (state.product === 'keychain') {
       const strandCount = this._getStrandBeadCount(state.activeStrand);
       if (strandCount >= state.maxBeads) { this.showToast(`Strand ${state.activeStrand + 1} is full!`); return; }
@@ -162,14 +155,12 @@ export class UIController {
     }
 
     state.pushHistory();
-
     const newEl = { uid: state.generateId(), ...item };
-    if (state.product === 'keychain') {
-      newEl.strand = state.activeStrand;
-    }
+    if (state.product === 'keychain') newEl.strand = state.activeStrand;
 
     const selectedIdx = state.elems.findIndex(e => e.uid === state.selectedId);
     const selEl = state.elems[selectedIdx];
+    
     if (selectedIdx !== -1 && state.product === 'keychain' && (selEl?.strand ?? 0) === newEl.strand) {
       state.elems.splice(selectedIdx + 1, 0, newEl);
     } else if (selectedIdx !== -1 && state.product !== 'keychain') {
@@ -186,7 +177,6 @@ export class UIController {
 
   addLetter(ch) {
     const state = this.app.state;
-
     if (state.product === 'keychain') {
       if (this._getStrandBeadCount(state.activeStrand) >= state.maxBeads) {
         this.showToast(`Strand ${state.activeStrand + 1} is full!`); return;
@@ -198,22 +188,17 @@ export class UIController {
     state.pushHistory();
 
     const letterEl = {
-      uid: state.generateId(),
-      id: 'letter_' + ch,
-      name: 'Letter ' + ch,
-      isLetter: true,
-      letterShape: state.letterShape || 'round',
-      ltrBg:   state.ltrColor.bg,
-      ltrText: state.ltrColor.text,
-      label: ch,
-      price: 8, stock: 'in', category: 'letters',
+      uid: state.generateId(), id: 'letter_' + ch, name: 'Letter ' + ch,
+      isLetter: true, letterShape: state.letterShape || 'square',
+      ltrBg: state.ltrColor.bg, ltrText: state.ltrColor.text,
+      label: ch, price: 8, stock: 'in', category: 'letters',
       strand: state.product === 'keychain' ? state.activeStrand : undefined,
     };
 
     letterEl.imgUrl = this.app.canvasEngine.createSingleThumb(letterEl);
     const selectedIdx = state.elems.findIndex(e => e.uid === state.selectedId);
-    const selEl = state.elems[selectedIdx];
-    if (selectedIdx !== -1 && state.product === 'keychain' && (selEl?.strand ?? 0) === letterEl.strand) {
+    
+    if (selectedIdx !== -1 && state.product === 'keychain' && (state.elems[selectedIdx]?.strand ?? 0) === letterEl.strand) {
       state.elems.splice(selectedIdx + 1, 0, letterEl);
     } else if (selectedIdx !== -1 && state.product !== 'keychain') {
       state.elems.splice(selectedIdx + 1, 0, letterEl);
@@ -225,11 +210,18 @@ export class UIController {
     this.updateInspector(letterEl);
     this.app.render();
   }
-
-  setAddDir(dir, btnEl) {
+setAddDir(dir, btnEl) {
     this.app.state.addDirection = dir;
-    document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.dir-btn').forEach(b => {
+      b.style.background = '#fff';
+      b.style.color = 'var(--ink-md)';
+      b.style.border = '1px solid #ced4da';
+      b.classList.remove('active');
+    });
     btnEl.classList.add('active');
+    btnEl.style.background = 'var(--ink)';
+    btnEl.style.color = '#fff';
+    btnEl.style.border = '1px solid var(--ink)';
   }
 
   removeBead(uid) {
@@ -274,82 +266,96 @@ export class UIController {
     const state = this.app.state;
     const list  = document.getElementById('design-list');
 
-    // ── Strand selector (keychain only, 2+ strands) ───────────────────────
+    // ── 1. STRAND SELECTOR (KEYCHAIN ONLY) ───────────────────────────────
     const selectorWrap = document.getElementById('strand-selector-panel');
     if (selectorWrap) {
       if (state.product === 'keychain' && state.keychainStrands > 1) {
-        selectorWrap.style.display = 'block';
+        // Force display block so it shows up!
+        selectorWrap.style.setProperty('display', 'block', 'important');
+        
         const btns = document.getElementById('strand-selector-btns');
         if (btns) {
           btns.innerHTML = Array.from({ length: state.keychainStrands }, (_, i) => {
             const cnt = this._getStrandBeadCount(i);
-            return `<button class="cpill active-strand-btn${state.activeStrand === i ? ' active' : ''}"
+            const isActive = state.activeStrand === i;
+            
+            // New UI styled pills
+            return `<button class="cpill ${isActive ? 'active' : ''}" 
+                            style="background: ${isActive ? 'var(--pink-bg)' : '#fff'}; 
+                                   color: ${isActive ? 'var(--pink-dk)' : 'var(--ink-md)'};
+                                   border: 1.5px solid ${isActive ? 'var(--pink)' : 'var(--ink-lt)'};"
                             onclick="app.ui.setActiveStrand(${i}, this)">
                       Strand ${i + 1}
-                      <span style="opacity:.6;font-weight:600;margin-left:3px;">${cnt}/${state.maxBeads}</span>
+                      <span style="opacity:0.6; margin-left:4px;">${cnt}/${state.maxBeads}</span>
                     </button>`;
           }).join('');
         }
       } else {
-        selectorWrap.style.display = 'none';
+        selectorWrap.style.setProperty('display', 'none', 'important');
       }
     }
 
-    // ── Filter elements by active strand for keychain ─────────────────────
-    const visibleElems = (state.product === 'keychain')
-      ? state.elems.filter(el => (el.strand ?? 0) === state.activeStrand)
+    // ── 2. FILTER ELEMENTS & UPDATE BADGES ───────────────────────────────
+    const visibleElems = (state.product === 'keychain') 
+      ? state.elems.filter(el => (el.strand ?? 0) === state.activeStrand) 
       : state.elems;
-
-    document.getElementById('elem-count-badge').textContent =
-      state.product === 'keychain'
-        ? `${visibleElems.length}/${state.maxBeads}`
+      
+    const badge = document.getElementById('elem-count-badge');
+    if (badge) {
+      badge.textContent = state.product === 'keychain' 
+        ? `${visibleElems.length}/${state.maxBeads}` 
         : state.elems.length;
+    }
 
+    // ── 3. RENDER THE LIST ───────────────────────────────────────────────
     if (!visibleElems.length) {
-      list.innerHTML = `<div class="dempty">
-        <div class="dempty-icon">✽</div>
-        ${state.product === 'keychain' && state.keychainStrands > 1
-          ? `No elements on Strand ${state.activeStrand + 1} yet.`
-          : 'No elements yet.'
-        }<br>Pick from the library ←
+      list.innerHTML = `<div class="text-center p-4 text-muted font-weight-bold text-sm">
+        <i data-lucide="asterisk" class="mb-2" style="width: 24px; color: var(--pink); opacity: 0.5;"></i><br>
+        ${state.product === 'keychain' && state.keychainStrands > 1 ? `No elements on Strand ${state.activeStrand + 1} yet.` : 'No elements yet.'}<br>Pick from the library
       </div>`;
+      if(window.lucide) lucide.createIcons();
       return;
     }
 
     list.innerHTML = visibleElems.map((el, i) => `
-      <div class="ditem${state.selectedId === el.uid ? ' selected' : ''}"
-           data-uid="${el.uid}"
-           data-globalidx="${state.elems.indexOf(el)}"
-           draggable="true"
+      <div class="ditem shadow-sm d-flex align-items-center p-2 mb-1 rounded border" 
+           style="background: ${state.selectedId === el.uid ? 'var(--teal-bg)' : '#fff'}; border-color: ${state.selectedId === el.uid ? 'var(--teal)' : 'var(--ink-lt)'} !important; cursor: grab;"
+           data-uid="${el.uid}" data-globalidx="${state.elems.indexOf(el)}" draggable="true"
            onclick="app.ui.selectBead('${el.uid}')">
-        <span class="di-num">${i + 1}</span>
-        <div class="di-thumb${el.useImg ? ' figure' : ''}"><img src="${el.imgUrl}"/></div>
-        <span class="di-name" title="${el.name}">${el.name}</span>
-        <span class="di-price">₱${el.price || 8}</span>
-        <div class="di-actions">
-          <button class="di-btn" onclick="app.ui.moveElem('${el.uid}', -1, event)">↑</button>
-          <button class="di-btn" onclick="app.ui.moveElem('${el.uid}', 1, event)">↓</button>
-          <button class="di-btn del" onclick="event.stopPropagation(); app.ui.removeBead('${el.uid}')">×</button>
+        <span class="font-weight-bold text-center" style="width: 20px; font-size: 0.75rem; color: var(--ink-md);">${i + 1}</span>
+        <div class="bg-white border rounded d-flex align-items-center justify-content-center mx-2" style="width: 30px; height: 30px; flex-shrink: 0;">
+          <img src="${el.imgUrl}" style="max-width: 80%; max-height: 80%;" />
+        </div>
+        <div class="flex-grow-1 text-truncate font-weight-bold text-dark" style="font-size: 0.8rem;">${el.name}</div>
+        <div class="font-weight-bold mr-2" style="font-size: 0.75rem; color: var(--pink);">₱${el.price || 8}</div>
+        <div class="btn-group btn-group-sm ml-auto" style="flex-shrink: 0;">
+          <button class="btn btn-light border p-1" style="color: var(--ink-md);" onclick="app.ui.moveElem('${el.uid}', -1, event)"><i data-lucide="arrow-up" style="width:12px;"></i></button>
+          <button class="btn btn-light border p-1" style="color: var(--ink-md);" onclick="app.ui.moveElem('${el.uid}', 1, event)"><i data-lucide="arrow-down" style="width:12px;"></i></button>
+          <button class="btn border p-1" style="background: var(--pink-bg); color: var(--pink-dk); border-color: var(--pink-dk) !important;" onclick="event.stopPropagation(); app.ui.removeBead('${el.uid}')"><i data-lucide="x" style="width:12px;"></i></button>
         </div>
       </div>`).join('');
 
-    // ── Drag-and-drop (uses uid so it works on filtered lists) ────────────
+    if(window.lucide) lucide.createIcons();
+    this.attachDragEvents(list);
+  }
+
+  attachDragEvents(list) {
     list.querySelectorAll('.ditem').forEach(row => {
       row.addEventListener('dragstart', e => {
         this.listDragSrcUid = row.dataset.uid;
         this.app.state.pushHistory();
-        row.classList.add('dragging');
+        row.style.opacity = '0.5';
         e.dataTransfer.effectAllowed = 'move';
       });
       row.addEventListener('dragend', () => {
-        list.querySelectorAll('.ditem').forEach(r => r.classList.remove('dragging', 'drag-over'));
+        list.querySelectorAll('.ditem').forEach(r => { r.style.opacity = '1'; r.classList.remove('bg-info', 'text-white'); });
       });
       row.addEventListener('dragover', e => {
         e.preventDefault();
-        list.querySelectorAll('.ditem').forEach(r => r.classList.remove('drag-over'));
-        row.classList.add('drag-over');
+        list.querySelectorAll('.ditem').forEach(r => r.classList.remove('bg-info', 'text-white'));
+        row.classList.add('bg-info', 'text-white');
       });
-      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+      row.addEventListener('dragleave', () => row.classList.remove('bg-info', 'text-white'));
       row.addEventListener('drop', e => {
         e.preventDefault(); e.stopPropagation();
         if (row.dataset.uid === this.listDragSrcUid) return;
@@ -360,80 +366,52 @@ export class UIController {
         const [moved] = elems.splice(srcIdx, 1);
         elems.splice(destIdx, 0, moved);
         this.app.render();
-        this.showToast('Reordered ✓');
       });
     });
   }
 
-  // Figures tab — compact: scrollable type pills + color swatches for active type
-  // ── Figure sections state ────────────────────────────────────────────────
-  // Each section key: { open: bool, activeGroup: string }
-  // Sections are defined here — add more objects to grow the Figures tab.
-  // ── Figures tab ─────────────────────────────────────────────────────────
-  // Sections are defined in _getFigureSections().
-  // Each section reuses the existing .bgroup accordion classes from the Beads/Charms tabs.
-  // To add a new section (e.g. Pendants): push one object into the array below.
+  buildFiguresGrid(items) {
+    const container = document.getElementById('grid-figures');
+    if (!container) return;
 
-buildFiguresGrid(items) {
-  const container = document.getElementById('grid-figures');
-  if (!container) return;
+    const figItems = items.filter(i => i.category === 'figures');
+    const groups   = {};
+    figItems.forEach(item => {
+      const g = item.group || 'Other';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(item);
+    });
 
-  container.style.cssText =
-    'overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;padding:7px 8px;display:flex;flex-direction:column;gap:5px;';
-
-  // ── Group figures by their `group` field (same as beads tab) ──────────
-  const figItems = items.filter(i => i.category === 'figures');
-  const groups   = {};
-  figItems.forEach(item => {
-    const g = item.group || 'Other';
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(item);
-  });
-
-  // ── Render one accordion per group ────────────────────────────────────
-  container.innerHTML = Object.entries(groups).map(([groupName, beads], idx) => `
-    <div class="bgroup${idx === 0 ? ' open' : ''}" id="figgroup-${groupName.toLowerCase().replace(/\s+/g,'-')}">
-      <div class="bgroup-head" onclick="this.closest('.bgroup').classList.toggle('open')">
-        <div class="bgroup-head-l">
-          <img class="bgroup-preview" src="${beads[0].imgUrl}" alt="${groupName}"/>
-          <span class="bgroup-lbl">${groupName}</span>
+    container.innerHTML = Object.entries(groups).map(([groupName, beads], idx) => `
+      <div class="bgroup ${idx === 0 ? 'open' : ''} bg-white rounded border mb-2 shadow-sm w-100">
+        <div class="bgroup-head d-flex justify-content-between align-items-center p-2 border-bottom" onclick="this.closest('.bgroup').classList.toggle('open')">
+          <div class="d-flex align-items-center">
+            <img src="${beads[0].imgUrl}" alt="${groupName}" style="width:24px; height:24px; border-radius:4px;" class="mr-2"/>
+            <span class="font-weight-bold text-dark" style="font-size: 0.85rem;">${groupName}</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-pink-light text-pink mr-2">₱${beads[0].price}</span>
+            <i class="fas fa-chevron-down text-muted" style="font-size:0.7rem;"></i>
+          </div>
         </div>
-        <div class="bgroup-head-r">
-          <span class="bgroup-price">₱${beads[0].price}</span>
-          <svg class="bgroup-arr" viewBox="0 0 10 10"><polyline points="2,3 5,7 8,3"/></svg>
+        <div class="bgroup-body p-2 bg-light">
+          <div class="d-flex flex-wrap gap-2">
+            ${beads.map(item => `
+              <div class="bswatch border shadow-sm ${item.stock === 'out' ? 'opacity-50' : ''}"
+                   onclick="${item.stock !== 'out' ? `app.ui.addElement('${item.id}')` : ''}"
+                   title="${item.name}"
+                   style="width:34px;height:34px;border-radius:6px; cursor:pointer; background:#fff; display:flex; align-items:center; justify-content:center; position:relative;">
+                <img src="${item.imgUrl}" alt="${item.name}" style="border-radius:4px; max-width:85%; max-height:85%;"/>
+                ${item.stock === 'low' ? '<span class="position-absolute badge badge-warning p-1" style="top:-5px; right:-5px; font-size:10px;">!</span>' : ''}
+              </div>`).join('')}
+          </div>
         </div>
-      </div>
-      <div class="bgroup-body">
-        <div class="bgroup-swatches">
-          ${beads.map(item => `
-            <div class="bswatch${item.stock === 'out' ? ' out' : ''}"
-                 onclick="${item.stock !== 'out' ? `app.ui.addElement('${item.id}')` : ''}"
-                 title="${item.name}"
-                 style="width:34px;height:34px;border-radius:6px;">
-              <img src="${item.imgUrl}" alt="${item.name}" style="border-radius:4px;"/>
-              ${item.stock === 'low' ? '<span class="bswatch-low">!</span>' : ''}
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-  _buildFigureSwatches(sec) {
-    return (sec.groups[sec.activeGroup] || []).map(item => `
-      <div class="bswatch${item.stock === 'out' ? ' out' : ''}"
-           onclick="${item.stock !== 'out' ? `app.ui.addElement('${item.id}')` : ''}"
-           title="${item.name}"
-           style="width:34px;height:34px;border-radius:6px;">
-        <img src="${item.imgUrl}" alt="${item.name}" style="border-radius:4px;"/>
-        ${item.stock === 'low' ? '<span class="bswatch-low">!</span>' : ''}
       </div>`).join('');
   }
 
- 
-
   // Charms tab — image-based series grouped in accordions
   buildCharmsGrid(items) {
-    const container = document.getElementById('grid-charms');
+    const container = document.getElementById('grid-charms') || document.getElementById('charms-groups-wrap');
     if (!container) return;
 
     const groups = {};
@@ -444,36 +422,54 @@ buildFiguresGrid(items) {
     });
 
     container.style.cssText = 'overflow-y:auto;flex:1;padding:8px;display:flex;flex-direction:column;gap:5px;';
+    
     container.innerHTML = Object.entries(groups).map(([seriesName, figs], idx) => `
-      <div class="bgroup${idx === 0 ? ' open' : ''}">
+      <div class="bgroup charm-group ${idx === 0 ? 'open' : ''}">
         <div class="bgroup-head" onclick="this.closest('.bgroup').classList.toggle('open')">
-          <div class="bgroup-head-l">
-            <img class="bgroup-preview" src="${figs[0].imgUrl}" alt="${seriesName}" style="border-radius:6px;"/>
-            <span class="bgroup-lbl">${seriesName}</span>
+          <div class="bgroup-head-l d-flex align-items-center">
+            <img class="bgroup-preview" src="${figs[0].imgUrl}" alt="${seriesName}" style="border-radius:6px; width:24px; height:24px; margin-right:8px;"/>
+            <span class="bgroup-lbl font-weight-bold text-dark">${seriesName}</span>
           </div>
-          <div class="bgroup-head-r">
-            <span class="bgroup-price">₱${figs[0].price}</span>
-            <svg class="bgroup-arr" viewBox="0 0 10 10"><polyline points="2,3 5,7 8,3"/></svg>
+          <div class="bgroup-head-r d-flex align-items-center">
+            <span class="bgroup-price text-pink font-weight-bold mr-2" style="font-size: 0.8rem;">₱${figs[0].price}</span>
+            <svg class="bgroup-arr" viewBox="0 0 10 10" style="width:12px; stroke:var(--ink-md); fill:none; stroke-width:2;"><polyline points="2,3 5,7 8,3"/></svg>
           </div>
         </div>
-        <div class="bgroup-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            ${figs.map(item => `
-              <div class="ecard figure${item.stock === 'out' ? ' out' : ''}"
+        <div class="bgroup-body bg-light p-2">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            ${figs.map(item => {
+              // Determine Stock Style
+              let stockClass = '';
+              let stockText = '';
+              if (item.stock === 'in') {
+                stockClass = 'stock-in'; stockText = 'In Stock';
+              } else if (item.stock === 'low') {
+                stockClass = 'stock-low'; stockText = 'Low Stock';
+              } else {
+                stockClass = 'stock-out'; stockText = 'Out of Stock';
+              }
+
+              return `
+              <div class="ecard charm-litem figure${item.stock === 'out' ? ' out' : ''} bg-white shadow-sm"
+                   data-search="${(item.name + ' ' + seriesName).toLowerCase()}"
                    onclick="${item.stock !== 'out' ? `app.ui.addElement('${item.id}')` : ''}"
                    title="${item.name}">
-                <div class="eprev-img" style="width:64px;height:64px;">
-                  <img src="${item.imgUrl}" alt="${item.name}"/>
+                <div class="eprev-img d-flex justify-content-center align-items-center mb-2" style="height:64px;">
+                  <img src="${item.imgUrl}" alt="${item.name}" style="max-width:100%; max-height:100%;"/>
                 </div>
-                <div class="ename">${item.name}</div>
-                <span class="sbd s-${item.stock}">${item.stock === 'in' ? '✓ In' : item.stock === 'low' ? 'Low' : 'Out'}</span>
-              </div>`).join('')}
+                <div class="ename font-weight-bold text-dark mb-2 text-truncate" style="font-size:0.8rem;">${item.name}</div>
+                <span class="stock-badge ${stockClass}">${stockText}</span>
+              </div>`;
+            }).join('')}
           </div>
         </div>
       </div>`).join('');
   }
 
   buildBeadsPanel(items) {
+    const container = document.getElementById('bead-groups');
+    if(!container) return;
+
     const groups = {};
     items.forEach(item => {
       const g = item.group || 'Other';
@@ -481,120 +477,169 @@ buildFiguresGrid(items) {
       groups[g].push(item);
     });
 
-    const html = Object.entries(groups).map(([groupName, beads], idx) => `
-      <div class="bgroup${idx === 0 ? ' open' : ''}" id="bgroup-${groupName.toLowerCase()}">
-        <div class="bgroup-head" onclick="this.closest('.bgroup').classList.toggle('open')">
-          <div class="bgroup-head-l">
-            <img class="bgroup-preview" src="${beads[0].imgUrl}" alt="${groupName}"/>
-            <span class="bgroup-lbl">${groupName}</span>
+    container.innerHTML = Object.entries(groups).map(([groupName, beads], idx) => `
+      <div class="bgroup ${idx === 0 ? 'open' : ''} bg-white rounded border mb-2 shadow-sm w-100">
+        <div class="bgroup-head d-flex justify-content-between align-items-center p-2 border-bottom" onclick="this.closest('.bgroup').classList.toggle('open')">
+          <div class="d-flex align-items-center">
+            <img src="${beads[0].imgUrl}" alt="${groupName}" style="width:24px; height:24px; border-radius:4px;" class="mr-2"/>
+            <span class="font-weight-bold text-dark" style="font-size: 0.85rem;">${groupName}</span>
           </div>
-          <div class="bgroup-head-r">
-            <span class="bgroup-price">₱${beads[0].price}</span>
-            <svg class="bgroup-arr" viewBox="0 0 10 10"><polyline points="2,3 5,7 8,3"/></svg>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-pink-light text-pink mr-2">₱${beads[0].price}</span>
+            <i class="fas fa-chevron-down text-muted" style="font-size:0.7rem;"></i>
           </div>
         </div>
-        <div class="bgroup-body">
-          <div class="bgroup-swatches">
+        <div class="bgroup-body p-2 bg-light">
+          <div class="d-flex flex-wrap gap-2">
             ${beads.map(item => `
-              <div class="bswatch${item.stock === 'out' ? ' out' : ''}"
+              <div class="bswatch border shadow-sm ${item.stock === 'out' ? 'opacity-50' : ''}"
                    onclick="${item.stock !== 'out' ? `app.ui.addElement('${item.id}')` : ''}"
-                   title="${item.name}">
-                <img src="${item.imgUrl}" alt="${item.name}"/>
-                ${item.stock === 'low' ? '<span class="bswatch-low">!</span>' : ''}
+                   title="${item.name}"
+                   style="width:34px;height:34px;border-radius:50%; cursor:pointer; background:#fff; display:flex; align-items:center; justify-content:center; position:relative;">
+                <img src="${item.imgUrl}" alt="${item.name}" style="max-width:85%; max-height:85%;"/>
+                ${item.stock === 'low' ? '<span class="position-absolute badge badge-warning p-1" style="top:-5px; right:-5px; font-size:10px;">!</span>' : ''}
               </div>`).join('')}
           </div>
         </div>
       </div>`).join('');
-
-    document.getElementById('bead-groups').innerHTML = html;
   }
 
-  buildLetters() {
+buildLetters() {
     const state = this.app.state;
     const isSquare = state.letterShape === 'square';
     document.getElementById('grid-ltrs').innerHTML = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'].map(ch => `
-      <div class="lbtn" onclick="app.ui.addLetter('${ch}')"
-           style="background:${state.ltrColor.bg};color:${state.ltrColor.text};
-                  border-radius:${isSquare ? '8px' : '50%'};">${ch}</div>`).join('');
+      <div class="shadow-sm font-weight-bold d-inline-flex align-items-center justify-content-center" 
+           onclick="app.ui.addLetter('${ch}')"
+           style="background:${state.ltrColor.bg}; color:${state.ltrColor.text}; border: 2px solid var(--ink-lt);
+                  width: 36px; height: 36px; border-radius:${isSquare ? '8px' : '50%'}; font-size: 1.1rem; cursor: pointer; transition: transform 0.1s;">
+        ${ch}
+      </div>`).join('');
   }
 
-  setLetterShape(shape, btnEl) {
+setLetterShape(shape, btnEl) {
     this.app.state.letterShape = shape;
-    document.querySelectorAll('.lshape-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lshape-btn').forEach(b => {
+      b.style.background = '#fff';
+      b.style.color = 'var(--ink-md)';
+      b.style.border = '1px solid #ced4da';
+      b.classList.remove('active');
+    });
     btnEl.classList.add('active');
+    btnEl.style.background = 'var(--pink-bg)';
+    btnEl.style.color = 'var(--pink)';
+    btnEl.style.border = '1px solid var(--pink-dk)';
     this.buildLetters();
   }
 
+  // BOOTSTRAP INSPECTOR PANEL
+// 1. UPDATE INSPECTOR TO USE THEME COLORS
   updateInspector(el) {
     const b = document.getElementById('insp-body');
-    if (!el) { b.innerHTML = '<div class="insp-empty">Click any element on the canvas to edit</div>'; return; }
+    if (!el) { 
+      b.innerHTML = '<div class="text-center p-4 text-muted font-weight-bold"><i data-lucide="mouse-pointer-click" class="mb-2" style="width: 28px; height: 28px; color: var(--pink); opacity: 0.5;"></i><br>Click any element on the canvas to edit</div>'; 
+      if(window.lucide) lucide.createIcons();
+      return; 
+    }
+
+    // Determine stock badge styling based on your theme
+    let stockStyle = '';
+    let stockText = '';
+    if (el.stock === 'in') {
+      stockStyle = 'background: var(--lime-bg); color: var(--lime-dk); border: 1px solid var(--lime);';
+      stockText = 'In Stock';
+    } else if (el.stock === 'low') {
+      stockStyle = 'background: #FFF7E0; color: #A07200; border: 1px solid #FFD93D;';
+      stockText = 'Low Stock';
+    } else {
+      stockStyle = 'background: var(--pink-bg); color: var(--pink-dk); border: 1px solid var(--pink);';
+      stockText = 'Out of Stock';
+    }
+
     b.innerHTML = `
-      <div class="insp-content">
-        <div class="insp-top">
-          <div class="insp-thumb${el.useImg ? ' figure' : ''}"><img src="${el.imgUrl}"/></div>
-          <div class="insp-name">${el.name}</div>
-          <span class="insp-price-badge">₱${el.price || 8}</span>
+      <div class="p-3 bg-white">
+        <div class="d-flex align-items-center mb-3">
+          <div class="mr-3 bg-light border rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+            <img src="${el.imgUrl}" style="max-width: 80%; max-height: 80%;" />
+          </div>
+          <div class="flex-grow-1">
+            <div class="font-weight-bold text-dark" style="font-size: 1rem; line-height: 1.2;">${el.name}</div>
+            <span class="badge mt-1" style="background: var(--pink-bg); color: var(--pink); border: 1px solid var(--pink-dk); font-size: 0.8rem;">₱${el.price || 8}</span>
+          </div>
         </div>
-        <div class="insp-meta">
-          <span class="insp-tag">${el.category || 'bead'}</span>
-          <span class="insp-tag sbd s-${el.stock}">${el.stock === 'in' ? 'In Stock' : el.stock === 'low' ? 'Low' : 'Out'}</span>
+        <div class="mb-3 d-flex" style="gap: 8px;">
+          <span class="badge" style="background: var(--offwhite); color: var(--ink-md); border: 1px solid var(--ink-lt); padding: 6px; text-transform: uppercase;">${el.category || 'bead'}</span>
+          <span class="badge" style="padding: 6px; text-transform: uppercase; ${stockStyle}">
+            ${stockText}
+          </span>
         </div>
-        <div class="ibtns">
-          <div class="ibtn teal" onclick="app.ui.dupeBead('${el.uid}')">⊕ Dupe</div>
-          <div class="ibtn danger" onclick="app.ui.removeBead('${el.uid}')">× Remove</div>
+        <div class="d-flex justify-content-between" style="gap: 8px;">
+          <button class="btn font-weight-bold w-100 d-flex align-items-center justify-content-center" style="background: var(--teal-bg); color: var(--teal-dk); border: 1px solid var(--teal);" onclick="app.ui.dupeBead('${el.uid}')">
+            <i data-lucide="copy" class="mr-1" style="width:14px;"></i> Dupe
+          </button>
+          <button class="btn font-weight-bold w-100 d-flex align-items-center justify-content-center" style="background: var(--pink-bg); color: var(--pink-dk); border: 1px solid var(--pink);" onclick="app.ui.removeBead('${el.uid}')">
+            <i data-lucide="trash-2" class="mr-1" style="width:14px;"></i> Remove
+          </button>
         </div>
       </div>`;
+    if(window.lucide) lucide.createIcons();
   }
 
   setProduct(el) {
     this.app.state.product = el.dataset.prod;
     this.app.state.basePrice = +el.dataset.price;
     this.app.state.maxBeads = +el.dataset.max;
-    document.querySelectorAll('.tpill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
     this.updateCounters();
     this.app.render();
   }
   setStrCol(col, el) {
     this.app.state.strColor = col;
-    document.querySelectorAll('#str-sw .sw').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
+    document.querySelectorAll('#str-sw .sw').forEach(s => s.classList.remove('active', 'border-dark'));
+    el.classList.add('active', 'border-dark');
     this.app.render();
   }
   setRingCol(col, el) {
     this.app.state.ringColor = col;
-    document.querySelectorAll('#ring-sw .sw').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
+    document.querySelectorAll('#ring-sw .sw').forEach(s => s.classList.remove('active', 'border-dark'));
+    el.classList.add('active', 'border-dark');
     this.app.render();
   }
   setStrType(type) { this.app.state.strType = type; this.app.render(); }
   setLtrCol(bg, text, el) {
     this.app.state.ltrColor = { bg, text };
-    document.querySelectorAll('#ltr-sw .sw').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
+    document.querySelectorAll('#ltr-sw .sw').forEach(s => s.classList.remove('active', 'border-dark'));
+    el.classList.add('active', 'border-dark');
     this.buildLetters();
   }
   setClasp(c, el) {
     this.app.state.clasp = c;
-    document.querySelectorAll('.cpill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
+    document.querySelectorAll('.cpill').forEach(p => p.classList.remove('active', 'bg-pink-light', 'text-pink', 'border-pink'));
+    el.classList.add('active', 'bg-pink-light', 'text-pink', 'border-pink');
     this.app.render();
   }
   setView(v) {
     this.app.state.view = v;
     document.getElementById('vt-sil').classList.toggle('active', v === 'silhouette');
     document.getElementById('vt-flat').classList.toggle('active', v === 'flatlay');
-    document.getElementById('canvas-surface').classList.toggle('show', v === 'flatlay');
     this.app.render();
   }
 
-  toggleSec(id) { document.getElementById(id).classList.toggle('open'); }
+  toggleSec(id) { 
+    const el = document.getElementById(id);
+    el.classList.toggle('open'); 
+    const icon = el.querySelector('.psec-arr');
+    if(icon) {
+      icon.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+      icon.style.transition = 'transform 0.2s';
+    }
+  }
 
   setStrandCount(n, btnEl) {
     this.app.state.keychainStrands = n;
     if (this.app.state.activeStrand >= n) this.app.state.activeStrand = 0;
-    document.querySelectorAll('.strand-count-btn').forEach(b => b.classList.remove('active'));
-    btnEl.classList.add('active');
+    document.querySelectorAll('.strand-count-btn').forEach(b => b.classList.remove('active', 'btn-pink'));
+    document.querySelectorAll('.strand-count-btn').forEach(b => b.classList.add('btn-outline-secondary'));
+    btnEl.classList.remove('btn-outline-secondary');
+    btnEl.classList.add('active', 'btn-pink');
     this.app.render();
   }
 
@@ -605,53 +650,59 @@ buildFiguresGrid(items) {
 
   setRingType(type, btnEl) {
     this.app.state.ringType = type;
-    document.querySelectorAll('.ring-type-btn').forEach(b => b.classList.remove('active'));
-    btnEl.classList.add('active');
+    document.querySelectorAll('.ring-type-btn').forEach(b => b.classList.remove('active', 'btn-pink'));
+    document.querySelectorAll('.ring-type-btn').forEach(b => b.classList.add('btn-outline-secondary'));
+    btnEl.classList.remove('btn-outline-secondary');
+    btnEl.classList.add('active', 'btn-pink');
     this.app.render();
   }
 
-  switchTab(el) {
+switchTab(el) {
     const tab = el.dataset.tab;
     ['beads', 'figures', 'charms', 'letters'].forEach(t => {
       const el2 = document.getElementById('tab-' + t);
-      if (el2) el2.style.display = t === tab ? 'flex' : 'none';
+      if (el2) {
+        // Because of Bootstrap's flex utilities, we need to explicitly use flex here
+        el2.style.setProperty('display', t === tab ? 'flex' : 'none', 'important');
+      }
     });
-    document.querySelectorAll('.ltab').forEach(t => t.classList.remove('active'));
+    
+    document.querySelectorAll('.ltab').forEach(t => {
+      t.style.color = '#6c757d'; 
+      t.style.borderBottomColor = 'transparent';
+      t.classList.remove('active');
+    });
+    
     el.classList.add('active');
+    el.style.color = 'var(--pink)';
+    el.style.borderBottomColor = 'var(--pink)';
   }
 
-filterCharms(input, target) {
-  const q      = input.value.trim().toLowerCase();
-  const wrap   = document.getElementById(target);
-  if (!wrap) return;
- 
-  if (target === 'charms-groups-wrap') {
-    // Grouped charm layout — show/hide individual items, then collapse empty groups
-    const items = wrap.querySelectorAll('.charm-litem');
-    items.forEach(item => {
-      const haystack = (item.dataset.search || item.dataset.name || '').toLowerCase();
-      const match    = !q || haystack.includes(q);
-      item.dataset.hidden = match ? 'false' : 'true';
-      item.style.display  = match ? '' : 'none';
-    });
- 
-    // Hide groups where every item is filtered out
-    wrap.querySelectorAll('.charm-group').forEach(group => {
-      const anyVisible = [...group.querySelectorAll('.charm-litem')]
-        .some(el => el.style.display !== 'none');
-      group.style.display = anyVisible ? '' : 'none';
-    });
- 
-  } else {
-    // Flat grid layout (figures tab)
-    const items = wrap.querySelectorAll('.litem');
-    items.forEach(item => {
-      const name  = (item.dataset.name || '').toLowerCase();
-      const match = !q || name.includes(q);
-      item.style.display = match ? '' : 'none';
-    });
+  filterCharms(input, target) {
+    const q = input.value.trim().toLowerCase();
+    const wrap = document.getElementById(target);
+    if (!wrap) return;
+
+    if (target === 'charms-groups-wrap') {
+      const items = wrap.querySelectorAll('.charm-litem');
+      items.forEach(item => {
+        const haystack = (item.dataset.search || '').toLowerCase();
+        const match = !q || haystack.includes(q);
+        item.style.display = match ? '' : 'none';
+      });
+
+      wrap.querySelectorAll('.charm-group').forEach(group => {
+        const anyVisible = [...group.querySelectorAll('.charm-litem')].some(el => el.style.display !== 'none');
+        group.style.display = anyVisible ? '' : 'none';
+      });
+    } else {
+      const items = wrap.querySelectorAll('.litem');
+      items.forEach(item => {
+        const name = (item.dataset.name || '').toLowerCase();
+        item.style.display = (!q || name.includes(q)) ? '' : 'none';
+      });
+    }
   }
-}
 
   renderToCanvas(targetCanvas, W, H) {
     targetCanvas.width = W; targetCanvas.height = H;
@@ -673,277 +724,248 @@ filterCharms(input, target) {
     this.showToast('Downloaded!');
   }
 
+  // BOOTSTRAP PREVIEW MODAL INTEGRATION
   openPreview() {
     const state = this.app.state;
     const ec = state.elems.reduce((s, e) => s + (e.price || 8), 0);
-    const lenVal = document.getElementById('length-sel').value;
+    const lenVal = document.getElementById('length-sel')?.value || 'medium';
     const lenMap = { small: '16cm', medium: '18cm', large: '20cm', custom: 'Custom' };
     const prodMap = { bracelet: 'Bracelet', necklace: 'Necklace', keychain: 'Keychain' };
 
     document.getElementById('prev-info').innerHTML = `
-      <div class="mic"><div class="mic-l">Product</div><div class="mic-v">${prodMap[state.product]}</div></div>
-      <div class="mic"><div class="mic-l">Elements</div><div class="mic-v">${state.elems.length}</div></div>
-      <div class="mic"><div class="mic-l">Length</div><div class="mic-v">${lenMap[lenVal]}</div></div>
-      <div class="mic"><div class="mic-l">Est. Price</div><div class="mic-v" style="color:var(--pink-dk)">₱${state.basePrice + ec}</div></div>`;
+      <div class="d-flex justify-content-between border-bottom py-2"><span class="text-muted font-weight-bold text-uppercase" style="font-size:0.75rem;">Product</span><span class="font-weight-bold text-dark">${prodMap[state.product]}</span></div>
+      <div class="d-flex justify-content-between border-bottom py-2"><span class="text-muted font-weight-bold text-uppercase" style="font-size:0.75rem;">Elements</span><span class="font-weight-bold text-dark">${state.elems.length}</span></div>
+      <div class="d-flex justify-content-between border-bottom py-2"><span class="text-muted font-weight-bold text-uppercase" style="font-size:0.75rem;">Length</span><span class="font-weight-bold text-dark">${lenMap[lenVal] || 'Standard'}</span></div>
+      <div class="d-flex justify-content-between py-2 mt-1"><span class="text-muted font-weight-bold text-uppercase" style="font-size:0.75rem;">Est. Price</span><span class="font-weight-bold text-pink" style="font-size:1.1rem;">₱${state.basePrice + ec}</span></div>`;
 
-    document.getElementById('prev-modal').classList.add('open');
-    this.renderToCanvas(document.getElementById('preview-canvas'), 460, 320);
-  }
+    if (typeof $ !== 'undefined') {
+      $('#prev-modal').modal('show');
+    }
+this.renderToCanvas(document.getElementById('preview-canvas'), 680, 480);  }
 
 openOrder() {
-  const state = this.app.state;
+    const state = this.app.state;
 
-  if (!state.elems.length) {
-    this.showToast('Add at least one element first!');
-    return;
-  }
-
-  // 1. Render canvas → base64 PNG snapshot
-  const ec = document.createElement('canvas');
-  ec.width  = 680;
-  ec.height = 480;
-  const ctx = ec.getContext('2d');
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, 680, 480);
-  const savedSel = state.selectedId;
-  state.selectedId = null;
-  this.app.canvasEngine.draw(ec, state, false);
-  state.selectedId = savedSel;
-  const snapshot = ec.toDataURL('image/png');
-
-  // 2. Read the length select text
-  const lenEl   = document.getElementById('length-sel');
-  const lenText = lenEl?.selectedOptions[0]?.text || lenEl?.value || '';
-
-  // 3. Read the string type select
-  const strTypeEl = document.getElementById('str-type');
-
-  // 4. Build a hidden form and POST to /order/preview
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = 'order/preview';  
-  form.style.display = 'none';
-
-
-  const fields = {
-    _token:           document.querySelector('meta[name="csrf-token"]')?.content || '',
-    // design (matches controller validation key)
-    design:           JSON.stringify(state.elems),
-    snapshot:         snapshot,
-    // product (matches controller validation key)
-    product_slug:     state.product,
-    length:           lenText,
-    // canvas state
-    str_color:        state.strColor          || '',
-    str_type:         strTypeEl?.value        || state.strType || '',
-    clasp:            state.clasp             || '',
-    view:             state.view              || '',
-    keychain_strands: state.keychainStrands   || 1,
-    ring_type:        state.ringType          || '',
-    ring_color:       state.ringColor         || '',
-    letter_bg_color:  state.ltrColor?.bg      || '',
-    letter_text_color: state.ltrColor?.text   || '',
-    letter_shape:     state.letterShape       || '',
-  };
-
-  Object.entries(fields).forEach(([name, value]) => {
-    const input = document.createElement('input');
-    input.type  = 'hidden';
-    input.name  = name;
-    input.value = value ?? '';
-    form.appendChild(input);
-  });
-
-  document.body.appendChild(form);
-  form.submit();
-}
-
-  closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// ── submitOrder() ────────────────────────────────────────────────────────────
-// Replace your existing submitOrder() with this version.
-async submitOrder() {
-  const state = this.app.state;
- 
-  // ── 1. Validate form inputs ─────────────────────────────────────────────
-  const firstName = document.getElementById('order-first-name')?.value.trim();
-  const lastName  = document.getElementById('order-last-name')?.value.trim();
-  const contact   = document.getElementById('order-contact')?.value.trim();
-  const notes     = document.getElementById('order-notes')?.value.trim();
-  const errorEl   = document.getElementById('order-error');
- 
-  const hide = () => { if (errorEl) errorEl.style.display = 'none'; };
-  const show = (msg) => {
-    if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
-  };
- 
-  hide();
- 
-  if (!firstName) { show('Please enter your first name.'); return; }
-  if (!lastName)  { show('Please enter your last name.');  return; }
-  if (!contact)   { show('Please enter your contact number.'); return; }
-  if (state.elems.length === 0) { show('Your design is empty — add at least one element.'); return; }
- 
-  // ── 2. Disable button + show loading state ──────────────────────────────
-  const btn = document.getElementById('order-submit-btn');
-  const originalText = btn?.innerHTML;
-  if (btn) { btn.disabled = true; btn.innerHTML = 'Submitting…'; }
- 
-  try {
-    // ── 3. Capture the design snapshot ─────────────────────────────────────
-    const snapshotDataUrl = this._captureSnapshot(680, 480);
- 
-    // ── 4. Gather the length + product info from the DOM ───────────────────
-    const lengthSelect  = document.getElementById('length-sel');
-    const lengthText    = lengthSelect?.selectedOptions[0]?.text || lengthSelect?.value || '';
-    const elemCost      = state.elems.reduce((s, e) => s + (e.price || 8), 0);
-    const totalPrice    = state.basePrice + elemCost;
- 
-    // ── 5. Build order items from state.elems ──────────────────────────────
-    const items = state.elems.map((el, i) => ({
-      element_slug      : el.isLetter ? null : (el.slug || el.id || null),
-      letter            : el.isLetter ? el.label : null,
-      letter_bg         : el.isLetter ? el.ltrBg   : null,
-      letter_text_color : el.isLetter ? el.ltrText  : null,
-      letter_shape      : el.isLetter ? (el.letterShape || null) : null,
-      strand            : el.strand ?? 0,
-      price             : el.price || 8,
-    }));
- 
-    // ── 6. Build the full payload ───────────────────────────────────────────
-    const payload = {
-      // Customer
-      first_name     : firstName,
-      last_name      : lastName,
-      contact_number : contact,
-      notes          : notes || null,
- 
-      // Product
-      product_slug   : window.BUILDER_PRODUCT?.product
-                         ? this._productToSlug(window.BUILDER_PRODUCT.product)
-                         : 'keychain-standard',
-      length         : lengthText,
-      base_price     : state.basePrice,
-      elements_cost  : elemCost,
-      total_price    : totalPrice,
- 
-      // Design
-      design_json    : JSON.stringify(state.elems),
-      snapshot       : snapshotDataUrl,
- 
-      // Design specs
-      str_color      : state.strColor   || null,
-      str_type       : state.strType    || null,
-      clasp          : state.clasp      || null,
-      view           : state.view       || null,
-      keychain_strands : state.keychainStrands || 1,
-      ring_type      : state.ringType   || null,
-      ring_color     : state.ringColor  || null,
-      letter_bg_color   : state.ltrColor?.bg   || null,
-      letter_text_color : state.ltrColor?.text  || null,
-      letter_shape      : state.letterShape    || null,
- 
-      // Items
-      items,
-    };
- 
-    // ── 7. POST to Laravel ─────────────────────────────────────────────────
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-                   || window.CSRF_TOKEN
-                   || '';
- 
-    const response = await fetch('/builder/order', {
-      method : 'POST',
-      headers: {
-        'Content-Type'    : 'application/json',
-        'Accept'          : 'application/json',
-        'X-CSRF-TOKEN'    : csrfToken,
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify(payload),
-    });
- 
-    const data = await response.json();
- 
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Server error. Please try again.');
+    // 1. Validate that the canvas isn't empty
+    if (!state.elems.length) {
+      this.showToast('Add at least one element first!');
+      return;
     }
- 
-    // ── 8. Show success view ───────────────────────────────────────────────
-    const codeEl = document.getElementById('success-order-code');
-    if (codeEl) codeEl.textContent = data.order_code;
- 
-    document.getElementById('order-form-view').style.display    = 'none';
-    document.getElementById('order-success-view').style.display = 'block';
- 
-  } catch (err) {
-    show(err.message || 'Something went wrong. Please try again.');
-    console.error('[ArtsyCrate] Order submission error:', err);
-  } finally {
-    // Re-enable the button regardless of outcome
-    if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+
+    // Optional: Make the button look like it's loading
+    const btn = document.querySelector('.btn-order');
+    if (btn) {
+      btn.style.pointerEvents = 'none';
+      btn.innerHTML = 'Preparing... <i data-lucide="loader" class="fa-spin" style="width:14px; margin-left:6px;"></i>';
+      if(window.lucide) lucide.createIcons();
+    }
+
+    // 2. Render canvas to a base64 PNG snapshot
+    const snapshotDataUrl = this._captureSnapshot(680, 480);
+
+    // 3. Read the length & string type from the DOM
+    const lenEl     = document.getElementById('length-sel');
+    const lenText   = lenEl?.selectedOptions[0]?.text || lenEl?.value || 'Standard';
+    const strTypeEl = document.getElementById('str-type');
+
+    // 4. Build a hidden form to seamlessly POST data to Laravel
+    const form = document.createElement('form');
+    form.method = 'POST';
+    
+    // 👇 IMPORTANT: Change this URL to match your Laravel route that handles the checkout transition!
+    // (e.g., if your route is Route::post('/builder/checkout', ...))
+    form.action = '/builder/order/preview';  
+    
+    form.style.display = 'none';
+
+    // 5. Package all the data
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const fields = {
+      _token:            csrfToken,
+      design:            JSON.stringify(state.elems),
+      snapshot:          snapshotDataUrl,
+      product_slug:      state.product,
+      length:            lenText,
+      str_color:         state.strColor          || '',
+      str_type:          strTypeEl?.value        || state.strType || '',
+      clasp:             state.clasp             || '',
+      view:              state.view              || '',
+      keychain_strands:  state.keychainStrands   || 1,
+      ring_type:         state.ringType          || '',
+      ring_color:        state.ringColor         || '',
+      letter_bg_color:   state.ltrColor?.bg      || '',
+      letter_text_color: state.ltrColor?.text    || '',
+      letter_shape:      state.letterShape       || '',
+    };
+
+    // 6. Attach data to form and submit
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type  = 'hidden';
+      input.name  = name;
+      input.value = value ?? '';
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
   }
-}
 
-// ── _productToSlug(product) ───────────────────────────────────────────────────
-// NEW helper — maps the JS product key to your products table slug.
-// Update these values to match your actual `products.slug` rows.
-_productToSlug(product) {
-  const map = {
-    bracelet : 'bracelet-standard',
-    necklace : 'necklace-standard',
-    keychain : 'keychain-standard',
-  };
-  return map[product] || product;
-}
- 
-// ── _resetOrderModal() ────────────────────────────────────────────────────────
-// NEW helper — resets the modal back to the form view (called on close / Done).
-_resetOrderModal() {
-  const formView    = document.getElementById('order-form-view');
-  const successView = document.getElementById('order-success-view');
-  const errorEl     = document.getElementById('order-error');
- 
-  if (formView)    formView.style.display    = 'block';
-  if (successView) successView.style.display = 'none';
-  if (errorEl)     errorEl.style.display     = 'none';
-}
- 
+  closeModal(id) {
+    if (typeof $ !== 'undefined') {
+      $(`#${id}`).modal('hide');
+    }
+  }
 
- 
-// ── _captureSnapshot(W, H) ────────────────────────────────────────────────────
-// NEW helper method — renders the current state to an offscreen canvas
-// and returns a base64 PNG data URL.
-_captureSnapshot(W = 680, H = 480) {
-  const offscreen = document.createElement('canvas');
-  offscreen.width  = W;
-  offscreen.height = H;
- 
-  const ctx = offscreen.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
- 
-  // White background so PNGs look clean
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, W, H);
- 
-  // Temporarily deselect so the glow ring doesn't appear in the snapshot
-  const savedSelection = this.app.state.selectedId;
-  this.app.state.selectedId = null;
- 
-  this.app.canvasEngine.draw(offscreen, this.app.state, false);
- 
-  // Restore selection
-  this.app.state.selectedId = savedSelection;
- 
-  return offscreen.toDataURL('image/png');
-}
+  async submitOrder() {
+    const state = this.app.state;
+  
+    const firstName = document.getElementById('order-first-name')?.value.trim();
+    const lastName  = document.getElementById('order-last-name')?.value.trim();
+    const contact   = document.getElementById('order-contact')?.value.trim();
+    const notes     = document.getElementById('order-notes')?.value.trim();
+  
+    if (!firstName || !lastName || !contact) { 
+      this.showToast('Please fill all required fields!'); 
+      return; 
+    }
+    if (state.elems.length === 0) { 
+      this.showToast('Your design is empty!'); 
+      return; 
+    }
+  
+    const btn = document.getElementById('order-submit-btn');
+    const originalText = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...'; }
+  
+    try {
+      const snapshotDataUrl = this._captureSnapshot(680, 480);
+      const lengthSelect  = document.getElementById('length-sel');
+      const lengthText    = lengthSelect?.selectedOptions[0]?.text || lengthSelect?.value || '';
+      const elemCost      = state.elems.reduce((s, e) => s + (e.price || 8), 0);
+      const totalPrice    = state.basePrice + elemCost;
+  
+      const items = state.elems.map((el, i) => ({
+        element_slug      : el.isLetter ? null : (el.slug || el.id || null),
+        letter            : el.isLetter ? el.label : null,
+        letter_bg         : el.isLetter ? el.ltrBg   : null,
+        letter_text_color : el.isLetter ? el.ltrText  : null,
+        letter_shape      : el.isLetter ? (el.letterShape || null) : null,
+        strand            : el.strand ?? 0,
+        price             : el.price || 8,
+      }));
+  
+      const payload = {
+        first_name     : firstName,
+        last_name      : lastName,
+        contact_number : contact,
+        notes          : notes || null,
+        product_slug   : window.BUILDER_PRODUCT?.product ? this._productToSlug(window.BUILDER_PRODUCT.product) : 'keychain-standard',
+        length         : lengthText,
+        base_price     : state.basePrice,
+        elements_cost  : elemCost,
+        total_price    : totalPrice,
+        design_json    : JSON.stringify(state.elems),
+        snapshot       : snapshotDataUrl,
+        str_color      : state.strColor   || null,
+        str_type       : state.strType    || null,
+        clasp          : state.clasp      || null,
+        view           : state.view       || null,
+        keychain_strands : state.keychainStrands || 1,
+        ring_type      : state.ringType   || null,
+        ring_color     : state.ringColor  || null,
+        letter_bg_color   : state.ltrColor?.bg   || null,
+        letter_text_color : state.ltrColor?.text  || null,
+        letter_shape      : state.letterShape    || null,
+        items,
+      };
+  
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || window.CSRF_TOKEN || '';
+      const response = await fetch('/builder/order', {
+        method : 'POST',
+        headers: {
+          'Content-Type'    : 'application/json',
+          'Accept'          : 'application/json',
+          'X-CSRF-TOKEN'    : csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Server error. Please try again.');
+      }
+  
+      // Simulate Success View using Bootstrap classes
+      const formView = document.getElementById('order-form-view');
+      formView.innerHTML = `
+        <div class="text-center p-4">
+          <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+          <h4 class="font-weight-bold text-dark">Order Placed!</h4>
+          <p class="text-muted">Your order code is:</p>
+          <div class="bg-pink-light text-pink border border-pink rounded p-3 mb-3 d-inline-block font-weight-bold" style="font-size: 1.5rem; letter-spacing: 2px;">
+            ${data.order_code || 'SUCCESS'}
+          </div>
+          <p class="text-sm text-muted">We'll contact you at your number to confirm.</p>
+          <button class="btn btn-pink w-100 font-weight-bold" onclick="app.ui.closeModal('order-modal'); setTimeout(() => location.reload(), 500);">Done</button>
+        </div>
+      `;
+  
+    } catch (err) {
+      this.showToast(err.message || 'Something went wrong.');
+      console.error('[ArtsyCrate] Order submission error:', err);
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+    }
+  }
 
+  _productToSlug(product) {
+    const map = { bracelet : 'bracelet-standard', necklace : 'necklace-standard', keychain : 'keychain-standard' };
+    return map[product] || product;
+  }
+
+  _captureSnapshot(W = 680, H = 480) {
+    const offscreen = document.createElement('canvas');
+    offscreen.width  = W;
+    offscreen.height = H;
+    const ctx = offscreen.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, W, H);
+    const savedSelection = this.app.state.selectedId;
+    this.app.state.selectedId = null;
+    this.app.canvasEngine.draw(offscreen, this.app.state, false);
+    this.app.state.selectedId = savedSelection;
+    return offscreen.toDataURL('image/png');
+  }
+
+  // BOOTSTRAP TOAST IMPLEMENTATION
   showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      document.body.appendChild(t);
+    }
+    
+    // Inject Bootstrap utility classes to the dynamically created/grabbed toast
+    t.className = 'toast position-fixed bg-dark text-white py-2 px-4 rounded-pill shadow align-items-center justify-content-center font-weight-bold';
+    t.style.bottom = '20px';
+    t.style.left = '50%';
+    t.style.transform = 'translateX(-50%)';
+    t.style.zIndex = '9999';
+    t.style.opacity = '1';
+    t.style.transition = 'opacity 0.3s ease-in-out';
+    t.style.display = 'flex';
+    t.innerHTML = `<i class="fas fa-info-circle mr-2"></i> ${msg}`;
+
     clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    this.toastTimer = setTimeout(() => {
+      t.style.opacity = '0';
+      setTimeout(() => t.style.display = 'none', 300);
+    }, 2600);
   }
 }

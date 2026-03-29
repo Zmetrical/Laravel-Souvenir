@@ -1,180 +1,140 @@
 @extends('admin.includes.layout')
-@section('title', 'Elements')
+@section('title', 'All Elements')
 
 @section('content')
 
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
-    <h5 class="mb-0 fw-bold" style="color:#2D2D3A;">Element Library</h5>
-    <small class="text-muted">Manage beads, figures, and charms used in the builder</small>
+    <h5 class="mb-0" style="font-family: var(--fh); font-size: 2rem; color: var(--ink); letter-spacing: 1px;">Element Inventory</h5>
+    <small style="font-size: 0.95rem; font-weight: 700; color: var(--ink-md);">Full list of items available in the builder.</small>
   </div>
-  <a href="{{ route('admin.elements.create') }}" class="btn btn-sm fw-semibold"
-     style="background:#FF5FA0;color:#fff;border-radius:8px;padding:8px 18px;">
-    + Add Element
+  <a href="{{ route('admin.elements.create') }}" class="btn-pink">
+    <i data-lucide="plus"></i> Add Element
   </a>
 </div>
 
 {{-- ── Filters ─────────────────────────────────────────────────────────── --}}
 <div class="ac-card mb-4">
-  <div class="ac-card-header">
-    <i data-lucide="filter" style="width:15px;height:15px;"></i> Filter & Search
-  </div>
-  <div class="p-3">
-    <form method="GET" action="{{ route('admin.elements.index') }}" class="row g-2 align-items-end">
-      <div class="col-md-4">
-        <label class="form-label small fw-semibold mb-1">Search</label>
-        <input type="text" name="search" value="{{ request('search') }}"
-               class="form-control form-control-sm" placeholder="Element name..."/>
+  <form method="GET" action="{{ route('admin.elements.index') }}">
+    <div class="filter-bar">
+      <div class="d-flex align-items-center gap-2" style="flex: 1;">
+        <i data-lucide="search" style="width:16px; color: var(--grey-400);"></i>
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control border-0 bg-transparent" placeholder="Search by name..."/>
       </div>
-      <div class="col-md-3">
-        <label class="form-label small fw-semibold mb-1">Category</label>
-        <select name="category" class="form-select form-select-sm">
-          <option value="">All Categories</option>
-          <option value="beads"   {{ request('category') === 'beads'   ? 'selected' : '' }}>Beads</option>
-          <option value="figures" {{ request('category') === 'figures' ? 'selected' : '' }}>Figures</option>
-          <option value="charms"  {{ request('category') === 'charms'  ? 'selected' : '' }}>Charms</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <button type="submit" class="btn btn-sm btn-dark w-100">Search</button>
-      </div>
-      <div class="col-md-2">
-        <a href="{{ route('admin.elements.index') }}" class="btn btn-sm btn-outline-secondary w-100">Reset</a>
-      </div>
-    </form>
-  </div>
+      
+      <select name="category" class="form-select" style="width: 180px;">
+        <option value="">All Categories</option>
+        <option value="beads" {{ request('category') === 'beads' ? 'selected' : '' }}>Beads</option>
+        <option value="figures" {{ request('category') === 'figures' ? 'selected' : '' }}>Figures</option>
+        <option value="charms" {{ request('category') === 'charms' ? 'selected' : '' }}>Charms</option>
+      </select>
+
+      <button type="submit" class="btn-ghost" style="background: var(--ink); color: #fff; border-color: var(--ink);">Search</button>
+      <a href="{{ route('admin.elements.index') }}" class="btn-ghost">Reset</a>
+    </div>
+  </form>
 </div>
 
 {{-- ── Table ────────────────────────────────────────────────────────────── --}}
 <div class="ac-card">
-  <div class="ac-card-header">
-    <i data-lucide="list" style="width:15px;height:15px;"></i>
-    All Elements
-    <span class="badge ms-auto" style="background:#F3F0FF;color:#7C3AED;font-size:.7rem;">
-      {{ $elements->total() }} total
-    </span>
-  </div>
-
   <div class="table-responsive">
-    <table class="table table-hover mb-0" style="font-size:.85rem;">
-      <thead style="background:#F8F7FA; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em;">
+    <table class="table table-borderless align-middle mb-0" style="font-size: 0.9rem; font-weight: 700;">
+      <thead style="background: var(--offwhite); border-bottom: 1.5px solid var(--grey-200); font-size: 0.75rem; text-transform: uppercase; color: var(--ink-md); letter-spacing: 0.05em;">
         <tr>
-          <th class="ps-4 py-3" style="width:50px;">Preview</th>
+          <th class="ps-4 py-3">Preview</th>
           <th class="py-3">Name / Slug</th>
           <th class="py-3">Category</th>
-          <th class="py-3">Group</th>
-          <th class="py-3">Shape</th>
           <th class="py-3">Price</th>
           <th class="py-3">Stock</th>
-          <th class="py-3">Active</th>
-          <th class="py-3 pe-4 text-end">Actions</th>
+          <th class="py-3">Status</th>
+          <th class="py-3 text-end pe-4">Actions</th>
         </tr>
       </thead>
       <tbody>
         @forelse($elements as $el)
-        <tr>
-          {{-- Preview ──────────────────────────────────────────────────── --}}
-          <td class="ps-4 py-2 align-middle">
-            @if($el->use_img && $el->img_path)
-              <img src="{{ asset('img/builder/' . $el->img_path) }}"
-                   style="width:36px;height:36px;object-fit:contain;border-radius:6px;
-                          background:#F8F7FA;border:1px solid #EEE;padding:2px;"
-                   alt="{{ $el->name }}"/>
+        <tr style="border-bottom: 1px solid var(--grey-100);">
+          <td class="ps-4 py-2">
+            @if($el->category === 'charms' && $el->img_path)
+              <img src="{{ asset('img/builder/' . $el->img_path) }}" style="width:40px; height:40px; object-fit:contain; border-radius:8px; background:var(--white); border:1.5px solid var(--grey-200); padding:2px;"/>
             @else
-              {{-- Color swatch preview for bead/figure --}}
-              <div style="width:36px;height:36px;border-radius:50%;
-                          background:{{ $el->color ?? '#DDD' }};
-                          border:1px solid rgba(0,0,0,.1);
-                          display:flex;align-items:center;justify-content:center;
-                          font-size:10px;color:rgba(0,0,0,.4);">
-                {{ strtoupper(substr($el->shape ?? '?', 0, 1)) }}
-              </div>
+              {{-- Unified Shape Canvas for consistency --}}
+              <canvas class="shape-canvas" width="44" height="44" 
+                      data-shape="{{ $el->shape ?? 'round' }}" 
+                      data-color="{{ $el->color ?? '#F9B8CF' }}" 
+                      data-detail="{{ $el->detail_color ?? '#C0136A' }}" 
+                      data-small="{{ $el->is_small ? '1' : '0' }}" 
+                      style="display: block; width: 44px; height: 44px;">
+              </canvas>
             @endif
           </td>
 
-          {{-- Name / Slug ──────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle">
-            <div class="fw-semibold" style="color:#2D2D3A;">{{ $el->name }}</div>
-            <small class="text-muted font-monospace">{{ $el->slug }}</small>
+          <td class="py-2">
+            <div style="color: var(--ink); font-weight: 800;">{{ $el->name }}</div>
+            <div style="font-size: 0.7rem; font-family: monospace; color: var(--grey-400);">{{ $el->slug }}</div>
           </td>
 
-          {{-- Category ─────────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle">
+          <td class="py-2">
             @php
-              $catColor = match($el->category) {
-                'beads'   => 'background:#FFD6E8;color:#C0136A;',
-                'figures' => 'background:#D6F0FF;color:#0369A1;',
-                'charms'  => 'background:#EDE9FE;color:#7C3AED;',
-                default   => 'background:#F3F4F6;color:#374151;',
+              $badge = match($el->category) {
+                'beads'   => ['bg' => 'var(--pink-bg)', 'text' => 'var(--pink-dk)'],
+                'figures' => ['bg' => 'var(--teal-bg)', 'text' => 'var(--teal-dk)'],
+                'charms'  => ['bg' => 'var(--purple-bg)', 'text' => 'var(--purple-dk)'],
+                default   => ['bg' => 'var(--grey-100)', 'text' => 'var(--ink-md)'],
               };
             @endphp
-            <span class="badge" style="{{ $catColor }} font-size:.72rem;">{{ ucfirst($el->category) }}</span>
-          </td>
-
-          {{-- Group ───────────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle text-muted">{{ $el->group ?? '—' }}</td>
-
-          {{-- Shape ───────────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle">
-            <code style="font-size:.75rem;background:#F3F4F6;padding:2px 6px;border-radius:4px;">
-              {{ $el->shape ?? '—' }}
-            </code>
-          </td>
-
-          {{-- Price ───────────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle fw-semibold" style="color:#FF5FA0;">₱{{ $el->price }}</td>
-
-          {{-- Stock ───────────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle">
-            <span class="badge stock-{{ $el->stock }}" style="font-size:.72rem;">
-              {{ ucfirst($el->stock) }}
+            <span style="background: {{ $badge['bg'] }}; color: {{ $badge['text'] }}; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase;">
+              {{ $el->category }}
             </span>
           </td>
 
-          {{-- Active ──────────────────────────────────────────────────── --}}
-          <td class="py-2 align-middle">
+          <td class="py-2" style="color: var(--pink); font-weight: 800;">₱{{ $el->price }}</td>
+
+          <td class="py-2">
+             @php $sColors = ['in' => 'var(--lime-dk)', 'low' => '#D97706', 'out' => '#DC2626']; @endphp
+             <span style="font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: {{ $sColors[$el->stock] ?? 'var(--ink-md)' }};">
+               {{ $el->stock }}
+             </span>
+          </td>
+
+          <td class="py-2">
             @if($el->is_active)
-              <span style="color:#10B981;font-size:1rem;">●</span>
+              <span style="color: var(--lime-dk); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; display: flex; align-items: center; gap: 4px;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor;"></span> Live
+              </span>
             @else
-              <span style="color:#D1D5DB;font-size:1rem;">●</span>
+              <span style="color: var(--grey-400); font-size: 0.7rem; font-weight: 900; text-transform: uppercase; display: flex; align-items: center; gap: 4px;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor;"></span> Hidden
+              </span>
             @endif
           </td>
 
-          {{-- Actions ─────────────────────────────────────────────────── --}}
-          <td class="py-2 pe-4 align-middle text-end">
-            <a href="{{ route('admin.elements.edit', $el) }}"
-               class="btn btn-xs btn-outline-secondary me-1"
-               style="padding:3px 10px;font-size:.75rem;border-radius:6px;">
-              Edit
-            </a>
-            <form action="{{ route('admin.elements.destroy', $el) }}" method="POST"
-                  style="display:inline;"
-                  onsubmit="return confirm('Delete {{ addslashes($el->name) }}? This cannot be undone.')">
+          <td class="py-2 text-end pe-4">
+            <a href="{{ route('admin.elements.edit', $el) }}" class="btn-ghost" style="padding: 6px 12px; font-size: 0.8rem;">Edit</a>
+            <form action="{{ route('admin.elements.destroy', $el) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this element?')">
               @csrf @method('DELETE')
-              <button type="submit" class="btn btn-xs"
-                      style="padding:3px 10px;font-size:.75rem;border-radius:6px;
-                             background:#FEE2E2;color:#991B1B;border:none;">
-                Delete
-              </button>
+              <button type="submit" class="btn-danger-ghost" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">Delete</button>
             </form>
           </td>
         </tr>
         @empty
-        <tr>
-          <td colspan="9" class="text-center py-5 text-muted">
-            No elements found. <a href="{{ route('admin.elements.create') }}">Add one →</a>
-          </td>
-        </tr>
+        <tr><td colspan="7" class="text-center py-5 fw-bold text-muted">No elements matching your filters.</td></tr>
         @endforelse
       </tbody>
     </table>
   </div>
 
   @if($elements->hasPages())
-  <div class="p-3 border-top">
-    {{ $elements->links() }}
-  </div>
+    <div class="p-3 border-top d-flex justify-content-center">{{ $elements->links() }}</div>
   @endif
 </div>
 
 @endsection
+
+@push('scripts')
+@vite(['resources/js/shapes.js'])
+<script>
+  document.addEventListener('artshape:ready', () => {
+    if(window.ArtshapeRenderer) window.ArtshapeRenderer.renderAll();
+  });
+</script>
+@endpush

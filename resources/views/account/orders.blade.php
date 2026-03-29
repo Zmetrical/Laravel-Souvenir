@@ -4,125 +4,90 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>My Orders — ArtsyCrate</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/>
 
   <style>
-    body { overflow: auto !important; height: auto !important; background: var(--grey-50); display: block !important; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { overflow-y: auto !important; height: auto !important; background: var(--offwhite); display: block !important; }
 
     .acc-wrap { max-width: 900px; margin: 0 auto; padding: 36px 20px 72px; }
 
     /* ── Page head ── */
     .pg-back {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: .76rem; font-weight: 800; color: var(--ink2);
-      text-decoration: none; margin-bottom: 14px;
-      transition: color .13s;
+      display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 800; color: var(--ink-md);
+      text-decoration: none; margin-bottom: 16px; transition: color 0.2s;
     }
     .pg-back:hover { color: var(--pink); }
-    .pg-back i[data-lucide] { width: 12px; height: 12px; }
-    .pg-title { font-family: var(--fh); font-size: 1.55rem; font-weight: 800; color: var(--ink); margin-bottom: 4px; letter-spacing: -.025em; }
-    .pg-sub { font-size: .82rem; font-weight: 600; color: var(--ink2); margin-bottom: 22px; }
+    .pg-title { font-family: var(--fh); font-size: 2.2rem; color: var(--ink); margin-bottom: 4px; letter-spacing: 1px; }
+    .pg-sub { font-size: 0.95rem; font-weight: 700; color: var(--ink-md); margin-bottom: 24px; }
 
     /* ── Filter pills ── */
-    .filter-bar { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 22px; }
+    .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
     .filter-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      border: 1.5px solid var(--grey-200); border-radius: var(--r-pill);
-      padding: 5px 14px; font-size: .72rem; font-weight: 800;
-      color: var(--ink2); text-decoration: none; background: var(--white);
-      transition: border-color .12s, color .12s, background .12s;
+      display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--grey-200); border-radius: 12px;
+      padding: 8px 16px; font-size: 0.8rem; font-weight: 800; color: var(--ink-md); text-decoration: none; background: #fff;
+      transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
-    .filter-pill:hover { border-color: var(--grey-300); background: var(--grey-50); }
-    .filter-pill.active { border-color: var(--teal); color: var(--teal-dk); background: var(--teal-lt); }
-    .filter-pill .count {
-      background: var(--grey-100); border-radius: var(--r-pill);
-      padding: 0 6px; font-size: .6rem; font-weight: 900; color: var(--ink3);
-    }
-    .filter-pill.active .count { background: rgba(13,188,180,.15); color: var(--teal-dk); }
+    .filter-pill:hover { border-color: var(--teal); background: var(--teal-bg); color: var(--teal-dk); }
+    .filter-pill.active { border-color: var(--pink); color: var(--pink-dk); background: var(--pink-bg); }
+    .filter-pill .count { background: var(--offwhite); border-radius: 8px; padding: 2px 8px; font-size: 0.7rem; font-weight: 900; color: var(--ink-md); }
+    .filter-pill.active .count { background: var(--white); color: var(--pink-dk); }
 
     /* ── Order cards ── */
-    .order-list { display: flex; flex-direction: column; gap: 10px; }
+    .order-list { display: flex; flex-direction: column; gap: 16px; }
     .order-card {
-      background: var(--white); border: 1.5px solid var(--grey-200);
-      border-radius: var(--r-md); overflow: hidden;
-      text-decoration: none; color: inherit;
-      transition: border-color .13s, box-shadow .13s;
-      display: block;
+      background: var(--white); border: 1.5px solid var(--grey-200); border-radius: 16px; overflow: hidden;
+      text-decoration: none; color: inherit; transition: all 0.2s; display: block; box-shadow: 0 4px 16px rgba(0,0,0,0.02);
     }
-    .order-card:hover { border-color: var(--teal-bd); box-shadow: var(--sh-sm); }
+    .order-card:hover { border-color: var(--teal); box-shadow: 0 8px 24px rgba(26,200,196,0.1); transform: translateY(-2px); color: inherit; }
 
     .oc-head {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 18px; background: var(--grey-50);
-      border-bottom: 1px solid var(--grey-200);
+      display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--offwhite);
+      border-bottom: 1.5px solid var(--grey-200);
     }
-    .oc-code { font-family: var(--fh); font-size: .9rem; font-weight: 800; color: var(--ink); }
-    .oc-date { font-size: .7rem; font-weight: 700; color: var(--ink3); }
+    .oc-code { font-family: var(--fh); font-size: 1.1rem; color: var(--ink); }
+    .oc-date { font-size: 0.8rem; font-weight: 700; color: var(--ink-md); }
 
-    .oc-body {
-      display: grid; grid-template-columns: 64px 1fr auto;
-      gap: 14px; align-items: center; padding: 14px 18px;
-    }
+    .oc-body { display: grid; grid-template-columns: 80px 1fr auto; gap: 16px; align-items: center; padding: 20px; }
     .oc-snap {
-      width: 64px; height: 44px; border-radius: var(--r-sm);
-      background: var(--grey-50); border: 1px solid var(--grey-200);
-      object-fit: cover; overflow: hidden;
-      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      width: 80px; height: 60px; border-radius: 10px; background: var(--offwhite); border: 1.5px solid var(--grey-200);
+      object-fit: cover; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--grey-300);
     }
     .oc-snap img { width: 100%; height: 100%; object-fit: cover; }
-    .oc-prod { font-size: .84rem; font-weight: 800; color: var(--ink); margin-bottom: 3px; }
-    .oc-meta { font-size: .7rem; font-weight: 600; color: var(--ink2); }
+    .oc-prod { font-size: 1rem; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .oc-meta { font-size: 0.8rem; font-weight: 700; color: var(--ink-md); }
     .oc-right { text-align: right; flex-shrink: 0; }
-    .oc-price { font-family: var(--fh); font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-bottom: 5px; }
+    .oc-price { font-family: var(--fh); font-size: 1.4rem; color: var(--pink); margin-bottom: 8px; }
 
     /* ── Status badges ── */
     .sbd {
-      display: inline-flex; align-items: center; gap: 4px;
-      border-radius: var(--r-pill); padding: 3px 10px;
-      font-size: .6rem; font-weight: 800; letter-spacing: .04em;
-      text-transform: uppercase; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 6px 12px;
+      font-size: 0.7rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;
     }
-    .sbd::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-    .s-pending     { background: #FFF7E0; color: #B47D00; border: 1px solid #F0D080; }
-    .s-confirmed   { background: var(--teal-lt); color: var(--teal-dk); border: 1px solid var(--teal-bd); }
-    .s-in_progress { background: var(--purple-lt); color: var(--purple-dk); border: 1px solid var(--purple-bd); }
-    .s-ready       { background: #F0FFF4; color: #1A7F4A; border: 1px solid #9BE0BB; }
-    .s-completed   { background: var(--grey-100); color: var(--ink2); border: 1px solid var(--grey-200); }
-    .s-cancelled   { background: var(--pink-lt); color: var(--pink-dk); border: 1px solid var(--pink-bd); }
+    .s-pending     { background: var(--lime-bg); color: var(--lime-dk); border: 1.5px solid var(--lime); }
+    .s-confirmed   { background: var(--teal-bg); color: var(--teal-dk); border: 1.5px solid var(--teal); }
+    .s-in_progress { background: var(--purple-bg); color: var(--purple-dk); border: 1.5px solid var(--purple); }
+    .s-ready       { background: var(--teal-bg); color: var(--teal-dk); border: 1.5px solid var(--teal); }
+    .s-completed   { background: var(--grey-200); color: var(--ink-md); border: 1.5px solid var(--grey-300); }
+    .s-cancelled   { background: var(--pink-bg); color: var(--pink-dk); border: 1.5px solid var(--pink); }
 
     /* ── Empty ── */
-    .acc-empty {
-      background: var(--white); border: 1.5px dashed var(--grey-200);
-      border-radius: var(--r-md); padding: 48px 20px; text-align: center;
-    }
-    .acc-empty-icon { font-size: 2rem; margin-bottom: 10px; }
-    .acc-empty-msg { font-size: .86rem; font-weight: 700; color: var(--ink2); margin-bottom: 16px; }
+    .acc-empty { background: var(--white); border: 2px dashed var(--grey-200); border-radius: 16px; padding: 60px 20px; text-align: center; }
+    .acc-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .acc-empty-msg { font-size: 0.95rem; font-weight: 700; color: var(--ink-md); margin-bottom: 20px; }
     .acc-empty-btn {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: var(--pink); color: var(--white);
-      font-weight: 800; font-size: .82rem;
-      border: none; border-radius: var(--r-sm); padding: 10px 20px; text-decoration: none;
-      transition: background .13s;
+      display: inline-flex; align-items: center; gap: 8px; background: var(--pink); color: var(--white); font-weight: 800;
+      font-size: 0.9rem; border: none; border-radius: 10px; padding: 12px 24px; text-decoration: none; transition: all 0.2s;
     }
-    .acc-empty-btn:hover { background: var(--pink-dk); color: var(--white); }
-
-    /* ── Pagination ── */
-    .pg-links { display: flex; justify-content: center; gap: 6px; margin-top: 24px; }
-    .pg-links a, .pg-links span {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 36px; height: 36px; border-radius: var(--r-sm);
-      font-size: .76rem; font-weight: 800; text-decoration: none;
-      border: 1.5px solid var(--grey-200); color: var(--ink2); padding: 0 10px;
-    }
-    .pg-links a:hover { border-color: var(--teal); color: var(--teal-dk); background: var(--teal-lt); }
-    .pg-links span[aria-current] { background: var(--teal); border-color: var(--teal); color: var(--white); }
+    .acc-empty-btn:hover { background: var(--pink-dk); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,95,160,0.2); color: var(--white); }
 
     @media (max-width: 600px) {
-      .oc-body { grid-template-columns: 48px 1fr; }
+      .oc-body { grid-template-columns: 60px 1fr; }
       .oc-right { display: none; }
     }
   </style>
@@ -133,18 +98,14 @@
 
 <div class="acc-wrap">
 
-  <a href="{{ route('account.dashboard') }}" class="pg-back">
-    <i data-lucide="arrow-left"></i> Back to Dashboard
-  </a>
+  <a href="{{ route('account.dashboard') }}" class="pg-back"><i data-lucide="arrow-left" style="width:16px;"></i> Back to Dashboard</a>
   <h1 class="pg-title">My Orders</h1>
   <p class="pg-sub">Track the status of all your custom orders.</p>
 
   {{-- Filter pills --}}
   <div class="filter-bar">
-    <a class="filter-pill {{ ! request('status') ? 'active' : '' }}"
-       href="{{ route('account.orders') }}">
-      All
-      <span class="count">{{ $orderCounts['total'] ?? '' }}</span>
+    <a class="filter-pill {{ ! request('status') ? 'active' : '' }}" href="{{ route('account.orders') }}">
+      All <span class="count">{{ $orderCounts['total'] ?? 0 }}</span>
     </a>
     @foreach ([
       'pending'     => 'Pending',
@@ -154,8 +115,7 @@
       'completed'   => 'Completed',
       'cancelled'   => 'Cancelled',
     ] as $s => $label)
-      <a class="filter-pill {{ request('status') === $s ? 'active' : '' }}"
-         href="{{ route('account.orders', ['status' => $s]) }}">
+      <a class="filter-pill {{ request('status') === $s ? 'active' : '' }}" href="{{ route('account.orders', ['status' => $s]) }}">
         {{ $label }}
       </a>
     @endforeach
@@ -165,9 +125,8 @@
     <div class="acc-empty">
       <div class="acc-empty-icon">📦</div>
       <div class="acc-empty-msg">No orders found.</div>
-      <a class="acc-empty-btn" href="{{ route('builder.keychain') }}">
-        <i data-lucide="wand-2" style="width:14px;height:14px;"></i>
-        Start Designing
+      <a class="acc-empty-btn" href="{{ route('builder.bracelet') }}">
+        <i data-lucide="wand-2" style="width:16px;"></i> Start Designing
       </a>
     </div>
   @else
@@ -187,7 +146,7 @@
               @endif
             </div>
             <div>
-              <div class="oc-prod">{{ $order->product->label }}</div>
+              <div class="oc-prod">{{ $order->product->label ?? 'Custom' }}</div>
               <div class="oc-meta">
                 {{ ucfirst($order->length) }} length
                 @if($order->items->count()) · {{ $order->items->count() }} elements @endif
@@ -203,7 +162,7 @@
     </div>
 
     @if ($orders->hasPages())
-      <div class="pg-links">
+      <div style="margin-top: 24px;">
         {{ $orders->onEachSide(1)->links('pagination::simple-tailwind') }}
       </div>
     @endif
@@ -211,7 +170,6 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
 </body>
 </html>

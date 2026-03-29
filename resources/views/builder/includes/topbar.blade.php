@@ -3,176 +3,178 @@
 // Accepted values: 'bracelet' | 'necklace' | 'keychain' | '' (index)
 $activePage = $activePage ?? 'bracelet';
 
+// Upgraded to use Lucide icon names instead of basic text symbols!
 $navLinks = [
-  'bracelet' => ['href' => route('builder.bracelet'), 'icon' => '◯', 'label' => 'Bracelet'],
-  'necklace' => ['href' => route('builder.necklace'), 'icon' => '⌒', 'label' => 'Necklace'],
-  'keychain' => ['href' => route('builder.keychain'), 'icon' => '⊟', 'label' => 'Keychain'],
+  'bracelet' => ['href' => route('builder.bracelet'), 'icon' => 'circle', 'label' => 'Bracelet'],
+  'necklace' => ['href' => route('builder.necklace'), 'icon' => 'gem', 'label' => 'Necklace'],
+  'keychain' => ['href' => route('builder.keychain'), 'icon' => 'key', 'label' => 'Keychain'],
 ];
 ?>
 <style>
-  /* ── Auth pill ──────────────────────────────────────────────────────── */
-  .auth-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    border-radius: 999px;
-    padding: 6px 14px 6px 8px;
-    font-family: var(--fb);
-    font-size: .75rem;
-    font-weight: 800;
-    text-decoration: none;
-    transition: background .13s, border-color .13s;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-
-  /* Logged-in state: subtle filled pill with avatar */
-  .auth-pill.is-auth {
-    background: var(--white);
-    border: 1.5px solid var(--grey-200);
-    color: var(--ink);
-    position: relative;
-  }
-  .auth-pill.is-auth:hover {
-    border-color: var(--pink-bd);
-    background: var(--pink-lt);
-    color: var(--pink-dk);
-  }
-
-  /* Guest state: outlined ghost pill */
-  .auth-pill.is-guest {
-    background: transparent;
-    border: 1.5px solid var(--grey-300);
-    color: var(--ink2);
-  }
-  .auth-pill.is-guest:hover {
-    border-color: var(--pink);
-    color: var(--pink-dk);
-    background: var(--pink-lt);
-  }
-
-  /* Avatar circle */
-  .auth-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+  /* ── 1. Topbar Layout (Matches Workspace Columns exactly!) ──────────── */
+  .topbar {
+    background: #ffffff;
+    height: 64px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: .68rem;
-    font-weight: 900;
-    flex-shrink: 0;
-    line-height: 1;
+    justify-content: space-between;
+    border-bottom: 1.5px solid var(--grey-200);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+    z-index: 100;
   }
-  .auth-avatar.av-user {
-    background: var(--pink);
-    color: var(--white);
+  
+  /* Left zone matches the 240px Setup Panel */
+  .topbar-l { 
+    width: 240px; 
+    min-width: 240px; 
+    padding-left: 18px; /* Aligns logo with panel headers */
+    display: flex; 
+    justify-content: flex-start; 
+    align-items: center; 
   }
-  .auth-avatar.av-guest {
-    background: var(--grey-200);
-    color: var(--grey-400);
+  
+  /* Center zone takes remaining space, aligning perfectly with Canvas */
+  .topbar-c { 
+    flex: 1; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+  }
+  
+  /* Right zone matches the 540px combined Design + Library panels */
+  .topbar-r { 
+    width: 540px; 
+    min-width: 540px; 
+    padding-right: 18px; 
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    gap: 12px; 
   }
 
-  /* Online dot */
+  /* ── 2. Logo ───────────────────────────────────────────────────────── */
+  .logo {
+    font-family: var(--fh);
+    font-size: 1.4rem;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+  .logo b { color: var(--pink); }
+
+  /* ── 3. Centered Navigation Pills ──────────────────────────────────── */
+  .builder-nav {
+    display: flex;
+    background: var(--offwhite);
+    border: 1.5px solid var(--grey-200);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .bnav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border-radius: 999px;
+    font-family: var(--fb);
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--ink-md);
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .bnav-link:hover { 
+    color: var(--ink); 
+  }
+  .bnav-link.active {
+    background: #ffffff;
+    color: var(--pink-dk);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--pink-bg); /* Soft pink accent ring */
+  }
+
+  /* ── 4. Order Button ───────────────────────────────────────────────── */
+  .btn-order {
+    background: var(--pink);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-family: var(--fb);
+    font-weight: 900;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(255,95,160,0.25);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-order:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255,95,160,0.35);
+  }
+
+  /* ── 5. Auth pill ──────────────────────────────────────────────────── */
+  .auth-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    border-radius: 999px; padding: 6px 14px 6px 8px;
+    font-family: var(--fb); font-size: .75rem; font-weight: 800;
+    text-decoration: none; transition: all 0.15s; cursor: pointer;
+  }
+  .auth-pill.is-auth { background: var(--white); border: 1.5px solid var(--grey-200); color: var(--ink); position: relative; }
+  .auth-pill.is-auth:hover { border-color: var(--pink-bd); background: var(--pink-bg); color: var(--pink-dk); }
+  .auth-pill.is-guest { background: transparent; border: 1.5px solid var(--grey-300); color: var(--ink-md); }
+  .auth-pill.is-guest:hover { border-color: var(--pink); color: var(--pink-dk); background: var(--pink-bg); }
+
+  .auth-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 900; flex-shrink: 0;
+  }
+  .auth-avatar.av-user { background: var(--pink); color: var(--white); }
+  .auth-avatar.av-guest { background: var(--grey-200); color: #9ca3af; }
+
   .auth-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #22C55E;
-    border: 1.5px solid var(--white);
-    position: absolute;
-    bottom: 4px;
-    left: 25px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--lime-dk);
+    border: 1.5px solid var(--white); position: absolute; bottom: 4px; left: 26px;
   }
 
   /* Dropdown */
-  .auth-wrap {
-    position: relative;
-  }
+  .auth-wrap { position: relative; }
   .auth-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    min-width: 180px;
-    background: var(--white);
-    border: 1.5px solid var(--grey-200);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(30,30,42,.10);
-    overflow: hidden;
-    z-index: 200;
+    display: none; position: absolute; top: calc(100% + 12px); right: 0;
+    min-width: 200px; background: var(--white); border: 1.5px solid var(--grey-200);
+    border-radius: 14px; box-shadow: 0 10px 30px rgba(30,30,42,.08); overflow: hidden; z-index: 200;
   }
-  .auth-wrap:hover .auth-dropdown,
-  .auth-wrap.open .auth-dropdown {
-    display: block;
-  }
-  .auth-dropdown-head {
-    padding: 11px 14px 8px;
-    border-bottom: 1px solid var(--grey-100);
-  }
-  .auth-dropdown-name {
-    font-size: .8rem;
-    font-weight: 800;
-    color: var(--ink);
-    margin-bottom: 1px;
-  }
-  .auth-dropdown-role {
-    font-size: .65rem;
-    font-weight: 700;
-    color: var(--grey-400);
-    text-transform: uppercase;
-    letter-spacing: .06em;
-  }
-  .auth-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
-    font-size: .78rem;
-    font-weight: 700;
-    color: var(--ink2);
-    text-decoration: none;
-    transition: background .11s, color .11s;
-  }
-  .auth-dropdown-item:hover {
-    background: var(--grey-50);
-    color: var(--ink);
-  }
-  .auth-dropdown-item.danger {
-    color: #DC2626;
-  }
-  .auth-dropdown-item.danger:hover {
-    background: #FEF2F2;
-    color: #991B1B;
-  }
-  .auth-dropdown-divider {
-    height: 1px;
-    background: var(--grey-100);
-    margin: 2px 0;
-  }
-  .auth-dropdown-icon {
-    font-size: .85rem;
-    width: 16px;
-    text-align: center;
-    flex-shrink: 0;
-  }
+  .auth-wrap:hover .auth-dropdown, .auth-wrap.open .auth-dropdown { display: block; animation: popIn 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-  /* Keep topbar-r tidy */
-  .topbar-r {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .auth-dropdown-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--grey-100); background: var(--offwhite); }
+  .auth-dropdown-name { font-size: .85rem; font-weight: 900; color: var(--ink); margin-bottom: 2px; }
+  .auth-dropdown-role { font-size: .65rem; font-weight: 800; color: var(--ink-md); text-transform: uppercase; letter-spacing: .06em; }
+  .auth-dropdown-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    font-size: .8rem; font-weight: 800; color: var(--ink-md); text-decoration: none; transition: all .11s;
   }
+  .auth-dropdown-item:hover { background: var(--pink-bg); color: var(--pink-dk); }
+  .auth-dropdown-item.danger { color: #DC2626; }
+  .auth-dropdown-item.danger:hover { background: #FEF2F2; color: #991B1B; }
+  .auth-dropdown-divider { height: 1px; background: var(--grey-200); margin: 4px 0; }
 </style>
 
 <div class="topbar">
+  
   <div class="topbar-l">
     <a href="<?= route('builder.index') ?>" class="logo">Artsy<b>Crate</b></a>
+  </div>
+
+  <div class="topbar-c">
     <nav class="builder-nav">
       <?php foreach ($navLinks as $key => $link): ?>
-      <a class="bnav-link {{ $activePage === $key ? 'active' : '' }}"
-        href="{{ $link['href'] }}">
-        <span class="bnav-icon">{!! $link['icon'] !!}</span>
+      <a class="bnav-link {{ $activePage === $key ? 'active' : '' }}" href="{{ $link['href'] }}">
+        <i data-lucide="{{ $link['icon'] }}" style="width: 14px; height: 14px;"></i>
         {{ $link['label'] }}
       </a>
       <?php endforeach; ?>
@@ -183,7 +185,9 @@ $navLinks = [
 
     {{-- ── Order button — only on builder pages ── --}}
     @if($activePage)
-      <button class="btn-order" onclick="app.ui.openOrder()">Order This →</button>
+      <button class="btn-order" onclick="app.ui.openOrder()">
+        Order This <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+      </button>
     @endif
 
     {{-- ── Auth state pill ── --}}
@@ -192,48 +196,44 @@ $navLinks = [
       <div class="auth-wrap" id="auth-wrap">
         <div class="auth-pill is-auth" onclick="document.getElementById('auth-wrap').classList.toggle('open')">
           <div class="auth-avatar av-user">
-            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+{{ strtoupper(substr(auth()->user()->first_name, 0, 1)) }}
           </div>
-          <span>{{ explode(' ', auth()->user()->name)[0] }}</span>
-          <svg viewBox="0 0 12 12" style="width:10px;height:10px;flex-shrink:0;opacity:.5;">
-            <polyline points="2,4 6,8 10,4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
+          <span>{{ explode(' ', auth()->user()->first_name)[0] }}</span>
+          <i data-lucide="chevron-down" style="width: 12px; height: 12px; color: var(--ink-md);"></i>
           <span class="auth-dot"></span>
         </div>
 
         <div class="auth-dropdown">
           <div class="auth-dropdown-head">
-            <div class="auth-dropdown-name">{{ auth()->user()->name }}</div>
+            <div class="auth-dropdown-name">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
             <div class="auth-dropdown-role">
-              {{ auth()->user()->role === 'admin' ? '⭐ Admin' : '🛍️ Customer' }}
+              {{ auth()->user()->role === 'admin' ? 'Admin' : 'Customer' }}
             </div>
           </div>
 
           @if(auth()->user()->role === 'admin')
             <a class="auth-dropdown-item" href="{{ route('admin.orders.index') }}">
-              <span class="auth-dropdown-icon">📋</span> Admin Dashboard
+              <i data-lucide="layout-dashboard" style="width: 16px;"></i> Admin Dashboard
             </a>
             <div class="auth-dropdown-divider"></div>
           @endif
 
           <a class="auth-dropdown-item" href="{{ route('account.dashboard') }}">
-            <span class="auth-dropdown-icon">👤</span> My Account
+            <i data-lucide="user" style="width: 16px;"></i> My Account
           </a>
           <a class="auth-dropdown-item" href="{{ route('account.orders') }}">
-            <span class="auth-dropdown-icon">📦</span> My Orders
+            <i data-lucide="package" style="width: 16px;"></i> My Orders
           </a>
           <a class="auth-dropdown-item" href="{{ route('account.designs') }}">
-            <span class="auth-dropdown-icon">🎨</span> Saved Designs
+            <i data-lucide="palette" style="width: 16px;"></i> Saved Designs
           </a>
 
           <div class="auth-dropdown-divider"></div>
 
           <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="auth-dropdown-item danger"
-                    style="width:100%;background:none;border:none;text-align:left;cursor:pointer;
-                           font-family:var(--fb);">
-              <span class="auth-dropdown-icon">🚪</span> Log Out
+            <button type="submit" class="auth-dropdown-item danger" style="width:100%;background:none;border:none;text-align:left;cursor:pointer;font-family:var(--fb);">
+              <i data-lucide="log-out" style="width: 16px;"></i> Log Out
             </button>
           </form>
         </div>
@@ -242,12 +242,11 @@ $navLinks = [
     @else
       {{-- Guest: pill that links to login --}}
       <a class="auth-pill is-guest" href="{{ route('login') }}">
-        <div class="auth-avatar av-guest">?</div>
+        <div class="auth-avatar av-guest">
+          <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+        </div>
         <span>Guest</span>
-        <svg viewBox="0 0 12 12" style="width:9px;height:9px;flex-shrink:0;opacity:.45;">
-          <polyline points="5,2 10,6 5,10" fill="none" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.5"/>
-        </svg>
+        <i data-lucide="log-in" style="width: 14px; height: 14px; margin-left: 4px;"></i>
       </a>
     @endguest
 
@@ -255,6 +254,11 @@ $navLinks = [
 </div>
 
 <script>
+  // Ensure lucide icons render
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+  
   // Close auth dropdown when clicking outside
   document.addEventListener('click', function(e) {
     const wrap = document.getElementById('auth-wrap');

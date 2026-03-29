@@ -3,15 +3,13 @@
 
 @section('content')
 
-{{-- ── Page header ──────────────────────────────────────────────────────── --}}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
-    <h5 class="mb-0 fw-bold" style="color:var(--ink);">Orders</h5>
-    <small style="color:var(--grey-400);">All custom keychain &amp; bag charm orders</small>
+    <h5 class="mb-0" style="font-family: var(--fh); font-size: 2rem; color: var(--ink); letter-spacing: 1px;">All Orders</h5>
+    <small style="font-size: 0.95rem; font-weight: 700; color: var(--ink-md);">Track and update custom keychain & bag charm orders.</small>
   </div>
 </div>
 
-{{-- ── Status tabs ──────────────────────────────────────────────────────── --}}
 @php
   $allStatuses = [
     ''            => 'All',
@@ -36,151 +34,98 @@
   $totalAll = $counts->sum();
 @endphp
 
-<div class="ac-card mb-3">
-  <div style="padding: 8px 14px; display:flex; gap:6px; flex-wrap:wrap; border-bottom: 1px solid var(--grey-200);">
+<div class="ac-card mb-4">
+  <div style="padding: 12px 16px; display:flex; gap:8px; flex-wrap:wrap; border-bottom: 1.5px solid var(--grey-200); background: var(--offwhite);">
     @foreach($allStatuses as $val => $label)
       @php
         $count  = $val === '' ? $totalAll : ($counts[$val] ?? 0);
         $isActive = $currentStatus === $val;
       @endphp
       <a href="{{ route('admin.orders.index', array_merge(request()->except('status','page'), $val ? ['status' => $val] : [])) }}"
-         style="display:inline-flex; align-items:center; gap:5px;
-                padding: 4px 12px; border-radius: 20px; font-size:.77rem; font-weight:600;
-                text-decoration:none; transition: all .12s;
+         style="display:inline-flex; align-items:center; gap:6px;
+                padding: 6px 14px; border-radius: 10px; font-size:0.85rem; font-weight:800;
+                text-decoration:none; transition: all .15s; border: 1.5px solid transparent;
                 {{ $isActive
                     ? ($val && isset($tabColors[$val])
-                        ? 'background:' . $tabColors[$val]['bg'] . ';color:' . $tabColors[$val]['text'] . ';'
-                        : 'background:var(--ink);color:#fff;')
-                    : 'background:var(--grey-100);color:var(--grey-600);' }}">
+                        ? 'background:' . $tabColors[$val]['bg'] . ';color:' . $tabColors[$val]['text'] . '; border-color: ' . $tabColors[$val]['text'] . ';'
+                        : 'background:var(--pink-bg);color:var(--pink-dk); border-color: var(--pink-bd);')
+                    : 'background:var(--white);color:var(--ink-md); border-color: var(--grey-200);' }}">
         {{ $label }}
-        <span style="font-size:.7rem; font-weight:700;
-                     background: rgba(0,0,0,.1); border-radius:10px;
-                     padding: 1px 7px; line-height:1.6;">
+        <span style="font-size:0.75rem; font-weight:900; background: rgba(0,0,0,.08); border-radius:6px; padding: 2px 8px;">
           {{ $count }}
         </span>
       </a>
     @endforeach
   </div>
 
-  {{-- ── Search bar ──────────────────────────────────────────────────────── --}}
-  <form method="GET" action="{{ route('admin.orders.index') }}">
-    @if(request('status'))
-      <input type="hidden" name="status" value="{{ request('status') }}"/>
-    @endif
-    <div class="filter-bar">
-      <i data-lucide="search" style="width:14px;height:14px;color:var(--grey-400);"></i>
-      <input type="text" name="search" value="{{ request('search') }}"
-             placeholder="Order code, name, or phone…" style="width:230px;"/>
-      <button type="submit" class="btn-filter">Search</button>
-      <a href="{{ route('admin.orders.index', request('status') ? ['status' => request('status')] : []) }}"
-         class="btn-reset">Reset</a>
-      <span class="ms-auto" style="font-size:.75rem;color:var(--grey-400);">
-        {{ $orders->total() }} order{{ $orders->total() !== 1 ? 's' : '' }}
-      </span>
-    </div>
-  </form>
+  <div class="p-3">
+    <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-2 align-items-end">
+      @if(request('status')) <input type="hidden" name="status" value="{{ request('status') }}"/> @endif
+      <div class="col-md-5">
+        <label class="form-label">Search</label>
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Order code, name, or phone…"/>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn-ghost" style="background: var(--ink); color: #fff; border-color: var(--ink); width: 100%; justify-content: center;">Search</button>
+      </div>
+      <div class="col-md-2">
+        <a href="{{ route('admin.orders.index', request('status') ? ['status' => request('status')] : []) }}" class="btn-ghost w-100 justify-content-center">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
 
-  {{-- ── Orders table ─────────────────────────────────────────────────────── --}}
+<div class="ac-card">
   @if($orders->isEmpty())
-    <div class="text-center py-5" style="color:var(--grey-400);">
-      <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:8px;display:block;margin-inline:auto;"></i>
-      No orders found.
+    <div class="text-center py-5" style="color:var(--ink-md);">
+      <i data-lucide="package" style="width:36px;height:36px;margin-bottom:12px;opacity: 0.5;"></i>
+      <h6 class="fw-bold">No orders found.</h6>
     </div>
   @else
     <div class="table-responsive">
-      <table class="table table-hover mb-0" style="font-size:.84rem;">
-        <thead style="background:var(--grey-50); font-size:.73rem; text-transform:uppercase; letter-spacing:.05em;">
+      <table class="table table-borderless align-middle mb-0" style="font-size: 0.9rem; font-weight: 700;">
+        <thead style="background: var(--offwhite); border-bottom: 1.5px solid var(--grey-200); font-size: 0.75rem; text-transform: uppercase; color: var(--ink-md);">
           <tr>
             <th class="ps-4 py-3">Order</th>
             <th class="py-3">Customer</th>
             <th class="py-3">Product</th>
-            <th class="py-3">Length</th>
-            <th class="py-3 text-end">Total</th>
             <th class="py-3">Status</th>
-            <th class="py-3">Date</th>
+            <th class="py-3 text-end">Total</th>
             <th class="py-3 pe-4 text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
           @foreach($orders as $order)
-          @php
-            $sc  = $tabColors[$order->status] ?? ['bg' => '#F3F4F6', 'text' => '#374151'];
-          @endphp
-          <tr style="cursor:pointer;" onclick="window.location='{{ route('admin.orders.show', $order) }}'">
-
-            {{-- Order code ──────────────────────────────────────────────── --}}
+          @php $sc = $tabColors[$order->status] ?? ['bg' => '#F3F4F6', 'text' => '#374151']; @endphp
+          <tr style="border-bottom: 1px solid var(--grey-100); cursor: pointer;" onclick="window.location='{{ route('admin.orders.show', $order) }}'">
+            
             <td class="ps-4 py-3 align-middle">
-              <div class="fw-bold font-monospace" style="color:var(--ink);font-size:.8rem;">
-                {{ $order->order_code }}
-              </div>
-              @if($order->design && $order->design->snapshot_path)
-                <div style="margin-top:4px;">
-                  <img src="{{ asset('storage/' . $order->design->snapshot_path) }}"
-                       style="width:32px;height:32px;object-fit:contain;border-radius:5px;
-                              background:var(--grey-100);border:1px solid var(--grey-200);"
-                       alt="Design"/>
-                </div>
-              @endif
+              <div style="font-family: var(--fh); font-size: 1.1rem; color: var(--ink); letter-spacing: 0.5px;">{{ $order->order_code }}</div>
+              <div style="font-size: 0.75rem; color: var(--ink-md); font-weight: 700;">{{ $order->created_at->format('M d, Y') }}</div>
             </td>
 
-            {{-- Customer ────────────────────────────────────────────────── --}}
             <td class="py-3 align-middle">
-              <div class="fw-semibold" style="color:var(--ink);">
-                {{ $order->first_name }} {{ $order->last_name }}
-              </div>
-              <small style="color:var(--grey-400);">{{ $order->contact_number }}</small>
+              <div style="color: var(--ink); font-weight: 800;">{{ $order->first_name }} {{ $order->last_name }}</div>
             </td>
 
-            {{-- Product ─────────────────────────────────────────────────── --}}
+            <td class="py-3 align-middle" style="color: var(--ink-md);">
+              {{ $order->product->label ?? '—' }} ({{ $order->length }})
+            </td>
+
             <td class="py-3 align-middle">
-              <span style="font-size:.78rem;color:var(--ink-2);">
-                {{ $order->product->label ?? '—' }}
+              <span style="display:inline-block; padding:4px 12px; border-radius:6px; font-size:0.75rem; font-weight:800; text-transform: uppercase; background:{{ $sc['bg'] }}; color:{{ $sc['text'] }}; border: 1.5px solid {{ $sc['text'] }};">
+                {{ $order->statusLabel() ?? ucfirst($order->status) }}
               </span>
             </td>
 
-            {{-- Length ──────────────────────────────────────────────────── --}}
-            <td class="py-3 align-middle">
-              <span style="font-size:.78rem;color:var(--grey-600);">{{ $order->length }}</span>
+            <td class="py-3 align-middle text-end" style="color: var(--pink); font-weight: 800;">
+              ₱{{ number_format($order->total_price) }}
             </td>
 
-            {{-- Total ───────────────────────────────────────────────────── --}}
-            <td class="py-3 align-middle text-end">
-              <span class="fw-bold" style="color:var(--pink);">₱{{ number_format($order->total_price) }}</span>
-            </td>
-
-            {{-- Status ──────────────────────────────────────────────────── --}}
-            <td class="py-3 align-middle">
-              <span style="display:inline-block;padding:3px 10px;border-radius:20px;
-                           font-size:.71rem;font-weight:700;
-                           background:{{ $sc['bg'] }};color:{{ $sc['text'] }};">
-                {{ $order->statusLabel() }}
-              </span>
-            </td>
-
-            {{-- Date ────────────────────────────────────────────────────── --}}
-            <td class="py-3 align-middle">
-              <div style="font-size:.78rem;color:var(--ink-2);">
-                {{ $order->created_at->format('M d, Y') }}
-              </div>
-              <small style="color:var(--grey-400);">
-                {{ $order->created_at->format('h:i A') }}
-              </small>
-            </td>
-
-            {{-- Actions ─────────────────────────────────────────────────── --}}
             <td class="py-3 pe-4 align-middle text-end" onclick="event.stopPropagation()">
-              <a href="{{ route('admin.orders.show', $order) }}"
-                 class="btn btn-sm btn-outline-secondary me-1"
-                 style="padding:3px 10px;font-size:.73rem;border-radius:6px;">
-                View
-              </a>
-              <a href="{{ route('admin.orders.print', $order) }}" target="_blank"
-                 class="btn btn-sm"
-                 style="padding:3px 10px;font-size:.73rem;border-radius:6px;
-                        background:var(--grey-100);color:var(--ink-2);border:1px solid var(--grey-200);">
-                <i data-lucide="printer" style="width:11px;height:11px;"></i>
-              </a>
+              <a href="{{ route('admin.orders.show', $order) }}" class="btn-ghost" style="padding: 6px 12px; font-size: 0.8rem;">View</a>
             </td>
+            
           </tr>
           @endforeach
         </tbody>
@@ -191,7 +136,6 @@
     <div class="p-3 border-top">{{ $orders->links() }}</div>
     @endif
   @endif
-
 </div>
 
 @endsection

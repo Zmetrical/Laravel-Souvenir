@@ -10,98 +10,94 @@ $productConfig = ['product' => 'necklace', 'basePrice' => 100, 'maxBeads' => $ma
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>ArtsyCrate — Necklace Builder</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}"/>
-<meta name="csrf-token" content="{{ csrf_token() }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  
+  <meta name="csrf-token" content="{{ csrf_token() }}"/>
+
+<link rel="stylesheet" href="{{ asset('css/builder/styles.css') }}">
 </head>
 <body>
 
 @include('builder.includes.topbar')
 
-<div class="builder">
+<div class="d-flex flex-row flex-nowrap h-100 overflow-hidden">
 
-  <!-- ══ SETUP PANEL — necklace-specific ═══════════════════════════════════ -->
-  <div class="setup-panel" id="setup-panel">
-    <div class="setup-inner">
+  <div class="builder-pane border-right" id="setup-panel">
+    <div class="phead teal">
+      <i data-lucide="gem" class="mr-2" style="width: 18px;"></i> Necklace Setup
+    </div>
 
-      <div class="phead teal">
-        <div class="phead-ico">
-          <svg viewBox="0 0 12 12">
-            <circle cx="6" cy="6" r="4"/>
-            <line x1="6" y1="1" x2="6" y2="3"/>
-            <line x1="6" y1="9" x2="6" y2="11"/>
-            <line x1="1" y1="6" x2="3" y2="6"/>
-            <line x1="9" y1="6" x2="11" y2="6"/>
-          </svg>
-        </div>
-        Necklace Setup
-      </div>
+    <div class="overflow-auto flex-grow-1">
       <div class="psec open" id="sec-string">
         <div class="psec-toggle" onclick="app.ui.toggleSec('sec-string')">
-          <span class="psec-toggle-lbl">Chain / Cord &amp; Clasp</span>
-          <svg class="psec-arr" viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          <span>Chain / Cord</span>
+          <i data-lucide="chevron-down" class="psec-arr" style="width: 16px;"></i>
         </div>
         <div class="psec-body">
-
-          <div class="slbl" style="margin-bottom:8px;">String Color</div>
-          <div class="swatches" id="str-sw" style="margin-bottom:14px;">
+          
+          <label class="font-weight-bold text-sm">String Color</label>
+          <div class="swatches mb-3" id="str-sw">
             <div class="sw active" style="background:#FF5FA0;" onclick="app.ui.setStrCol('#FF5FA0',this)"></div>
-            <div class="sw"        style="background:#1AC8C4;" onclick="app.ui.setStrCol('#1AC8C4',this)"></div>
-            <div class="sw"        style="background:#A855F7;" onclick="app.ui.setStrCol('#A855F7',this)"></div>
-            <div class="sw"        style="background:#111118;" onclick="app.ui.setStrCol('#111118',this)"></div>
-            <div class="sw"        style="background:#fff;"    onclick="app.ui.setStrCol('#ffffff',this)"></div>
-            <div class="sw"        style="background:#FFD700;" onclick="app.ui.setStrCol('#FFD700',this)"></div>
-            <div class="sw"        style="background:#3B82F6;" onclick="app.ui.setStrCol('#3B82F6',this)"></div>
-            <div class="sw"        style="background:#EF4444;" onclick="app.ui.setStrCol('#EF4444',this)"></div>
+            <div class="sw" style="background:#1AC8C4;" onclick="app.ui.setStrCol('#1AC8C4',this)"></div>
+            <div class="sw" style="background:#A855F7;" onclick="app.ui.setStrCol('#A855F7',this)"></div>
+            <div class="sw" style="background:#111118;" onclick="app.ui.setStrCol('#111118',this)"></div>
+            <div class="sw" style="background:#fff;" onclick="app.ui.setStrCol('#ffffff',this)"></div>
+            <div class="sw" style="background:#FFD700;" onclick="app.ui.setStrCol('#FFD700',this)"></div>
+            <div class="sw" style="background:#3B82F6;" onclick="app.ui.setStrCol('#3B82F6',this)"></div>
+            <div class="sw" style="background:#EF4444;" onclick="app.ui.setStrCol('#EF4444',this)"></div>
           </div>
 
-          <div class="slbl" style="margin-bottom:8px;">Chain / Cord Type</div>
-          <select class="sel" id="str-type" style="margin-bottom:14px;"
-                  onchange="app.ui.setStrType(this.value)">
+          <label class="font-weight-bold text-sm">Chain / Cord Type</label>
+          <select class="form-control form-control-sm mb-3 font-weight-bold" id="str-type" onchange="app.ui.setStrType(this.value)" style="border-radius: 8px; border: 2px solid #e9ecef;">
             <option value="Chain">Chain</option>
             <option value="Cord">Cord</option>
             <option value="Wire">Wire</option>
             <option value="Elastic">Elastic</option>
           </select>
 
-          <div class="slbl" style="margin-bottom:8px;">Length</div>
-          <select class="sel" id="length-sel" style="margin-bottom:14px;">
+          <label class="font-weight-bold text-sm">Length</label>
+          <select class="form-control form-control-sm mb-3 font-weight-bold" id="length-sel" style="border-radius: 8px; border: 2px solid #e9ecef;">
             <option value="small">Choker — 40 cm</option>
             <option value="medium" selected>Princess — 45 cm</option>
             <option value="large">Matinee — 50 cm</option>
             <option value="custom">Custom</option>
           </select>
 
-          <div class="slbl" style="margin-bottom:8px;">Clasp</div>
-          <div class="cpills">
+          <label class="font-weight-bold text-sm">Clasp</label>
+          <div class="cpills d-flex gap-2">
             <div class="cpill active" onclick="app.ui.setClasp('none',this)">None</div>
-            <div class="cpill"        onclick="app.ui.setClasp('lobster',this)">Lobster</div>
-            <div class="cpill"        onclick="app.ui.setClasp('toggle',this)">Toggle</div>
+            <div class="cpill" onclick="app.ui.setClasp('lobster',this)">Lobster</div>
+            <div class="cpill" onclick="app.ui.setClasp('toggle',this)">Toggle</div>
           </div>
 
         </div>
       </div>
     </div>
   </div>
-  
 
-<!-- /setup-panel -->
+  @include('builder.includes.canvas')
+  @include('builder.includes.design-panel')
+  @include('builder.includes.library-panel')
 
-@include('builder.includes.library-panel')
-@include('builder.includes.canvas')
-@include('builder.includes.design-panel')
+</div>
+
 @include('builder.includes.modal-preview')
 @include('builder.includes.modal-order')
 
-<div class="toast" id="toast"></div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+  document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   window.BUILDER_PRODUCT  = {!! json_encode($productConfig) !!};
-  window.BUILDER_ELEMENTS = {!! json_encode($elements) !!};  // ← add this
+  window.BUILDER_ELEMENTS = {!! json_encode($elements ?? []) !!};
 </script>
 <script type="module" src="{{ asset('js/builder/main.js') }}"></script>
-
-
 </body>
 </html>

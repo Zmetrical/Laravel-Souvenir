@@ -39,11 +39,12 @@ function calcR(shape, small, size) {
 function draw(canvas, opts) {
     if (!canvas || !canvas.getContext) return;
 
-    const shape  = (opts?.shape  ?? canvas.dataset.shape)  || 'round';
-    const color  = (opts?.color  ?? canvas.dataset.color)  || '#F9B8CF';
-    const detail = (opts?.detail ?? canvas.dataset.detail) || '#C0136A';
-    const small  = (opts?.small  != null ? !!opts.small : canvas.dataset.small === '1');
+const shape  = opts?.shape  || canvas.dataset.shape  || 'round';
+    const color  = opts?.color  || canvas.dataset.color  || '#F9B8CF';
+    const detail = opts?.detail || canvas.dataset.detail || '#C0136A';
+    const small  = opts?.small !== undefined ? opts.small : (canvas.dataset.small === '1');
 
+    
     const W    = canvas.width  || 52;
     const H    = canvas.height || 52;
     const size = Math.min(W, H);
@@ -73,10 +74,11 @@ function draw(canvas, opts) {
     ctx.restore();
 }
 
-// ── renderAll() ───────────────────────────────────────────────────────────
-
+// ── UPDATED renderAll() ───────────────────────────────────────────────────
 function renderAll() {
-    document.querySelectorAll('canvas.shape-canvas').forEach(c => draw(c));
+    // 👇 This now finds ALL types of canvases used in the admin form and lists
+    const selector = 'canvas.shape-canvas, canvas.shape-tile-canvas, canvas.preview-canvas, canvas.var-canvas, .shape-tile-canvas';
+    document.querySelectorAll(selector).forEach(c => draw(c));
 }
 
 if (document.readyState === 'loading') {

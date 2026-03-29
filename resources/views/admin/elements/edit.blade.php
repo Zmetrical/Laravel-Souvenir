@@ -1,35 +1,23 @@
 @extends('admin.includes.layout')
-@section('title', 'Edit ' . ucfirst($element->category))
+@section('title', 'Edit Element')
 
 @section('content')
 
 <div class="d-flex align-items-center gap-3 mb-4">
-  <a href="{{ route('admin.elements.' . $element->category) }}"
-     class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
-    ← Back to {{ ucfirst($element->category) }}
+  <a href="{{ route('admin.elements.' . $element->category) }}" class="btn-ghost">
+    <i data-lucide="arrow-left" style="width: 16px;"></i> Back
   </a>
   <div>
-    <h5 class="mb-0 fw-bold" style="color:#2D2D3A;">Edit: {{ $element->name }}</h5>
-    <small class="text-muted font-monospace">slug: {{ $element->slug }}</small>
+    <h5 class="mb-0" style="font-family: var(--fh); font-size: 2.2rem; color: var(--ink); letter-spacing: 1px;">Edit: {{ $element->name }}</h5>
+    <code style="font-size: 0.8rem; color: var(--grey-400); font-weight: 800;">SLUG: {{ $element->slug }}</code>
   </div>
 </div>
-
-@if($errors->any())
-  <div class="flash-error mb-4">
-    <strong>Please fix the following errors:</strong>
-    <ul class="mb-0 mt-1">
-      @foreach($errors->all() as $error)
-        <li>{{ $error }}</li>
-      @endforeach
-    </ul>
-  </div>
-@endif
 
 @include('admin.elements._form', [
   'action'      => route('admin.elements.update', $element),
   'method'      => 'PUT',
   'element'     => $element,
-  'preCategory' => $preCategory,
+  'preCategory' => $element->category,
 ])
 
 @endsection
