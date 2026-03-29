@@ -58,7 +58,7 @@ Artsy PBS is a custom souvenir and accessories ordering platform where customers
 
 ## Modules
 
-### Phase 1 — Design Builder ⭐ Hero Feature
+### Phase 1 — Design Builder Hero Feature
 - Live canvas workspace powered by **Fabric.js**
 - Drag-and-drop beads, charms, figures, and letter tiles onto a base product
 - Color selection, resize, and reposition elements
